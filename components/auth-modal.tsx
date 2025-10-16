@@ -9,6 +9,9 @@ import { Chrome, Mail, Eye, EyeOff, Loader2, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { auth } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth-context"
+import { useGeo } from "@/contexts/geo-context"
+import { authTranslationsZh } from "@/lib/i18n/auth-zh"
+import { authTranslationsEn } from "@/lib/i18n/auth-en"
 // import { PhoneAuthModal } from "@/components/phone-auth-modal"
 
 interface AuthModalProps {
@@ -20,6 +23,9 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: AuthModalProps) {
   const { signIn } = useAuth()
+  const { isEurope, languageCode } = useGeo()
+  const t = languageCode === 'zh' ? authTranslationsZh : authTranslationsEn
+
   const [mode, setMode] = useState(authMode)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -29,6 +35,36 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
   const [success, setSuccess] = useState("")
   const [showBenefits, setShowBenefits] = useState(true)
   // const [showPhoneAuth, setShowPhoneAuth] = useState(false)
+
+  // 欧洲地区检测 - 显示屏蔽消息
+  if (isEurope) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-center">
+              Service Not Available in Europe
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              Due to regulatory requirements (GDPR), we are currently unable to offer authentication services in European countries.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-slate-300 text-center">
+              We apologize for any inconvenience. You can still browse our content as a guest.
+            </p>
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              onClick={() => window.open('mailto:mornscience@gmail.com?subject=Inquiry from Europe', '_blank')}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact Us
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   // Update mode when authMode prop changes
   useEffect(() => {
@@ -130,20 +166,19 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
         const { data, error } = await auth.signInWithGoogle()
         if (error) {
           setError(error.message)
+          setLoading(false)
           return
         }
-        // OAuth redirects to callback, so we don't need to handle the user data here
-      } 
+        // OAuth redirects to callback, keep loading state
+        // Don't close modal or reset loading - user will be redirected
+      }
       else {
         setError(`${provider} authentication is temporarily disabled. Please use Google or email login.`)
+        setLoading(false)
         return
       }
-      
-      // Close modal - user will be redirected for OAuth
-      onOpenChange(false)
     } catch (err) {
       setError(`${provider} authentication failed. Please try again.`)
-    } finally {
       setLoading(false)
     }
   }
@@ -160,12 +195,10 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
       <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {mode === "login" ? "Welcome Back to SiteHub" : "Join SiteHub - Your Personal Web Dashboard"}
+            {mode === "login" ? t.login.title : t.signup.title}
           </DialogTitle>
           <DialogDescription className="text-slate-400">
-            {mode === "login"
-              ? "Sign in to sync your sites across all devices and keep your favorites safe"
-              : "Create your account to organize 300+ sites, save favorites, and access from anywhere"}
+            {mode === "login" ? t.login.subtitle : t.signup.subtitle}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,16 +207,21 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
           <div className="grid gap-3">
             <Button
               variant="outline"
-              className="bg-white text-black hover:bg-gray-100"
+              className="bg-white text-black hover:bg-gray-100 relative"
               onClick={() => handleSocialAuth("google")}
               disabled={loading}
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
+                </>
               ) : (
-                <Chrome className="w-4 h-4 mr-2" />
+                <>
+                  <Chrome className="w-4 h-4 mr-2" />
+                  <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
+                </>
               )}
-              Continue with Google
             </Button>
             {/* Phone Auth - Temporarily Disabled
             <Button
@@ -208,7 +246,9 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               <span className="w-full border-t border-slate-600" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-800 px-2 text-slate-400">Or create account with email</span>
+              <span className="bg-slate-800 px-2 text-slate-400">
+                {mode === "login" ? t.login.orContinueWith : t.signup.orContinueWith}
+              </span>
             </div>
           </div>
 
@@ -216,31 +256,28 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
           <div className="space-y-4">
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
-                Email
+                {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="your.email@example.com"
+                placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
                 disabled={loading}
               />
-              <p className="text-xs text-slate-400 mt-1">
-                We'll send you a confirmation email
-              </p>
             </div>
-            
+
             <div>
               <Label htmlFor="password" className="text-sm font-medium">
-                Password
+                {mode === "login" ? t.login.passwordLabel : t.signup.passwordLabel}
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
+                  placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
@@ -261,9 +298,6 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
-                At least 6 characters for security
-              </p>
             </div>
           </div>
 
@@ -282,8 +316,8 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
           )}
 
           {/* Submit Button */}
-          <Button 
-            className="w-full bg-blue-600 hover:bg-blue-700" 
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700"
             onClick={handleEmailAuth}
             disabled={loading}
           >
@@ -292,7 +326,10 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
             ) : (
               <Mail className="w-4 h-4 mr-2" />
             )}
-            {mode === "login" ? "Sign In & Continue" : "Create Account & Start Organizing"}
+            {mode === "login"
+              ? (loading ? t.login.submitting : t.login.submitButton)
+              : (loading ? t.signup.submitting : t.signup.submitButton)
+            }
           </Button>
 
           {/* Mode Toggle */}
@@ -302,9 +339,12 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               className="text-blue-400 hover:underline block"
               disabled={loading}
             >
-              {mode === "login" ? "Don't have an account? Sign up to save your favorites" : "Already have an account? Sign in to continue"}
+              {mode === "login"
+                ? `${t.login.noAccount} ${t.login.signUpLink}`
+                : `${t.signup.hasAccount} ${t.signup.loginLink}`
+              }
             </button>
-            
+
             {/* Forgot Password Link - Only show in login mode */}
             {mode === "login" && (
               <button
@@ -312,7 +352,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
                 className="text-slate-400 hover:text-slate-300 text-xs block"
                 disabled={loading}
               >
-                Forgot your password?
+                {t.login.forgotPassword}
               </button>
             )}
           </div>

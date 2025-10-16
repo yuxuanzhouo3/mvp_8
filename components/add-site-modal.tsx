@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,72 +8,104 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Crown, Plus } from "lucide-react"
 
-export function AddSiteModal({ isOpen, onClose, onAdd, user }) {
+const ensureProtocol = (value: string) => {
+  if (!value) return ""
+  return value.startsWith("http://") || value.startsWith("https://") ? value : `https://${value}`
+}
+
+const extractDomain = (raw: string) => {
+  try {
+    const url = new URL(ensureProtocol(raw))
+    return url.hostname.replace(/^www\./, "")
+  } catch {
+    return ""
+  }
+}
+
+const defaultLogoForDomain = (domain: string) => {
+  const logoMap: Record<string, string> = {
+    "google.com": "🔍",
+    "youtube.com": "📺",
+    "facebook.com": "👥",
+    "twitter.com": "🐦",
+    "instagram.com": "📸",
+    "linkedin.com": "💼",
+    "github.com": "🐙",
+    "stackoverflow.com": "📚",
+    "medium.com": "📝",
+    "dev.to": "👨‍💻",
+  }
+  return logoMap[domain] || "🌐"
+}
+
+interface AddSiteModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onAdd: (site: { name: string; url: string; logo: string }) => Promise<boolean>
+  user: { pro: boolean }
+  customCount?: number
+  limit?: number
+}
+
+export function AddSiteModal({
+  isOpen,
+  onClose,
+  onAdd,
+  user,
+  customCount = 0,
+  limit = 10,
+}: AddSiteModalProps) {
   const [url, setUrl] = useState("")
   const [name, setName] = useState("")
   const [logo, setLogo] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const extractDomain = (url) => {
-    try {
-      const domain = new URL(url.startsWith("http") ? url : `https://${url}`).hostname
-      return domain.replace("www.", "")
-    } catch {
-      return ""
-    }
-  }
+  const usedCount = useMemo(() => customCount, [customCount])
+  const remainingCount = user.pro ? null : Math.max(0, limit - usedCount)
+  const canAddSite = user.pro || (remainingCount !== null && remainingCount > 0)
 
-  const generateLogo = (url) => {
-    const domain = extractDomain(url)
-    const logoMap = {
-      "google.com": "🔍",
-      "youtube.com": "📺",
-      "facebook.com": "👥",
-      "twitter.com": "🐦",
-      "instagram.com": "📸",
-      "linkedin.com": "💼",
-      "github.com": "🐙",
-      "stackoverflow.com": "📚",
-      "medium.com": "📝",
-      "dev.to": "👨‍💻",
-    }
-    return logoMap[domain] || "🌐"
-  }
-
-  const handleUrlChange = (value) => {
+  const handleUrlChange = (value: string) => {
     setUrl(value)
-    if (value) {
-      const domain = extractDomain(value)
-      setName(domain.split(".")[0].charAt(0).toUpperCase() + domain.split(".")[0].slice(1))
-      setLogo(generateLogo(value))
+    if (!value) {
+      setName("")
+      setLogo("")
+      return
+    }
+
+    const domain = extractDomain(value)
+    if (domain) {
+      const base = domain.split(".")[0]
+      setName(base.charAt(0).toUpperCase() + base.slice(1))
+      setLogo(defaultLogoForDomain(domain))
     }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!url || !name) return
-
-    setIsLoading(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const finalUrl = url.startsWith("http") ? url : `https://${url}`
-
-    onAdd({
-      name,
-      url: finalUrl,
-      logo: logo || "🌐",
-    })
-
+  const resetForm = () => {
     setUrl("")
     setName("")
     setLogo("")
-    setIsLoading(false)
-    onClose()
   }
 
-  const canAddSite = user.pro || user.customCount < 10
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!url || !name) return
+
+    setIsLoading(true)
+    const finalUrl = ensureProtocol(url.trim())
+
+    const success = await onAdd({
+      name: name.trim(),
+      url: finalUrl,
+      logo: (logo || "🌐").trim() || "🌐",
+    })
+
+    setIsLoading(false)
+
+    if (success) {
+      resetForm()
+      onClose()
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -81,36 +113,38 @@ export function AddSiteModal({ isOpen, onClose, onAdd, user }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            Add Custom Site
+            添加自定义网站
           </DialogTitle>
-          <DialogDescription className="text-slate-400">Add your favorite websites to quick access</DialogDescription>
+          <DialogDescription className="text-slate-400">
+            添加常用链接，快速访问您的专属站点。
+          </DialogDescription>
         </DialogHeader>
 
         {!canAddSite ? (
           <div className="text-center py-8 space-y-4">
             <div className="text-4xl">🚫</div>
-            <h3 className="text-lg font-semibold">Free Limit Reached</h3>
-            <p className="text-slate-400">You've added the maximum of 10 custom sites for free users.</p>
+            <h3 className="text-lg font-semibold">已达免费配额</h3>
+            <p className="text-slate-400">免费用户最多保存 10 个自定义网站，升级 Pro 即可无限添加。</p>
             <Button className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700">
               <Crown className="w-4 h-4 mr-2" />
-              Upgrade to Pro
+              升级 Pro
             </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex items-center justify-between">
               <Badge variant="outline" className="text-slate-300 border-slate-600">
-                {user.pro ? "Unlimited" : `${user.customCount}/10 sites used`}
+                {user.pro ? "Pro • 无限制" : `${Math.min(usedCount, limit)} / ${limit} 已使用`}
               </Badge>
               {user.pro && <Crown className="w-4 h-4 text-yellow-400" />}
             </div>
 
             <div>
-              <Label htmlFor="url">Website URL</Label>
+              <Label htmlFor="url">网站地址</Label>
               <Input
                 id="url"
                 type="url"
-                placeholder="example.com or https://example.com"
+                placeholder="example.com 或 https://example.com"
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 className="bg-slate-700 border-slate-600"
@@ -119,11 +153,11 @@ export function AddSiteModal({ isOpen, onClose, onAdd, user }) {
             </div>
 
             <div>
-              <Label htmlFor="name">Site Name</Label>
+              <Label htmlFor="name">网站名称</Label>
               <Input
                 id="name"
                 type="text"
-                placeholder="Site name"
+                placeholder="网站名称"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="bg-slate-700 border-slate-600"
@@ -132,7 +166,7 @@ export function AddSiteModal({ isOpen, onClose, onAdd, user }) {
             </div>
 
             <div>
-              <Label htmlFor="logo">Logo (Emoji)</Label>
+              <Label htmlFor="logo">图标 (Emoji)</Label>
               <div className="flex gap-2">
                 <Input
                   id="logo"
@@ -152,17 +186,20 @@ export function AddSiteModal({ isOpen, onClose, onAdd, user }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={() => {
+                  resetForm()
+                  onClose()
+                }}
                 className="flex-1 bg-transparent border-slate-600 text-white hover:bg-slate-700"
               >
-                Cancel
+                取消
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || !url || !name}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
-                {isLoading ? "Adding..." : "Add Site"}
+                {isLoading ? "添加中..." : "添加网站"}
               </Button>
             </div>
           </form>

@@ -1,8 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from "@dnd-kit/sortable"
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
@@ -56,12 +54,24 @@ function UltraCompactSiteCard({ site, onRemove, favorites, onToggleFavorite, isD
 
           {/* Favorite indicator */}
           {favorites.includes(site.id) ? (
-            <div className="absolute -top-0.5 -left-0.5">
-              <Heart className="w-3 h-3 text-red-500 fill-red-500 drop-shadow-sm" />
+            <div 
+              className="absolute -top-0.5 -left-0.5 cursor-pointer z-10"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite(site.id)
+              }}
+            >
+              <Heart className="w-3 h-3 text-red-500 fill-red-500 drop-shadow-sm hover:scale-110 transition-transform" />
             </div>
           ) : (
-            <div className="absolute -top-0.5 -left-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Heart className="w-3 h-3 text-white/40 hover:text-red-400 transition-colors" />
+            <div 
+              className="absolute -top-0.5 -left-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite(site.id)
+              }}
+            >
+              <Heart className="w-3 h-3 text-white/40 hover:text-red-400 hover:scale-110 transition-all" />
             </div>
           )}
 
@@ -96,45 +106,20 @@ function UltraCompactSiteCard({ site, onRemove, favorites, onToggleFavorite, isD
 }
 
 export function UltraCompactSiteGrid({ sites, onRemove, onReorder, onToggleFavorite, favorites = [], isDragDisabled = false }) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: isDragDisabled ? 999999 : 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
-
-  function handleDragEnd(event) {
-    const { active, over } = event
-
-    if (active.id !== over?.id) {
-      const oldIndex = sites.findIndex((site) => site.id === active.id)
-      const newIndex = sites.findIndex((site) => site.id === over.id)
-
-      const newSites = arrayMove(sites, oldIndex, newIndex)
-      onReorder(newSites)
-    }
-  }
-
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={sites.map((site) => site.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-15 xl:grid-cols-18 2xl:grid-cols-20 gap-1">
-          {sites.map((site) => (
-            <UltraCompactSiteCard
-              key={site.id}
-              site={site}
-              onRemove={onRemove}
-              favorites={favorites}
-              onToggleFavorite={onToggleFavorite}
-              isDragDisabled={isDragDisabled}
-            />
-          ))}
-        </div>
-      </SortableContext>
-    </DndContext>
+    <SortableContext items={sites.map((site) => site.id)} strategy={rectSortingStrategy}>
+      <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-15 xl:grid-cols-18 2xl:grid-cols-20 gap-1">
+        {sites.map((site) => (
+          <UltraCompactSiteCard
+            key={site.id}
+            site={site}
+            onRemove={onRemove}
+            favorites={favorites}
+            onToggleFavorite={onToggleFavorite}
+            isDragDisabled={isDragDisabled}
+          />
+        ))}
+      </div>
+    </SortableContext>
   )
 }

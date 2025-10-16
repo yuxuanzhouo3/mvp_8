@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Clock, Crown } from "lucide-react"
+import { useLanguage } from "@/contexts/language-context"
+import { homeUiText } from "@/lib/i18n/home-ui"
 
 interface GuestTimerProps {
   user: any
@@ -14,6 +16,8 @@ interface GuestTimerProps {
 export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState(600) // 10 minutes in seconds
   const [isExpired, setIsExpired] = useState(false)
+  const { language } = useLanguage()
+  const text = homeUiText[language].guestTimer
 
   useEffect(() => {
     if (user.type !== "guest") return
@@ -65,17 +69,17 @@ export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerPr
   }
 
   const getWarningMessage = () => {
-    if (timeRemaining > 300) return null
-    if (timeRemaining > 120) return "⚠️ Your favorites & custom sites will be lost soon!"
-    if (timeRemaining > 60) return "🚨 Sign up now to save your data!"
-    return "💥 Session expired! Your data will be lost!"
+    if (timeRemaining > 300) return text.warningHigh || null
+    if (timeRemaining > 120) return text.warningMid || null
+    if (timeRemaining > 60) return text.warningLow || null
+    return text.warningLow || null
   }
 
   return (
     <div className="flex items-center gap-3">
       <Badge className={`${getTimerColor()} text-white animate-pulse`}>
         <Clock className="w-3 h-3 mr-1" />
-        {isExpired ? "Expired" : `${minutes}:${seconds.toString().padStart(2, "0")}`}
+        {isExpired ? text.expired : `${minutes}:${seconds.toString().padStart(2, "0")}`}
       </Badge>
 
       {getWarningMessage() && (
@@ -92,10 +96,10 @@ export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerPr
             className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
           >
             <Crown className="w-4 h-4 mr-2" />
-            {isExpired ? "Sign Up to Continue" : "Save My Data"}
+            {isExpired ? text.upgradeCtaExpired : text.upgradeCtaActive}
           </Button>
           <span className="text-xs text-yellow-300">
-            {isExpired ? "✨ Keep your favorites forever!" : "💾 Don't lose your data!"}
+            {isExpired ? text.upgradeHintExpired : text.upgradeHintActive}
           </span>
         </div>
       )}

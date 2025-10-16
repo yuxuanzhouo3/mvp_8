@@ -2,10 +2,19 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Sparkles } from "lucide-react"
+import { useLanguage } from "@/contexts/language-context"
+import { homeUiText } from "@/lib/i18n/home-ui"
 
 export function FeaturedProducts({ sites }) {
-  const handleSiteClick = (url) => {
+  const { language } = useLanguage()
+  const text = homeUiText[language].hero
+
+  const handleSiteClick = (url: string) => {
     window.open(url, "_blank")
+  }
+
+  if (!sites?.length) {
+    return null
   }
 
   return (
@@ -13,7 +22,7 @@ export function FeaturedProducts({ sites }) {
       <div className="flex items-center gap-2 mb-3">
         <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white animate-pulse text-xs">
           <Sparkles className="w-3 h-3 mr-1" />
-          MornHub Products
+          {text.productLabel}
         </Badge>
       </div>
 

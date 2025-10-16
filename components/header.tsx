@@ -1,21 +1,24 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, Crown, Settings, LogOut } from "lucide-react"
+import { User, Crown, Settings, LogOut, MessageSquare, Globe, Check } from "lucide-react"
 import { GuestTimer } from "@/components/guest-timer"
 import { AuthModal } from "@/components/auth-modal"
 import { PaymentModal } from "@/components/payment-modal"
-import { SettingsModal } from "@/components/settings-modal"
 import { useAuth } from "@/contexts/auth-context"
+import { useLanguage } from "@/contexts/language-context"
+import { homeUiText } from "@/lib/i18n/home-ui"
 
 interface HeaderProps {
   onGuestTimeExpired: () => void
@@ -24,10 +27,12 @@ interface HeaderProps {
 
 export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
   const { user, signOut, loading } = useAuth()
+  const router = useRouter()
+  const { language, setLanguage, isAuto } = useLanguage()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [authMode, setAuthMode] = useState<"login" | "signup">("login")
+  const headerText = homeUiText[language].header
 
   // Listen for custom events to open auth modal
   useEffect(() => {
@@ -90,7 +95,7 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
             <div>
               <h1 className="text-xl font-bold">SiteHub</h1>
               <Badge variant="secondary" className="text-xs bg-white/10 text-white/80">
-                300+ Sites
+                {headerText.badgeLabel}
               </Badge>
             </div>
           </div>
@@ -102,8 +107,61 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
+                  <Globe className="w-4 h-4" />
+                  <span>{language === "zh" ? headerText.languageChinese : headerText.languageEnglish}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700 text-white">
+                <DropdownMenuLabel className="text-xs uppercase tracking-wider text-slate-400">
+                  {headerText.languageMenuTitle}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuItem
+                  onClick={() => setLanguage("zh")}
+                  className="justify-between text-white hover:bg-slate-700"
+                >
+                  <div className="flex items-center gap-3">
+                    <span role="img" aria-label="Chinese flag">
+                      🇨🇳
+                    </span>
+                    <div className="flex flex-col text-sm">
+                      <span>{headerText.languageChinese}</span>
+                      <span className="text-xs text-slate-400">{headerText.languageChineseDesc}</span>
+                    </div>
+                  </div>
+                  {language === "zh" && <Check className="w-4 h-4 text-blue-400" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setLanguage("en")}
+                  className="justify-between text-white hover:bg-slate-700"
+                >
+                  <div className="flex items-center gap-3">
+                    <span role="img" aria-label="US flag">
+                      🇺🇸
+                    </span>
+                    <div className="flex flex-col text-sm">
+                      <span>{headerText.languageEnglish}</span>
+                      <span className="text-xs text-slate-400">{headerText.languageEnglishDesc}</span>
+                    </div>
+                  </div>
+                  {language === "en" && <Check className="w-4 h-4 text-blue-400" />}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuItem
+                  onClick={() => setLanguage("auto")}
+                  className="text-xs text-slate-300 hover:bg-slate-700"
+                >
+                  {headerText.languageAutoNote}
+                  {isAuto && <Check className="w-4 h-4 ml-auto text-blue-400" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
                   <User className="w-4 h-4" />
-                  {user?.type === "guest" ? "Guest User" : user?.name || "Loading..."}
+                  {user?.type === "guest" ? headerText.guestUser : user?.name || "Loading..."}
                   {user?.pro && <Crown className="w-4 h-4 text-yellow-400" />}
                 </Button>
               </DropdownMenuTrigger>
@@ -117,12 +175,12 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
                       }} 
                       className="text-white hover:bg-slate-700"
                     >
-                      Sign Up
+                      {headerText.signUp}
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-white hover:bg-slate-700">
                       <div className="flex flex-col">
-                        <span>Guest Account</span>
-                        <span className="text-xs text-slate-400">Limited features</span>
+                        <span>{headerText.guestAccount}</span>
+                        <span className="text-xs text-slate-400">{headerText.limitedFeatures}</span>
                       </div>
                     </DropdownMenuItem>
                   </>
@@ -137,7 +195,7 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
                     <DropdownMenuSeparator className="bg-slate-700" />
                     <DropdownMenuItem className="text-white hover:bg-slate-700">
                       <div className="flex items-center justify-between w-full">
-                        <span>{user?.pro ? "Pro Account" : "Free Account"}</span>
+                        <span>{user?.pro ? headerText.proAccount : headerText.freeAccount}</span>
                         {user?.pro && <Crown className="w-4 h-4 text-yellow-400" />}
                       </div>
                     </DropdownMenuItem>
@@ -147,23 +205,30 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
                         className="text-yellow-400 hover:bg-slate-700"
                       >
                         <Crown className="w-4 h-4 mr-2" />
-                        Upgrade to Pro
+                        {headerText.upgrade}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator className="bg-slate-700" />
-                    <DropdownMenuItem 
-                      onClick={() => setShowSettingsModal(true)}
+                    <DropdownMenuItem
+                      onClick={() => router.push('/settings')}
                       className="text-white hover:bg-slate-700"
                     >
                       <Settings className="w-4 h-4 mr-2" />
-                      Settings
+                      {headerText.settings}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => window.open(`mailto:mornscience@gmail.com?subject=${encodeURIComponent(headerText.contactEmailSubject)}`, '_blank')}
+                      className="text-white hover:bg-slate-700"
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      {headerText.support}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={handleSignOut}
                       className="text-red-400 hover:bg-slate-700"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
+                      {headerText.signOut}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -189,13 +254,6 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
           console.log("Payment successful!")
           // Update user pro status
         }}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        open={showSettingsModal}
-        onOpenChange={setShowSettingsModal}
-        user={user}
       />
     </header>
   )

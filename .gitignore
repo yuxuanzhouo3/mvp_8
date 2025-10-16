@@ -1,2 +1,8 @@
 node_modules
 .vercel
+.next
+.DS_Store
+*.log
+.env.local
+tsconfig.tsbuildinfo
+package-lock.json
