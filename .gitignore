@@ -6,3 +6,6 @@ node_modules
 .env.local
 tsconfig.tsbuildinfo
 package-lock.json
+
+# 小程序文件夹（不上传到GitHub）
+mvp8-sitehub-min-02_副本/
