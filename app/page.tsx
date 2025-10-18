@@ -31,6 +31,7 @@ import { normalizeUrlForComparison } from "@/lib/site-parser"
 import canonicalData from "@/lib/sitehub-data/canonical.en.json"
 import { zhProducts, zhSites } from "@/lib/sitehub-data/zh-localization"
 import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
+import { createDatabaseAdapter } from "@/lib/database/adapter"
 
 interface Site {
   id: string
@@ -200,9 +201,14 @@ const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
 export default function SiteHub() {
   const { user } = useAuth()
   const supabase = createClient()
-  const { regionCategory, loading: geoLoading } = useGeo()
+  const { regionCategory, loading: geoLoading, isChina } = useGeo()
   const { language } = useLanguage()
   const text = homeUiText[language]
+  
+  // 创建数据库适配器（根据用户地区和ID）
+  const dbAdapter = user.type === "authenticated" && user.id
+    ? createDatabaseAdapter(isChina, user.id)
+    : null
   const toastText = text.toasts
   const [sites, setSites] = useState<Site[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -269,34 +275,25 @@ export default function SiteHub() {
     setCategoryInitialized(true)
   }, [categoryInitialized, geoLoading, regionCategory])
 
-  // Load favorites from Supabase (for authenticated users) or localStorage (for guests)
+  // Load favorites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadFavorites() {
-      if (user.type === "authenticated" && user.id) {
-        // Authenticated users: load from Supabase
-        const { data, error } = await supabase
-          .from("user_favorites")
-          .select("site_id")
-          .eq("user_id", user.id)
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Authenticated users: load from database (腾讯云或Supabase)
+        const favoriteSiteIds = await dbAdapter.getFavorites()
+        setFavorites(favoriteSiteIds)
 
-        if (data && !error) {
-          const favoriteSiteIds = data.map((fav) => fav.site_id)
-          setFavorites(favoriteSiteIds)
-
-          // Migrate localStorage data to Supabase if exists
-          const localFavorites = localStorage.getItem("sitehub-favorites")
-          if (localFavorites) {
-            const localFavIds = JSON.parse(localFavorites)
-            for (const siteId of localFavIds) {
-              if (!favoriteSiteIds.includes(siteId)) {
-                await supabase
-                  .from("user_favorites")
-                  .insert({ user_id: user.id, site_id: siteId })
-              }
+        // Migrate localStorage data to cloud if exists
+        const localFavorites = localStorage.getItem("sitehub-favorites")
+        if (localFavorites) {
+          const localFavIds = JSON.parse(localFavorites)
+          for (const siteId of localFavIds) {
+            if (!favoriteSiteIds.includes(siteId)) {
+              await dbAdapter.addFavorite(siteId)
             }
-            // Clear localStorage after migration
-            localStorage.removeItem("sitehub-favorites")
           }
+          // Clear localStorage after migration
+          localStorage.removeItem("sitehub-favorites")
         }
       } else {
         // Guest users: use localStorage
@@ -308,7 +305,7 @@ export default function SiteHub() {
     }
 
     loadFavorites()
-  }, [user.type, user.id])
+  }, [user.type, user.id, dbAdapter])
 
   // Load custom sites from Supabase (for authenticated users) or localStorage (for guests)
   useEffect(() => {
@@ -633,7 +630,9 @@ export default function SiteHub() {
 
         setSites((prev) => [...prev, siteWithId])
 
-        await supabase.from("user_favorites").insert({ user_id: user.id, site_id: data.id })
+        if (dbAdapter) {
+          await dbAdapter.addFavorite(data.id)
+        }
         setFavorites((prev) => [...prev, data.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
@@ -699,20 +698,14 @@ export default function SiteHub() {
     localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
 
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
-    if (user.type === "authenticated" && user.id) {
+    if (user.type === "authenticated" && user.id && dbAdapter) {
       try {
         if (isFavorited) {
-          // Remove favorite from Supabase
-          await supabase
-            .from("user_favorites")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("site_id", siteId)
+          // Remove favorite from database
+          await dbAdapter.removeFavorite(siteId)
         } else {
-          // Add favorite to Supabase
-          await supabase
-            .from("user_favorites")
-            .insert({ user_id: user.id, site_id: siteId })
+          // Add favorite to database
+          await dbAdapter.addFavorite(siteId)
         }
         console.log('✅ [Favorite] 云端同步成功')
       } catch (error) {
@@ -723,22 +716,13 @@ export default function SiteHub() {
   }
 
   const removeSite = async (siteId: string) => {
-    if (user.type === "authenticated" && user.id) {
-      // Authenticated users: delete from Supabase
-      await supabase
-        .from("user_custom_sites")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("id", siteId)
+    if (user.type === "authenticated" && user.id && dbAdapter) {
+      // Authenticated users: delete from database
+      await dbAdapter.removeCustomSite(siteId)
 
       // Also remove from favorites if it was favorited
       if (favorites.includes(siteId)) {
-        await supabase
-          .from("user_favorites")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("site_id", siteId)
-
+        await dbAdapter.removeFavorite(siteId)
         setFavorites(favorites.filter((id) => id !== siteId))
       }
 

@@ -23,7 +23,7 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: AuthModalProps) {
   const { signIn } = useAuth()
-  const { isEurope, languageCode } = useGeo()
+  const { isEurope, isChina, languageCode } = useGeo()
   const t = languageCode === 'zh' ? authTranslationsZh : authTranslationsEn
 
   const [mode, setMode] = useState(authMode)
@@ -172,8 +172,16 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
         // OAuth redirects to callback, keep loading state
         // Don't close modal or reset loading - user will be redirected
       }
+      else if (provider === "wechat") {
+        // 微信登录功能开发中
+        setError(languageCode === 'zh' 
+          ? '微信登录功能正在开发中，请使用邮箱登录' 
+          : 'WeChat login is under development, please use email login')
+        setLoading(false)
+        return
+      }
       else {
-        setError(`${provider} authentication is temporarily disabled. Please use Google or email login.`)
+        setError(`${provider} authentication is temporarily disabled. Please use ${isChina ? 'WeChat' : 'Google'} or email login.`)
         setLoading(false)
         return
       }
@@ -203,41 +211,61 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Social Login Buttons */}
+          {/* Social Login Buttons - IP自适应 */}
           <div className="grid gap-3">
-            <Button
-              variant="outline"
-              className="bg-white text-black hover:bg-gray-100 relative"
-              onClick={() => handleSocialAuth("google")}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
-                </>
-              ) : (
-                <>
-                  <Chrome className="w-4 h-4 mr-2" />
-                  <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
-                </>
-              )}
-            </Button>
-            {/* Phone Auth - Temporarily Disabled
-            <Button
-              variant="outline"
-              className="bg-green-600 text-white hover:bg-green-700"
-              onClick={() => setShowPhoneAuth(true)}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Phone className="w-4 h-4 mr-2" />
-              )}
-              Continue with Phone
-            </Button>
-            */}
+            {isChina ? (
+              /* 国内IP：显示微信登录 */
+              <Button
+                variant="outline"
+                className="bg-green-600 text-white hover:bg-green-700 relative"
+                onClick={() => handleSocialAuth("wechat")}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span>{languageCode === 'zh' ? '微信登录中...' : 'WeChat Login...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 6.093-1.98-.255-3.363-3.776-5.845-7.836-5.845zm-5.017 5.9c.134 0 .244.11.244.244a.244.244 0 0 1-.244.244c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244zm4.604 0c.134 0 .244.11.244.244a.244.244 0 0 1-.244.244c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244z"/>
+                      <path d="M20.657 11.326c-1.703-1.415-3.882-1.98-6.093-1.98-4.784 0-8.691 3.288-8.691 7.342 0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098c.85.232 1.735.403 2.837.403 4.784 0 8.691-3.288 8.691-7.342 0-2.578-1.592-4.972-3.598-5.855zm-8.567 6.446c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244.134 0 .244.11.244.244a.244.244 0 0 1-.244.244zm4.604 0c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244.134 0 .244.11.244.244a.244.244 0 0 1-.244.244z"/>
+                    </svg>
+                    <span>{mode === "login" 
+                      ? (languageCode === 'zh' ? '微信登录' : 'Login with WeChat')
+                      : (languageCode === 'zh' ? '微信注册' : 'Sign up with WeChat')
+                    }</span>
+                  </>
+                )}
+                <Badge className="absolute -top-2 -right-2 bg-green-500">
+                  {languageCode === 'zh' ? '推荐' : 'Recommended'}
+                </Badge>
+              </Button>
+            ) : (
+              /* 海外IP：显示Google登录 */
+              <Button
+                variant="outline"
+                className="bg-white text-black hover:bg-gray-100 relative"
+                onClick={() => handleSocialAuth("google")}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
+                  </>
+                ) : (
+                  <>
+                    <Chrome className="w-4 h-4 mr-2" />
+                    <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
+                  </>
+                )}
+                <Badge className="absolute -top-2 -right-2 bg-blue-500">
+                  {languageCode === 'zh' ? '推荐' : 'Recommended'}
+                </Badge>
+              </Button>
+            )}
           </div>
 
           {/* Divider */}

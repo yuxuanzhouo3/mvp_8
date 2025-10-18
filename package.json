@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@cloudbase/js-sdk": "^2.21.9",
     "@dnd-kit/core": "latest",
     "@dnd-kit/sortable": "latest",
     "@dnd-kit/utilities": "latest",
@@ -68,6 +69,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "wechat-oauth": "1.5.0",
+    "wechatpay-axios-plugin": "^0.9.4",
     "zod": "^3.24.1"
   },
   "devDependencies": {

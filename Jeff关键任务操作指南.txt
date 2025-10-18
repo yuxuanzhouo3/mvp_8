@@ -1,0 +1,350 @@
+# 🔧 **Jeff关键任务操作指南**
+
+## 📋 **任务清单**
+
+### **任务1：微信支付配置（6个环境变量）**
+### **任务2：微信登录配置（2个环境变量）**  
+### **任务3：腾讯云云开发环境配置**
+
+---
+
+## 🚀 **任务1：微信支付配置**
+
+### **步骤1：申请微信商户号**
+
+1. **访问微信支付商户平台：**
+   ```
+   https://pay.weixin.qq.com/
+   ```
+
+2. **注册商户号：**
+   - 选择"企业用户"
+   - 填写企业信息
+   - 上传营业执照
+   - 等待审核（通常1-3个工作日）
+
+3. **获取基础信息：**
+   - 商户号（MCH_ID）
+   - APPID（如果已有微信小程序）
+
+### **步骤2：下载API证书**
+
+1. **登录商户平台后：**
+   ```
+   账户中心 → API安全 → API证书
+   ```
+
+2. **下载证书文件：**
+   ```
+   apiclient_cert.pem    # 商户证书
+   apiclient_key.pem     # 商户私钥
+   ```
+
+3. **获取证书序列号：**
+   ```
+   账户中心 → API安全 → API证书 → 查看证书序列号
+   ```
+
+### **步骤3：获取API密钥**
+
+1. **设置API密钥：**
+   ```
+   账户中心 → API安全 → 设置API密钥
+   ```
+
+2. **生成32位随机字符串作为APIv3密钥**
+
+### **步骤4：配置环境变量**
+
+**获取到以下6个值后，配置到环境变量：**
+
+```bash
+# 微信支付配置
+WECHAT_PAY_APP_ID=wx1234567890abcdef          # 微信小程序APPID
+WECHAT_PAY_MCH_ID=1234567890                  # 商户号
+WECHAT_PAY_SERIAL_NO=1A2B3C4D5E6F7G8H9I0J    # 证书序列号
+WECHAT_PAY_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC..." # 私钥内容
+WECHAT_PAY_PUBLIC_KEY="-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJAJC1HiIAZAiIMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV..." # 证书内容
+WECHAT_PAY_API_V3_KEY=abcdef1234567890abcdef1234567890    # APIv3密钥
+```
+
+**注意：** 私钥和证书内容需要完整复制，包括 `-----BEGIN` 和 `-----END` 部分
+
+---
+
+## 🔐 **任务2：微信登录配置**
+
+### **步骤1：微信开放平台注册**
+
+1. **访问微信开放平台：**
+   ```
+   https://open.weixin.qq.com/
+   ```
+
+2. **注册开发者账号：**
+   - 使用企业邮箱注册
+   - 完成开发者资质认证
+   - 等待审核（通常1-3个工作日）
+
+### **步骤2：创建网站应用**
+
+1. **创建应用：**
+   ```
+   管理中心 → 网站应用 → 创建网站应用
+   ```
+
+2. **填写应用信息：**
+   ```
+   应用名称：MVP8网站登录
+   应用简介：用户登录认证
+   应用官网：https://mornhub.help
+   应用图标：上传logo
+   ```
+
+3. **设置授权回调域：**
+   ```
+   mornhub.help
+   site.mornscience.top
+   ```
+
+### **步骤3：获取配置信息**
+
+1. **获取APPID和Secret：**
+   ```
+   应用详情 → 开发信息 → 查看APPID和AppSecret
+   ```
+
+2. **配置环境变量：**
+
+```bash
+# 微信登录配置
+WECHAT_APP_ID=wx1234567890abcdef              # 网站应用APPID
+WECHAT_APP_SECRET=abcdef1234567890abcdef1234567890  # 网站应用Secret
+```
+
+---
+
+## ☁️ **任务3：腾讯云云开发环境配置**
+
+### **步骤1：开通云开发服务**
+
+1. **访问腾讯云控制台：**
+   ```
+   https://console.cloud.tencent.com/
+   ```
+
+2. **开通云开发：**
+   ```
+   产品 → 云开发 → 立即开通
+   ```
+
+3. **选择套餐：**
+   - 选择"按量计费"套餐
+   - 或"包年包月"套餐
+
+### **步骤2：创建云开发环境**
+
+1. **创建环境：**
+   ```
+   云开发控制台 → 新建环境
+   ```
+
+2. **配置环境：**
+   ```
+   环境名称：mvp8-website
+   环境ID：自动生成（如：cloud1-xxx）
+   地域：选择就近地域（如：北京）
+   ```
+
+3. **记录环境ID：**
+   ```
+   环境ID：cloud1-1234567890abcdef
+   ```
+
+### **步骤3：创建数据库集合**
+
+1. **进入数据库管理：**
+   ```
+   云开发控制台 → 数据库 → 集合管理
+   ```
+
+2. **创建以下5个集合：**
+
+#### **集合1：web_favorites**
+```
+集合名称：web_favorites
+权限设置：仅创建者可读写
+索引：
+  - user_id（升序）
+  - site_id（升序）
+  - created_at（降序）
+```
+
+#### **集合2：web_custom_sites**
+```
+集合名称：web_custom_sites
+权限设置：仅创建者可读写
+索引：
+  - user_id（升序）
+  - created_at（降序）
+```
+
+#### **集合3：web_subscriptions**
+```
+集合名称：web_subscriptions
+权限设置：仅创建者可读写
+索引：
+  - user_id（升序）
+  - status（升序）
+  - created_at（降序）
+```
+
+#### **集合4：web_payment_transactions**
+```
+集合名称：web_payment_transactions
+权限设置：仅创建者可读写
+索引：
+  - user_id（升序）
+  - transaction_id（升序）
+  - status（升序）
+  - created_at（降序）
+```
+
+#### **集合5：web_user_profiles**
+```
+集合名称：web_user_profiles
+权限设置：仅创建者可读写
+索引：
+  - user_id（升序）
+  - created_at（降序）
+```
+
+### **步骤4：配置环境变量**
+
+```bash
+# 腾讯云云开发配置
+NEXT_PUBLIC_WECHAT_CLOUDBASE_ID=cloud1-1234567890abcdef  # 云开发环境ID
+```
+
+### **步骤5：获取云开发密钥**
+
+1. **获取密钥：**
+   ```
+   云开发控制台 → 设置 → 环境设置 → 环境密钥
+   ```
+
+2. **记录密钥信息：**
+   ```
+   环境ID：cloud1-1234567890abcdef
+SecretId：AKID[请填写您的SecretId]
+SecretKey：[请填写您的SecretKey]
+   ```
+
+---
+
+## 📝 **环境变量完整清单**
+
+### **Vercel环境变量配置：**
+
+```bash
+# 微信支付配置（6个）
+WECHAT_PAY_APP_ID=wx1234567890abcdef
+WECHAT_PAY_MCH_ID=1234567890
+WECHAT_PAY_SERIAL_NO=1A2B3C4D5E6F7G8H9I0J
+WECHAT_PAY_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+WECHAT_PAY_PUBLIC_KEY="-----BEGIN CERTIFICATE-----\n..."
+WECHAT_PAY_API_V3_KEY=abcdef1234567890abcdef1234567890
+
+# 微信登录配置（2个）
+WECHAT_APP_ID=wx1234567890abcdef
+WECHAT_APP_SECRET=abcdef1234567890abcdef1234567890
+
+# 腾讯云配置（1个）
+NEXT_PUBLIC_WECHAT_CLOUDBASE_ID=cloud1-1234567890abcdef
+
+# 现有配置保持不变
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
+# ... 其他现有配置
+```
+
+### **腾讯云Serverless环境变量配置：**
+
+```bash
+# 所有Vercel的环境变量都需要配置到腾讯云
+# 配置方式：腾讯云控制台 → 云函数 → 环境变量
+```
+
+---
+
+## ⏰ **时间预估**
+
+### **微信支付配置：**
+- 商户号申请：1-3个工作日
+- 证书下载：即时
+- 环境变量配置：30分钟
+
+### **微信登录配置：**
+- 开放平台注册：1-3个工作日
+- 应用创建：即时
+- 环境变量配置：30分钟
+
+### **腾讯云云开发配置：**
+- 服务开通：即时
+- 环境创建：即时
+- 数据库集合创建：30分钟
+- 环境变量配置：30分钟
+
+**总计：2-6个工作日（主要等待审核）+ 2小时配置时间**
+
+---
+
+## 📞 **技术支持**
+
+### **微信支付技术支持：**
+- 商户平台：https://pay.weixin.qq.com/
+- 客服电话：95017
+
+### **微信开放平台技术支持：**
+- 开放平台：https://open.weixin.qq.com/
+- 开发者文档：https://developers.weixin.qq.com/
+
+### **腾讯云技术支持：**
+- 控制台：https://console.cloud.tencent.com/
+- 客服电话：95716
+
+---
+
+## ✅ **完成检查清单**
+
+### **微信支付配置：**
+- [ ] 商户号申请成功
+- [ ] API证书下载完成
+- [ ] API密钥设置完成
+- [ ] 6个环境变量配置完成
+
+### **微信登录配置：**
+- [ ] 开放平台注册成功
+- [ ] 网站应用创建完成
+- [ ] 回调域名配置完成
+- [ ] 2个环境变量配置完成
+
+### **腾讯云云开发配置：**
+- [ ] 云开发服务开通
+- [ ] 环境创建完成
+- [ ] 5个数据库集合创建完成
+- [ ] 1个环境变量配置完成
+
+---
+
+## 🚨 **注意事项**
+
+1. **证书安全：** 私钥和证书文件要妥善保管，不要泄露
+2. **回调域名：** 微信登录的回调域名必须与实际域名一致
+3. **环境ID：** 腾讯云环境ID是全局唯一的，创建后不能修改
+4. **权限设置：** 数据库集合权限建议设置为"仅创建者可读写"
+5. **备份：** 所有配置信息建议备份到安全位置
+
+---
+
+*Jeff按照这个指南操作，完成后通知开发团队进行下一步部署！*

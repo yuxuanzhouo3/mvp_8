@@ -1,0 +1,17 @@
+# Vercel 缺失的环境变量
+# 请添加以下 2 个变量到 Vercel
+
+# ==================== 变量 1 ====================
+NEXT_PUBLIC_SUPABASE_URL=https://ykirhilnbvsanqyenusf.supabase.co
+
+# ==================== 变量 2 ====================
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlraXJoaWxuYnZzYW5xeWVudXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5NzA5OTQsImV4cCI6MjA2ODU0Njk5NH0.AHf66dC0vqu43WFET1zzosMMKIWwcvPlDIKCnVQli0Y
+
+# ==========================================
+# 添加说明：
+# 1. 每个变量的环境选择：Production ✓ Preview ✓ Development ✓
+# 2. 添加完成后，需要删除以下重复变量：
+#    - PAYPAL_CLIENT_ID (重复，已有 NEXT_PUBLIC_PAYPAL_CLIENT_ID)
+#    - STRIPE_PUBLISHABLE_KEY (重复，已有 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+# 3. 最后重新部署项目
+# ==========================================

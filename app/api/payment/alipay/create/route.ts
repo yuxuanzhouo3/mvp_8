@@ -10,7 +10,7 @@ const supabase = createClient(
 
 // 支付宝支付配置
 const alipayConfig = {
-  appId: process.env.ALIPAY_APP_ID || '',
+  appId: process.env.ALIPAY_APP_ID || '2021005199628151',
   privateKey: process.env.ALIPAY_PRIVATE_KEY || '',
   alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || '',
   gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     const body_text = `SiteHub ${planType} subscription - ${billingCycle} billing`
 
     // 初始化支付宝 SDK
-    const alipaySdk = new (AlipaySdk as any).default(alipayConfig)
+    const alipaySdk = new AlipaySdk(alipayConfig)
 
     // 创建支付宝订单参数
     const formData = {

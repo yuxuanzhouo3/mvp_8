@@ -10,7 +10,7 @@ const supabase = createClient(
 
 // 支付宝配置（与 create/route.ts 保持一致）
 const alipayConfig = {
-  appId: process.env.ALIPAY_APP_ID || '',
+  appId: process.env.ALIPAY_APP_ID || '2021005199628151',
   privateKey: process.env.ALIPAY_PRIVATE_KEY || '',
   alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || '',
   gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     })
 
     // 初始化支付宝 SDK
-    const alipaySdk = new (AlipaySdk as any).default(alipayConfig)
+    const alipaySdk = new AlipaySdk(alipayConfig)
 
     // 验证签名
     const signVerified = alipaySdk.checkNotifySign(params)
@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
 
     // 验证签名
     if (alipayConfig.alipayPublicKey) {
-      const alipaySdk = new (AlipaySdk as any).default(alipayConfig)
+      const alipaySdk = new AlipaySdk(alipayConfig)
       const signVerified = alipaySdk.checkNotifySign(params)
 
       if (!signVerified) {

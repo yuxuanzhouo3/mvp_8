@@ -46,18 +46,12 @@ export default function PaymentPage() {
     )
   }
 
-  // 汇率配置（固定汇率）
-  const USD_TO_CNY_RATE = 7.2
-
-  // 定价方案 - 根据IP显示不同货币
-  const pricingPlans = isChina ? {
-    // 国内价格（人民币）
+  // 定价方案 (Pro / Team) - 月付测试价格
+  const pricingPlans = {
     pro: {
       name: t.plans.pro.name,
-      monthlyPrice: (0.50 * USD_TO_CNY_RATE).toFixed(2), // ¥3.60/月
-      yearlyPrice: (168 * USD_TO_CNY_RATE).toFixed(2),   // ¥1209.60/年
-      currency: '¥',
-      currencyCode: 'CNY',
+      monthlyPrice: 0.50, // 测试价格 $0.50/月 (Stripe 最低限制)
+      yearlyPrice: 168, // 正式价格 $168/年
       description: t.plans.pro.description,
       features: t.plans.pro.features,
       isPopular: true,
@@ -66,56 +60,8 @@ export default function PaymentPage() {
     },
     team: {
       name: languageCode === 'zh' ? 'Team 会员' : 'Team',
-      monthlyPrice: (1.00 * USD_TO_CNY_RATE).toFixed(2), // ¥7.20/月
-      yearlyPrice: (2520 * USD_TO_CNY_RATE).toFixed(2),  // ¥18144/年
-      currency: '¥',
-      currencyCode: 'CNY',
-      description: languageCode === 'zh' ? '适合团队和组织' : 'For teams and organizations',
-      features: languageCode === 'zh' ? [
-        '包含 Pro 的所有功能',
-        '无限团队成员',
-        '团队协作工具',
-        'API 接口访问',
-        '高级数据分析',
-        '自定义域名',
-        '专属客户经理',
-        'SLA 保证',
-        '优先功能开发'
-      ] : [
-        'Everything in Pro',
-        'Unlimited team members',
-        'Team collaboration tools',
-        'API access',
-        'Advanced analytics',
-        'Custom domain',
-        'Dedicated account manager',
-        'SLA guarantee',
-        'Priority feature development'
-      ],
-      isPopular: false,
-      buttonText: t.buttons.subscribe,
-      buttonVariant: 'default' as const
-    }
-  } : {
-    // 海外价格（美元）
-    pro: {
-      name: t.plans.pro.name,
-      monthlyPrice: '0.50', // $0.50/月
-      yearlyPrice: '168',   // $168/年
-      currency: '$',
-      currencyCode: 'USD',
-      description: t.plans.pro.description,
-      features: t.plans.pro.features,
-      isPopular: true,
-      buttonText: t.buttons.subscribe,
-      buttonVariant: 'default' as const
-    },
-    team: {
-      name: languageCode === 'zh' ? 'Team 会员' : 'Team',
-      monthlyPrice: '1.00',  // $1.00/月
-      yearlyPrice: '2520',   // $2520/年
-      currency: '$',
-      currencyCode: 'USD',
+      monthlyPrice: 1.00, // 测试价格 $1.00/月
+      yearlyPrice: 2520, // 正式价格 $2520/年
       description: languageCode === 'zh' ? '适合团队和组织' : 'For teams and organizations',
       features: languageCode === 'zh' ? [
         '包含 Pro 的所有功能',
@@ -227,40 +173,6 @@ export default function PaymentPage() {
     }
   }
 
-  const handleWeChatCheckout = async () => {
-    if (!userEmail) {
-      alert(t.email.required)
-      return
-    }
-
-    setLoadingAlipay(true) // 暂时复用loading状态
-    try {
-      const response = await fetch('/api/payment/wechat/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planType: selectedPlan,
-          billingCycle: billingCycle,
-          userEmail,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.qrCodeUrl) {
-        // TODO: 显示二维码让用户扫码支付
-        alert('微信支付功能开发中...')
-      } else {
-        throw new Error(data.error || 'No QR code received')
-      }
-    } catch (error) {
-      console.error('WeChat Pay checkout error:', error)
-      alert(t.errors.paymentFailed)
-    } finally {
-      setLoadingAlipay(false)
-    }
-  }
-
   const handleAlipayCheckout = async () => {
     if (!userEmail) {
       alert(t.email.required)
@@ -295,28 +207,11 @@ export default function PaymentPage() {
     }
   }
 
-  const cycleButtonClass = (cycle: 'monthly' | 'yearly') =>
-    billingCycle === cycle
-      ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 border-blue-600'
-      : 'bg-white text-slate-700 border border-slate-300 hover:bg-blue-50 hover:text-blue-600'
-
-  const planCardClass = (plan: 'pro' | 'team') =>
-    `shadow-lg border transition-all duration-200 ${
-      selectedPlan === plan
-        ? 'border-blue-500 ring-2 ring-blue-200 shadow-blue-200'
-        : 'border-slate-200 hover:border-blue-200'
-    } bg-white`
-
-  const planButtonClass = (plan: 'pro' | 'team') =>
-    selectedPlan === plan
-      ? 'bg-blue-600 text-white hover:bg-blue-700'
-      : 'bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-600'
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-10 px-4">
-      <div className="max-w-6xl mx-auto space-y-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-12 px-4">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center space-y-3">
+        <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
             {t.title}
           </h1>
@@ -338,128 +233,129 @@ export default function PaymentPage() {
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.3fr,1fr] items-start">
-          <div className="space-y-6">
-            {/* Billing Cycle Toggle */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setBillingCycle('monthly')}
-                className={`w-32 md:w-36 ${cycleButtonClass('monthly')}`}
-              >
-                {t.planSelector.monthly}
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setBillingCycle('yearly')}
-                className={`w-32 md:w-36 relative ${cycleButtonClass('yearly')}`}
-              >
-                {t.planSelector.yearly}
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                  {t.planSelector.save.replace('{amount}', '30%')}
+        {/* Billing Cycle Toggle */}
+        <div className="flex justify-center gap-4 mb-12">
+          <Button
+            variant={billingCycle === 'monthly' ? 'default' : 'outline'}
+            size="lg"
+            onClick={() => setBillingCycle('monthly')}
+            className="w-40"
+          >
+            {t.planSelector.monthly}
+          </Button>
+          <Button
+            variant={billingCycle === 'yearly' ? 'default' : 'outline'}
+            size="lg"
+            onClick={() => setBillingCycle('yearly')}
+            className="w-40 relative"
+          >
+            {t.planSelector.yearly}
+            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+              {t.planSelector.save.replace('{amount}', '30%')}
+            </span>
+          </Button>
+        </div>
+
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-5xl mx-auto">
+          {/* Pro Plan */}
+          <Card className={`shadow-lg border-2 ${selectedPlan === 'pro' ? 'border-blue-600 shadow-blue-300 ring-2 ring-blue-200' : 'border-slate-300'} bg-white transition-all hover:shadow-xl relative`}>
+            {pricingPlans.pro.isPopular && (
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">
+                {languageCode === 'zh' ? '最受欢迎' : 'Most Popular'}
+              </Badge>
+            )}
+            <CardHeader className="text-center pt-8">
+              <CardTitle className="text-2xl mb-2 text-slate-900">{pricingPlans.pro.name}</CardTitle>
+              <CardDescription className="text-slate-600 min-h-[48px]">
+                {pricingPlans.pro.description}
+              </CardDescription>
+              <div className="pt-4">
+                <span className="text-4xl font-bold text-blue-600">
+                  ${billingCycle === 'monthly' ? pricingPlans.pro.monthlyPrice : (pricingPlans.pro.yearlyPrice / 12).toFixed(2)}
                 </span>
-              </Button>
-            </div>
-
-            {/* Pricing Cards */}
-            <div className="grid gap-6 sm:grid-cols-2">
-              {/* Pro Plan */}
-              <Card className={`${planCardClass('pro')} relative`}>
-                {pricingPlans.pro.isPopular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">
-                    {languageCode === 'zh' ? '最受欢迎' : 'Most Popular'}
-                  </Badge>
+                <span className="text-slate-500">{t.planSelector.perMonth}</span>
+                {billingCycle === 'yearly' && (
+                  <div className="text-sm text-green-600 mt-1">
+                    ${pricingPlans.pro.yearlyPrice}{t.planSelector.perYear} ({t.planSelector.billedYearly})
+                  </div>
                 )}
-                <CardHeader className="text-center pt-8">
-                  <CardTitle className="text-2xl mb-2 text-slate-900">{pricingPlans.pro.name}</CardTitle>
-                  <CardDescription className="text-slate-600 min-h-[48px]">
-                    {pricingPlans.pro.description}
-                  </CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold text-blue-600">
-                      ${billingCycle === 'monthly' ? pricingPlans.pro.monthlyPrice : (pricingPlans.pro.yearlyPrice / 12).toFixed(2)}
-                    </span>
-                    <span className="text-slate-500">{t.planSelector.perMonth}</span>
-                    {billingCycle === 'yearly' && (
-                      <div className="text-sm text-green-600 mt-1">
-                        ${pricingPlans.pro.yearlyPrice}{t.planSelector.perYear} ({t.planSelector.billedYearly})
-                      </div>
-                    )}
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              <ul className="space-y-3">
+                {pricingPlans.pro.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700 text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+
+            <CardFooter>
+              <Button
+                variant={pricingPlans.pro.buttonVariant}
+                className={`w-full ${selectedPlan === 'pro' ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'} hover:bg-blue-700 transition-all`}
+                size="lg"
+                onClick={() => setSelectedPlan('pro')}
+              >
+                {pricingPlans.pro.buttonText}
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Team Plan */}
+          <Card className={`shadow-lg border-2 ${selectedPlan === 'team' ? 'border-blue-600 shadow-blue-300 ring-2 ring-blue-200' : 'border-slate-300'} bg-white transition-all hover:shadow-xl`}>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl mb-2 text-slate-900">{pricingPlans.team.name}</CardTitle>
+              <CardDescription className="text-slate-600 min-h-[48px]">
+                {pricingPlans.team.description}
+              </CardDescription>
+              <div className="pt-4">
+                <span className="text-4xl font-bold text-slate-900">
+                  ${billingCycle === 'monthly' ? pricingPlans.team.monthlyPrice : (pricingPlans.team.yearlyPrice / 12).toFixed(2)}
+                </span>
+                <span className="text-slate-500">{t.planSelector.perMonth}</span>
+                {billingCycle === 'yearly' && (
+                  <div className="text-sm text-green-600 mt-1">
+                    ${pricingPlans.team.yearlyPrice}{t.planSelector.perYear} ({t.planSelector.billedYearly})
                   </div>
-                </CardHeader>
+                )}
+              </div>
+            </CardHeader>
 
-                <CardContent className="space-y-3">
-                  <ul className="space-y-3">
-                    {pricingPlans.pro.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-slate-700 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
+            <CardContent className="space-y-3">
+              <ul className="space-y-3">
+                {pricingPlans.team.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700 text-sm">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
 
-                <CardFooter>
-                  <Button
-                    variant="default"
-                    className={`w-full ${planButtonClass('pro')} transition-all`}
-                    size="lg"
-                    onClick={() => setSelectedPlan('pro')}
-                  >
-                    {pricingPlans.pro.buttonText}
-                  </Button>
-                </CardFooter>
-              </Card>
+            <CardFooter>
+              <Button
+                variant="outline"
+                className={`w-full border-2 transition-all ${
+                  selectedPlan === 'team'
+                    ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                    : 'bg-white text-slate-900 border-slate-900 hover:bg-slate-900 hover:text-white'
+                }`}
+                size="lg"
+                onClick={() => setSelectedPlan('team')}
+              >
+                {pricingPlans.team.buttonText}
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
 
-              {/* Team Plan */}
-              <Card className={`${planCardClass('team')}`}>
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl mb-2 text-slate-900">{pricingPlans.team.name}</CardTitle>
-                  <CardDescription className="text-slate-600 min-h-[48px]">
-                    {pricingPlans.team.description}
-                  </CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold text-slate-900">
-                      ${billingCycle === 'monthly' ? pricingPlans.team.monthlyPrice : (pricingPlans.team.yearlyPrice / 12).toFixed(2)}
-                    </span>
-                    <span className="text-slate-500">{t.planSelector.perMonth}</span>
-                    {billingCycle === 'yearly' && (
-                      <div className="text-sm text-green-600 mt-1">
-                        ${pricingPlans.team.yearlyPrice}{t.planSelector.perYear} ({t.planSelector.billedYearly})
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                  <ul className="space-y-3">
-                    {pricingPlans.team.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-slate-700 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-
-                <CardFooter>
-                  <Button
-                    variant="default"
-                    className={`w-full ${planButtonClass('team')} transition-all`}
-                    size="lg"
-                    onClick={() => setSelectedPlan('team')}
-                  >
-                    {pricingPlans.team.buttonText}
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-          </div>
-
-          {/* Selected Plan Checkout */}
-          <Card className="shadow-xl border border-purple-400 bg-slate-800 lg:sticky lg:top-10">
+        {/* Selected Plan Checkout */}
+        <Card className="mb-8 shadow-xl border-2 border-purple-500 bg-slate-800">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl text-white">
                 {languageCode === 'zh' ? `完成 ${pricingPlans[selectedPlan].name} 购买` : `Complete Your ${pricingPlans[selectedPlan].name} Plan Purchase`}
@@ -491,33 +387,10 @@ export default function PaymentPage() {
 
                 {/* 支付方式选择卡片 */}
                 <div className="grid gap-3">
-                  {/* 根据地理位置显示不同支付方式 */}
+                  {/* 根据地理位置智能排序支付方式 */}
                   {isChina ? (
                     <>
-                      {/* 中国用户: 微信支付 + 支付宝 */}
-                      <button
-                        onClick={() => setSelectedPaymentMethod('wechat')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
-                          selectedPaymentMethod === 'wechat'
-                            ? 'border-green-500 bg-green-500/20 ring-2 ring-green-400'
-                            : 'border-slate-600 bg-slate-700/50 hover:border-green-400'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              selectedPaymentMethod === 'wechat' ? 'border-green-500' : 'border-slate-500'
-                            }`}>
-                              {selectedPaymentMethod === 'wechat' && (
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                              )}
-                            </div>
-                            <span className="text-white font-medium">微信支付 (WeChat Pay)</span>
-                          </div>
-                          <Badge className="bg-green-500">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
-                        </div>
-                      </button>
-
+                      {/* 中国用户: 支付宝优先 */}
                       <button
                         onClick={() => setSelectedPaymentMethod('alipay')}
                         className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
@@ -526,15 +399,58 @@ export default function PaymentPage() {
                             : 'border-slate-600 bg-slate-700/50 hover:border-blue-400'
                         }`}
                       >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              selectedPaymentMethod === 'alipay' ? 'border-blue-500' : 'border-slate-500'
+                            }`}>
+                              {selectedPaymentMethod === 'alipay' && (
+                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                              )}
+                            </div>
+                            <span className="text-white font-medium">支付宝支付 (Alipay)</span>
+                          </div>
+                          <Badge className="bg-green-500">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedPaymentMethod('stripe')}
+                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                          selectedPaymentMethod === 'stripe'
+                            ? 'border-purple-500 bg-purple-500/20 ring-2 ring-purple-400'
+                            : 'border-slate-600 bg-slate-700/50 hover:border-purple-400'
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                            selectedPaymentMethod === 'alipay' ? 'border-blue-500' : 'border-slate-500'
+                            selectedPaymentMethod === 'stripe' ? 'border-purple-500' : 'border-slate-500'
                           }`}>
-                            {selectedPaymentMethod === 'alipay' && (
-                              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                            {selectedPaymentMethod === 'stripe' && (
+                              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
                             )}
                           </div>
-                          <span className="text-white font-medium">支付宝支付 (Alipay)</span>
+                          <span className="text-white font-medium">Credit Card (Stripe)</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedPaymentMethod('paypal')}
+                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                          selectedPaymentMethod === 'paypal'
+                            ? 'border-blue-400 bg-blue-400/20 ring-2 ring-blue-300'
+                            : 'border-slate-600 bg-slate-700/50 hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            selectedPaymentMethod === 'paypal' ? 'border-blue-400' : 'border-slate-500'
+                          }`}>
+                            {selectedPaymentMethod === 'paypal' && (
+                              <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                            )}
+                          </div>
+                          <span className="text-white font-medium">PayPal</span>
                         </div>
                       </button>
                     </>
@@ -611,8 +527,7 @@ export default function PaymentPage() {
               {/* 统一的确认支付按钮 */}
               <Button
                 onClick={() => {
-                  if (selectedPaymentMethod === 'wechat') handleWeChatCheckout()
-                  else if (selectedPaymentMethod === 'stripe') handleStripeCheckout()
+                  if (selectedPaymentMethod === 'stripe') handleStripeCheckout()
                   else if (selectedPaymentMethod === 'paypal') handlePayPalCheckout()
                   else if (selectedPaymentMethod === 'alipay') handleAlipayCheckout()
                 }}
@@ -625,12 +540,11 @@ export default function PaymentPage() {
 
               <p className="text-xs text-slate-400 text-center mt-2">
                 {languageCode === 'zh'
-                  ? `继续即表示您同意我们的服务条款和隐私政策。安全支付由 ${isChina ? '微信支付、支付宝' : 'Stripe、PayPal 或支付宝'} 处理。`
-                  : `By continuing, you agree to our Terms of Service and Privacy Policy. Secure payment processed by ${isChina ? 'WeChat Pay or Alipay' : 'Stripe, PayPal, or Alipay'}.`}
+                  ? '继续即表示您同意我们的服务条款和隐私政策。安全支付由 Stripe、PayPal 或支付宝处理。'
+                  : 'By continuing, you agree to our Terms of Service and Privacy Policy. Secure payment processed by Stripe, PayPal, or Alipay.'}
               </p>
             </CardFooter>
           </Card>
-        </div>
 
         {/* FAQ */}
         <div className="text-center text-sm text-slate-400">
