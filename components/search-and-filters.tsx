@@ -108,7 +108,7 @@ const formatCategory = (key: string) =>
     .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase())
 
-// 可拖放的收藏按钮组件
+// 可拖放的收藏按钮组件 - 移动端优化
 function DroppableFavoriteButton({ isSelected, onClick, label, icon }: any) {
   const { setNodeRef, isOver } = useDroppable({
     id: 'favorites-dropzone',
@@ -120,7 +120,7 @@ function DroppableFavoriteButton({ isSelected, onClick, label, icon }: any) {
       variant={isSelected ? "default" : "outline"}
       size="sm"
       onClick={onClick}
-      className={`text-xs transition-all duration-200 ${
+      className={`text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation transition-all duration-200 ${
         isSelected
           ? "bg-blue-600 hover:bg-blue-700 text-white"
           : isOver
@@ -128,9 +128,9 @@ function DroppableFavoriteButton({ isSelected, onClick, label, icon }: any) {
           : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-blue-400"
       }`}
     >
-      <span className={`mr-1 ${isOver ? "animate-bounce" : ""}`}>{icon}</span>
+      <span className={`mr-0.5 sm:mr-1 ${isOver ? "animate-bounce" : ""}`}>{icon}</span>
       {label}
-      {isOver && <span className="ml-1 animate-pulse">👆</span>}
+      {isOver && <span className="ml-0.5 sm:ml-1 animate-pulse">👆</span>}
     </Button>
   )
 }
@@ -181,16 +181,16 @@ export function SearchAndFilters({
   const sitesSuffix = text.sitesSuffix
 
   return (
-    <div className="mb-6 space-y-4">
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-4 h-4" />
+    <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+      {/* Search Bar - 移动端优化 */}
+      <div className="relative w-full sm:max-w-md">
+        <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-3.5 h-3.5 sm:w-4 sm:h-4" />
         <Input
           type="text"
           placeholder={text.placeholder.replace("{count}", placeholderCount)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-blue-400"
+          className="pl-9 sm:pl-10 pr-9 sm:pr-10 h-9 sm:h-10 text-sm bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-blue-400 touch-manipulation"
           aria-label={sectionLabel}
         />
         {searchQuery && (
@@ -198,38 +198,38 @@ export function SearchAndFilters({
             variant="ghost"
             size="sm"
             onClick={() => setSearchQuery("")}
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 text-white/60 hover:text-white"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 sm:h-6 sm:w-6 p-0 text-white/60 hover:text-white min-w-[44px] sm:min-w-0 touch-manipulation"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         )}
       </div>
 
-      {/* Category Filters */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-white/60" />
-          <span className="text-sm text-white/80">{sectionLabel}</span>
+      {/* Category Filters - 移动端优化 */}
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/60" />
+          <span className="text-xs sm:text-sm text-white/80">{sectionLabel}</span>
           {filteredCount > 0 && (
-            <Badge variant="secondary" className="bg-blue-600 text-white text-xs">
+            <Badge variant="secondary" className="bg-blue-600 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 h-5 sm:h-auto">
               {`${filteredCount} ${sitesSuffix}`}
             </Badge>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           <Button
             key="all-category"
             variant={selectedCategory === "all" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedCategory("all")}
-            className={`text-xs ${
+            className={`text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation ${
               selectedCategory === "all"
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-blue-400"
             }`}
           >
-            <span className="mr-1">{getIcon("all")}</span>
+            <span className="mr-0.5 sm:mr-1">{getIcon("all")}</span>
             {getLabel("all")}
           </Button>
 
@@ -253,13 +253,13 @@ export function SearchAndFilters({
                 variant={selectedCategory === categoryId ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(categoryId)}
-                className={`text-xs ${
+                className={`text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation ${
                   selectedCategory === categoryId
                     ? "bg-blue-600 hover:bg-blue-700 text-white"
                     : "bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-blue-400"
                 }`}
               >
-                <span className="mr-1">{getIcon(categoryId)}</span>
+                <span className="mr-0.5 sm:mr-1">{getIcon(categoryId)}</span>
                 {getLabel(categoryId)}
               </Button>
             )
@@ -270,7 +270,7 @@ export function SearchAndFilters({
               variant="outline"
               size="sm"
               onClick={() => setShowAllCategories(true)}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation"
             >
               {moreLabel}
             </Button>
@@ -281,7 +281,7 @@ export function SearchAndFilters({
               variant="outline"
               size="sm"
               onClick={() => setShowAllCategories(false)}
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation"
             >
               {lessLabel}
             </Button>
