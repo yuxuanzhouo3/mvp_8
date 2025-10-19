@@ -51,22 +51,22 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
   // Show loading state while auth is initializing
   if (loading) {
     return (
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-xl font-bold">S</span>
+      <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+                <span className="text-lg sm:text-xl font-bold">S</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold">SiteHub</h1>
-                <Badge variant="secondary" className="text-xs bg-white/10 text-white/80">
+                <h1 className="text-base sm:text-xl font-bold">SiteHub</h1>
+                <Badge variant="secondary" className="text-[10px] sm:text-xs bg-white/10 text-white/80 hidden xs:inline-flex">
                   300+ Sites
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="h-8 w-24 bg-slate-700 rounded animate-pulse"></div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-16 sm:w-24 bg-slate-700 rounded animate-pulse"></div>
             </div>
           </div>
         </div>
@@ -84,31 +84,31 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
   }
 
   return (
-    <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <span className="text-xl font-bold">S</span>
+    <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm sticky top-0 z-50">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2">
+          {/* Logo - 移动端优化 */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-lg sm:text-xl font-bold">S</span>
             </div>
-            <div>
-              <h1 className="text-xl font-bold">SiteHub</h1>
-              <Badge variant="secondary" className="text-xs bg-white/10 text-white/80">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold truncate">SiteHub</h1>
+              <Badge variant="secondary" className="text-[10px] sm:text-xs bg-white/10 text-white/80 hidden xs:inline-flex">
                 {headerText.badgeLabel}
               </Badge>
             </div>
           </div>
 
-          {/* User Menu */}
-          <div className="flex items-center gap-4">
+          {/* User Menu - 移动端优化 */}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
             <GuestTimer user={user} onTimeExpired={onGuestTimeExpired} onUpgradeClick={onUpgradeClick} />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
-                  <Globe className="w-4 h-4" />
-                  <span>{language === "zh" ? headerText.languageChinese : headerText.languageEnglish}</span>
+                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 h-9 sm:h-10 px-2 sm:px-3 min-w-[44px] touch-manipulation">
+                  <Globe className="w-4 h-4 flex-shrink-0" />
+                  <span className="hidden sm:inline text-sm">{language === "zh" ? headerText.languageChinese : headerText.languageEnglish}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700 text-white">
@@ -159,10 +159,12 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10">
-                  <User className="w-4 h-4" />
-                  {user?.type === "guest" ? headerText.guestUser : user?.name || "Loading..."}
-                  {user?.pro && <Crown className="w-4 h-4 text-yellow-400" />}
+                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 h-9 sm:h-10 px-2 sm:px-3 min-w-[44px] max-w-[120px] sm:max-w-none touch-manipulation">
+                  <User className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate text-sm hidden xs:inline">
+                    {user?.type === "guest" ? headerText.guestUser : user?.name || "Loading..."}
+                  </span>
+                  {user?.pro && <Crown className="w-4 h-4 text-yellow-400 flex-shrink-0" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700">

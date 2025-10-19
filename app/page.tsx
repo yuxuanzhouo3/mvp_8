@@ -31,7 +31,7 @@ import { normalizeUrlForComparison } from "@/lib/site-parser"
 import canonicalData from "@/lib/sitehub-data/canonical.en.json"
 import { zhProducts, zhSites } from "@/lib/sitehub-data/zh-localization"
 import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
-import { createDatabaseAdapter } from "@/lib/database/adapter"
+// import { createDatabaseAdapter } from "@/lib/database/adapter"
 
 interface Site {
   id: string
@@ -206,9 +206,9 @@ export default function SiteHub() {
   const text = homeUiText[language]
   
   // 创建数据库适配器（根据用户地区和ID）
-  const dbAdapter = user.type === "authenticated" && user.id
-    ? createDatabaseAdapter(isChina, user.id)
-    : null
+  // const dbAdapter = user.type === "authenticated" && user.id
+  //   ? createDatabaseAdapter(isChina, user.id)
+  //   : null
   const toastText = text.toasts
   const [sites, setSites] = useState<Site[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -278,22 +278,18 @@ export default function SiteHub() {
   // Load favorites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadFavorites() {
-      if (user.type === "authenticated" && user.id && dbAdapter) {
-        // Authenticated users: load from database (腾讯云或Supabase)
-        const favoriteSiteIds = await dbAdapter.getFavorites()
-        setFavorites(favoriteSiteIds)
+      if (user.type === "authenticated" && user.id) {
+        // Authenticated users: load from Supabase (暂时使用原来的逻辑)
+        const { data: favorites, error } = await supabase
+          .from('web_favorites')
+          .select('site_id')
+          .eq('user_id', user.id)
 
-        // Migrate localStorage data to cloud if exists
-        const localFavorites = localStorage.getItem("sitehub-favorites")
-        if (localFavorites) {
-          const localFavIds = JSON.parse(localFavorites)
-          for (const siteId of localFavIds) {
-            if (!favoriteSiteIds.includes(siteId)) {
-              await dbAdapter.addFavorite(siteId)
-            }
-          }
-          // Clear localStorage after migration
-          localStorage.removeItem("sitehub-favorites")
+        if (error) {
+          console.error('Error loading favorites:', error)
+        } else {
+          const favoriteSiteIds = favorites?.map(fav => fav.site_id) || []
+          setFavorites(favoriteSiteIds)
         }
       } else {
         // Guest users: use localStorage
@@ -305,7 +301,7 @@ export default function SiteHub() {
     }
 
     loadFavorites()
-  }, [user.type, user.id, dbAdapter])
+  }, [user.type, user.id])
 
   // Load custom sites from Supabase (for authenticated users) or localStorage (for guests)
   useEffect(() => {
@@ -630,9 +626,11 @@ export default function SiteHub() {
 
         setSites((prev) => [...prev, siteWithId])
 
-        if (dbAdapter) {
-          await dbAdapter.addFavorite(data.id)
-        }
+        // 保存到Supabase
+        await supabase.from('web_favorites').insert({
+          user_id: user.id,
+          site_id: data.id
+        })
         setFavorites((prev) => [...prev, data.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
@@ -698,14 +696,21 @@ export default function SiteHub() {
     localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
 
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
-    if (user.type === "authenticated" && user.id && dbAdapter) {
+    if (user.type === "authenticated" && user.id) {
       try {
         if (isFavorited) {
-          // Remove favorite from database
-          await dbAdapter.removeFavorite(siteId)
+          // Remove favorite from Supabase
+          await supabase
+            .from('web_favorites')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('site_id', siteId)
         } else {
-          // Add favorite to database
-          await dbAdapter.addFavorite(siteId)
+          // Add favorite to Supabase
+          await supabase.from('web_favorites').insert({
+            user_id: user.id,
+            site_id: siteId
+          })
         }
         console.log('✅ [Favorite] 云端同步成功')
       } catch (error) {
@@ -716,13 +721,21 @@ export default function SiteHub() {
   }
 
   const removeSite = async (siteId: string) => {
-    if (user.type === "authenticated" && user.id && dbAdapter) {
-      // Authenticated users: delete from database
-      await dbAdapter.removeCustomSite(siteId)
+    if (user.type === "authenticated" && user.id) {
+      // Authenticated users: delete from Supabase
+      await supabase
+        .from('web_custom_sites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('id', siteId)
 
       // Also remove from favorites if it was favorited
       if (favorites.includes(siteId)) {
-        await dbAdapter.removeFavorite(siteId)
+        await supabase
+          .from('web_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('site_id', siteId)
         setFavorites(favorites.filter((id) => id !== siteId))
       }
 
@@ -799,24 +812,24 @@ export default function SiteHub() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <main className="container mx-auto px-4 py-2">
-          {/* 拖拽提示 */}
+        <main className="container mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3">
+          {/* 拖拽提示 - 移动端优化 */}
           {draggingSiteId && !favorites.includes(draggingSiteId) && (
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse">
-              <span className="mr-2">⭐</span>
+            <div className="fixed top-16 sm:top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg z-50 animate-pulse text-sm sm:text-base max-w-[90%] sm:max-w-none text-center">
+              <span className="mr-1 sm:mr-2">⭐</span>
               {language === "zh" ? "拖拽到收藏按钮来添加收藏" : "Drag to ⭐ Favorites to add"}
             </div>
           )}
 
-          {/* Data Loss Warning for Guest Users */}
+          {/* Data Loss Warning for Guest Users - 移动端优化 */}
           {user.type === "guest" && (favorites.length > 0 || sites.some(site => site.custom)) && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">⚠️</div>
-                <div>
-                  <h3 className="font-semibold text-red-300">{text.guestBanner.title}</h3>
-                  <p className="text-sm text-red-200">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="text-xl sm:text-2xl flex-shrink-0 mt-0.5">⚠️</div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-red-300 text-sm sm:text-base">{text.guestBanner.title}</h3>
+                  <p className="text-xs sm:text-sm text-red-200 mt-0.5">
                     {text.guestBanner.description
                       .replace("{favorites}", favorites.length.toString())
                       .replace("{custom}", sites.filter((s) => s.custom).length.toString())}
@@ -826,13 +839,13 @@ export default function SiteHub() {
               <Button
                 onClick={() => {
                   setTimeout(() => {
-                    const event = new CustomEvent('openAuthModal', { 
-                      detail: { mode: 'signup' } 
+                    const event = new CustomEvent('openAuthModal', {
+                      detail: { mode: 'signup' }
                     })
                     window.dispatchEvent(event)
                   }, 100)
                 }}
-                className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
+                className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white h-9 sm:h-10 text-sm sm:text-base min-w-[44px] touch-manipulation flex-shrink-0 w-full sm:w-auto"
               >
                 <Crown className="w-4 h-4 mr-2" />
                 {text.guestBanner.cta}
@@ -841,9 +854,9 @@ export default function SiteHub() {
           </div>
         )}
 
-        <section className="mb-4">
-          <h1 className="text-2xl font-bold text-white">{text.hero.title}</h1>
-          <p className="text-sm text-white/60">{text.hero.subtitle}</p>
+        <section className="mb-3 sm:mb-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">{text.hero.title}</h1>
+          <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
         <FeaturedProducts sites={sites.filter((site) => site.featured)} />
@@ -858,48 +871,48 @@ export default function SiteHub() {
           totalCount={nonFeaturedCount}
         />
 
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="text-lg font-bold">{text.stats.heading}</h2>
-            <p className="text-xs text-white/60">{summaryLabel}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-bold truncate">{text.stats.heading}</h2>
+            <p className="text-xs text-white/60 truncate">{summaryLabel}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white text-xs"
+              className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial"
             >
-              <Plus className="w-3 h-3 mr-1" />
-              {text.buttons.addSite}
+              <Plus className="w-3 h-3 sm:mr-1" />
+              <span className="hidden xs:inline ml-1">{text.buttons.addSite}</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleOpenParseModal}
               disabled={!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0}
-              className={`bg-white/10 border-white/20 hover:bg-white/20 hover:border-blue-400 text-white text-xs ${
+              className={`bg-white/10 border-white/20 hover:bg-white/20 hover:border-blue-400 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial ${
                 !user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0
                   ? "opacity-40 cursor-not-allowed"
                   : ""
               }`}
             >
-              <Sparkles className="w-3 h-3 mr-1 text-blue-300" />
-              {text.buttons.smartParse}
+              <Sparkles className="w-3 h-3 sm:mr-1 text-blue-300" />
+              <span className="hidden xs:inline ml-1">{text.buttons.smartParse}</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={shuffleSites}
               disabled={isDragDisabled}
-              className={`text-xs ${
+              className={`text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial ${
                 isDragDisabled
                   ? "bg-white/5 border-white/10 text-white/40 cursor-not-allowed"
                   : "bg-white/10 border-white/20 hover:bg-white/20 text-white"
               }`}
             >
-              <Shuffle className="w-3 h-3 mr-1" />
-              {text.buttons.shuffle}
+              <Shuffle className="w-3 h-3 sm:mr-1" />
+              <span className="hidden xs:inline ml-1">{text.buttons.shuffle}</span>
             </Button>
           </div>
         </div>

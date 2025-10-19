@@ -12,7 +12,22 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "SiteHub - Your Personal Web Dashboard",
   description: "Access 300+ top websites instantly. Chrome-like new tab page with customization.",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
+  themeColor: '#0f172a',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'SiteHub'
+  },
+  formatDetection: {
+    telephone: false,
+  }
 }
 
 export default function RootLayout({
