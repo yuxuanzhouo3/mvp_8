@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@cloudbase/js-sdk": "^2.21.9",
+    "@cloudbase/node-sdk": "^3.10.1",
     "@dnd-kit/core": "latest",
     "@dnd-kit/sortable": "latest",
     "@dnd-kit/utilities": "latest",
