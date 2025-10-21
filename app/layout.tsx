@@ -37,6 +37,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta charSet="UTF-8" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon.ico" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('[SW] Registered:', reg.scope))
+                    .catch(err => console.log('[SW] Registration failed:', err));
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <AuthProvider>
           <SettingsProvider>

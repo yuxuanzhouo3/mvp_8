@@ -1,0 +1,13 @@
+{
+  "appId": "com.sitehub.app",
+  "appName": "SiteHub",
+  "webDir": "dist",
+  "server": {
+    "url": "https://mornhub.help",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#0f172a"
+  }
+}
