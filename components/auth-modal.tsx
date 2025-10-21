@@ -136,7 +136,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
       if (result.user) {
         const userData = {
           type: "authenticated" as const,
-          name: result.user.name || email.split("@")[0],
+          name: result.user.name || (email.includes("@") ? email.split("@")[0] : email),
           email: result.user.email || email,
           customCount: 0,
           pro: result.user.pro || false,

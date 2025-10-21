@@ -227,23 +227,23 @@ export async function POST(request: NextRequest) {
 
       // 测试账号验证
       const TEST_ACCOUNT = {
-        email: 'test@mornhub.com',
-        password: 'test123456'
+        email: '123',
+        password: '123'
       }
 
       if (email === TEST_ACCOUNT.email && password === TEST_ACCOUNT.password) {
         result = {
           user: {
             id: 'test-user-china-001',
-            email: TEST_ACCOUNT.email,
-            name: '测试用户（国内）',
+            email: '123@test.com',
+            name: '测试用户',
             pro: false,
             region: 'china'
           }
         }
       } else {
         return NextResponse.json({
-          error: '账号或密码错误。测试账号：test@mornhub.com / test123456'
+          error: '账号或密码错误。测试账号：123 密码：123'
         }, { status: 401 })
       }
     } else {
