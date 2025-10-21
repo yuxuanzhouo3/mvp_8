@@ -277,12 +277,12 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
           <div className="space-y-4">
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
-                {isChina === true ? (languageCode === 'zh' ? '账号' : 'Account') : (mode === "login" ? t.login.emailLabel : t.signup.emailLabel)}
+                {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
               </Label>
               <Input
                 id="email"
-                type="text"
-                placeholder={isChina === true ? (languageCode === 'zh' ? '请输入账号（测试：123）' : 'Enter account (test: 123)') : (mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder)}
+                type="email"
+                placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
@@ -298,7 +298,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder={isChina === true ? (languageCode === 'zh' ? '请输入密码（测试：123）' : 'Enter password (test: 123)') : (mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder)}
+                  placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
