@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import cloudbase from '@cloudbase/node-sdk'
+
+// 服务器端Supabase客户端（无需localStorage）
+function createServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false
+    }
+  })
+}
 
 /**
  * 邮箱登录/注册API
@@ -41,7 +55,7 @@ async function cloudbaseEmailAuth(email: string, password: string, mode: 'login'
     // 暂时使用Supabase，通过metadata中的region字段标记为china
     console.log('[国内用户] 使用Supabase存储，region标记为china')
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     if (mode === 'signup') {
       const { data, error } = await supabase.auth.signUp({
@@ -109,7 +123,7 @@ async function supabaseEmailAuth(email: string, password: string, mode: 'login' 
   try {
     console.log('[海外用户] 使用Supabase存储，region标记为overseas')
 
-    const supabase = createClient()
+    const supabase = createServerClient()
 
     if (mode === 'signup') {
       const { data, error } = await supabase.auth.signUp({
@@ -199,8 +213,12 @@ export async function POST(request: NextRequest) {
     // 根据IP选择认证方式
     let result
     if (isChina) {
-      console.log('🔐 使用腾讯云CloudBase认证')
-      result = await cloudbaseEmailAuth(email, password, mode as 'login' | 'signup')
+      // 国内IP用户：暂时禁用，等待CloudBase API密钥配置完成
+      console.log('🔐 [国内IP] 注册功能暂时关闭，等待CloudBase配置')
+      return NextResponse.json({
+        error: '国内用户注册功能正在配置中，我们正在部署符合数据安全法规的国内服务器。请稍后再试或联系客服 mornscience@gmail.com',
+        needCloudBase: true
+      }, { status: 503 })
     } else {
       console.log('🔐 使用Supabase认证')
       result = await supabaseEmailAuth(email, password, mode as 'login' | 'signup')
