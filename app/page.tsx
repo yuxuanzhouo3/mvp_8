@@ -309,7 +309,7 @@ export default function SiteHub() {
       if (user.type === "authenticated" && user.id) {
         // Authenticated users: load custom sites from Supabase
         const { data, error } = await supabase
-          .from("user_custom_sites")
+          .from("web_custom_sites")
           .select("*")
           .eq("user_id", user.id)
 
@@ -342,7 +342,7 @@ export default function SiteHub() {
               // Check if site already exists in Supabase
               const exists = data.some((s) => s.url === site.url)
               if (!exists) {
-                await supabase.from("user_custom_sites").insert({
+                await supabase.from("web_custom_sites").insert({
                   user_id: user.id,
                   name: site.name,
                   url: site.url,
@@ -600,7 +600,7 @@ export default function SiteHub() {
     try {
       if (user.type === "authenticated" && user.id) {
         const { data, error } = await supabase
-          .from("user_custom_sites")
+          .from("web_custom_sites")
           .insert({
             user_id: user.id,
             name: newSite.name,

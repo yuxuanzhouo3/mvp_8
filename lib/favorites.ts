@@ -21,7 +21,7 @@ export interface CreateFavoriteData {
 
 export async function addToFavorites(userId: string, site: CreateFavoriteData): Promise<Favorite> {
   const { data, error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .insert({
       user_id: userId,
       site_id: site.site_id,
@@ -42,7 +42,7 @@ export async function addToFavorites(userId: string, site: CreateFavoriteData): 
 
 export async function getFavorites(userId: string): Promise<Favorite[]> {
   const { data, error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
@@ -56,7 +56,7 @@ export async function getFavorites(userId: string): Promise<Favorite[]> {
 
 export async function removeFromFavorites(userId: string, siteId: string): Promise<void> {
   const { error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .delete()
     .eq('user_id', userId)
     .eq('site_id', siteId)
@@ -68,7 +68,7 @@ export async function removeFromFavorites(userId: string, siteId: string): Promi
 
 export async function isFavorited(userId: string, siteId: string): Promise<boolean> {
   const { data, error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .select('id')
     .eq('user_id', userId)
     .eq('site_id', siteId)
@@ -83,7 +83,7 @@ export async function isFavorited(userId: string, siteId: string): Promise<boole
 
 export async function getFavoritesByCategory(userId: string, category: string): Promise<Favorite[]> {
   const { data, error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .select('*')
     .eq('user_id', userId)
     .eq('site_category', category)
@@ -98,7 +98,7 @@ export async function getFavoritesByCategory(userId: string, category: string): 
 
 export async function searchFavorites(userId: string, query: string): Promise<Favorite[]> {
   const { data, error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .select('*')
     .eq('user_id', userId)
     .or(`site_name.ilike.%${query}%,site_url.ilike.%${query}%`)
@@ -113,7 +113,7 @@ export async function searchFavorites(userId: string, query: string): Promise<Fa
 
 export async function getFavoriteCount(userId: string): Promise<number> {
   const { count, error } = await supabase
-    .from('favorites')
+    .from('web_favorites')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
 

@@ -4,8 +4,9 @@
  * 提供统一的数据库操作接口
  */
 
-import { CloudBaseAdapter } from './cloudbase-adapter'
-import { SupabaseAdapter } from './supabase-adapter'
+// 动态导入，避免SSR问题
+// import { CloudBaseAdapter } from './cloudbase-adapter'
+// import { SupabaseAdapter } from './supabase-adapter'
 
 /**
  * 数据库适配器接口
@@ -33,15 +34,17 @@ export interface IDatabaseAdapter {
  * @param userId - 用户ID
  * @returns 数据库适配器实例
  */
-export function createDatabaseAdapter(
+export async function createDatabaseAdapter(
   isChina: boolean,
   userId: string
-): IDatabaseAdapter {
+): Promise<IDatabaseAdapter> {
   if (isChina) {
     console.log('🇨🇳 [DB] 使用腾讯云数据库（国内IP）')
+    const { CloudBaseAdapter } = await import('./cloudbase-adapter')
     return new CloudBaseAdapter(userId)
   } else {
     console.log('🌍 [DB] 使用Supabase数据库（海外IP）')
+    const { SupabaseAdapter } = await import('./supabase-adapter')
     return new SupabaseAdapter(userId)
   }
 }

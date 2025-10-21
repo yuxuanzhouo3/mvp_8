@@ -1,26 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from './supabase/client'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-if (!supabaseUrl) {
-  throw new Error('NEXT_PUBLIC_SUPABASE_URL is required.')
-}
-
-if (!supabaseAnonKey) {
-  throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required.')
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storageKey: 'sitehub-auth-token',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-    flowType: 'pkce'
-  }
-})
+export const supabase = createClient()
 
 // Auth helper functions
 export const auth = {

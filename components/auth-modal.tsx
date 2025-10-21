@@ -86,7 +86,12 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
 
   const handleEmailAuth = async () => {
     if (!email || !password) {
-      setError("Please fill in all fields")
+      setError(languageCode === 'zh' ? "请填写完整信息" : "Please fill in all fields")
+      return
+    }
+
+    if (password.length < 6) {
+      setError(languageCode === 'zh' ? "密码至少6位" : "Password must be at least 6 characters")
       return
     }
 
@@ -94,64 +99,71 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
     setError("")
 
     try {
-      if (mode === "signup") {
-        // Sign up
-        const { data, error } = await auth.signUp(email, password)
-        if (error) {
-          setError(error.message)
+      // 调用双认证API（自动根据IP选择数据库）
+      const response = await fetch('/api/auth/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          mode: mode // 'login' or 'signup'
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || result.error) {
+        setError(result.error || (languageCode === 'zh' ? '认证失败' : 'Authentication failed'))
+        return
+      }
+
+      // 认证成功
+      const dbInfo = result.database === 'cloudbase' ? '腾讯云' : 'Supabase'
+      console.log(`✅ 登录成功 [${dbInfo}数据库]`, result.user)
+
+      if (mode === "signup" && result.user && !result.user.emailConfirmed) {
+        // 注册成功但需要邮箱验证（仅Supabase）
+        if (result.database === 'supabase') {
+          setSuccess(languageCode === 'zh'
+            ? "注册成功！请检查邮箱确认账户。"
+            : "Account created! Please check your email to confirm your account.")
           return
-        }
-        
-        if (data.user) {
-          // Check if email confirmation is required
-          if (!data.user.email_confirmed_at) {
-            setSuccess("Account created successfully! Please check your email to confirm your account.")
-            return
-          }
-          
-          const userData = {
-            type: "authenticated" as const,
-            name: data.user.user_metadata?.full_name || email.split("@")[0],
-            email: data.user.email || email,
-            customCount: 0,
-            pro: false,
-            id: data.user.id
-          }
-          signIn(userData)
-          onAuth(userData)
-          onOpenChange(false)
-        } else {
-          setSuccess("Account created! Please check your email to confirm your account.")
-        }
-      } else {
-        // Sign in
-        const { data, error } = await auth.signIn(email, password)
-        if (error) {
-          setError(error.message)
-          return
-        }
-        
-        if (data.user) {
-          const userData = {
-            type: "authenticated" as const,
-            name: data.user.user_metadata?.full_name || email.split("@")[0],
-            email: data.user.email || email,
-            customCount: 0,
-            pro: false,
-            id: data.user.id
-          }
-          signIn(userData)
-          onAuth(userData)
-          onOpenChange(false)
         }
       }
-      
+
+      if (result.user) {
+        const userData = {
+          type: "authenticated" as const,
+          name: result.user.name || email.split("@")[0],
+          email: result.user.email || email,
+          customCount: 0,
+          pro: result.user.pro || false,
+          id: result.user.id,
+          database: result.database, // 记录用户使用的数据库
+          region: result.region // 记录用户地区
+        }
+
+        signIn(userData)
+        onAuth(userData)
+
+        // 显示成功消息
+        const regionText = result.region === 'china' ? '国内' : '海外'
+        console.log(`🎉 ${mode === 'login' ? '登录' : '注册'}成功 [${regionText}用户]`)
+
+        onOpenChange(false)
+      }
+
       // Reset form
       setEmail("")
       setPassword("")
       setError("")
-    } catch (err) {
-      setError("Authentication failed. Please try again.")
+    } catch (err: any) {
+      console.error('邮箱认证错误:', err)
+      setError(languageCode === 'zh'
+        ? '登录失败，请稍后再试'
+        : 'Authentication failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -165,7 +177,13 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
       if (provider === "google") {
         const { data, error } = await auth.signInWithGoogle()
         if (error) {
-          setError(error.message)
+          if (error.message.includes('Supabase not configured')) {
+            setError(languageCode === 'zh' 
+              ? '登录功能正在配置中，请稍后再试' 
+              : 'Login feature is being configured, please try again later')
+          } else {
+            setError(error.message)
+          }
           setLoading(false)
           return
         }
@@ -186,7 +204,9 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
         return
       }
     } catch (err) {
-      setError(`${provider} authentication failed. Please try again.`)
+      setError(languageCode === 'zh' 
+        ? '登录功能正在配置中，请稍后再试' 
+        : 'Login feature is being configured, please try again later')
       setLoading(false)
     }
   }
@@ -212,37 +232,9 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
 
         <div className="space-y-4">
           {/* Social Login Buttons - IP自适应 */}
+          {/* 微信登录已隐藏，等待二次迭代开发 */}
           <div className="grid gap-3">
-            {isChina ? (
-              /* 国内IP：显示微信登录 */
-              <Button
-                variant="outline"
-                className="bg-green-600 text-white hover:bg-green-700 relative"
-                onClick={() => handleSocialAuth("wechat")}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    <span>{languageCode === 'zh' ? '微信登录中...' : 'WeChat Login...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 6.093-1.98-.255-3.363-3.776-5.845-7.836-5.845zm-5.017 5.9c.134 0 .244.11.244.244a.244.244 0 0 1-.244.244c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244zm4.604 0c.134 0 .244.11.244.244a.244.244 0 0 1-.244.244c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244z"/>
-                      <path d="M20.657 11.326c-1.703-1.415-3.882-1.98-6.093-1.98-4.784 0-8.691 3.288-8.691 7.342 0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098c.85.232 1.735.403 2.837.403 4.784 0 8.691-3.288 8.691-7.342 0-2.578-1.592-4.972-3.598-5.855zm-8.567 6.446c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244.134 0 .244.11.244.244a.244.244 0 0 1-.244.244zm4.604 0c-.134 0-.244-.11-.244-.244 0-.134.11-.244.244-.244.134 0 .244.11.244.244a.244.244 0 0 1-.244.244z"/>
-                    </svg>
-                    <span>{mode === "login" 
-                      ? (languageCode === 'zh' ? '微信登录' : 'Login with WeChat')
-                      : (languageCode === 'zh' ? '微信注册' : 'Sign up with WeChat')
-                    }</span>
-                  </>
-                )}
-                <Badge className="absolute -top-2 -right-2 bg-green-500">
-                  {languageCode === 'zh' ? '推荐' : 'Recommended'}
-                </Badge>
-              </Button>
-            ) : (
+            {!isChina && (
               /* 海外IP：显示Google登录 */
               <Button
                 variant="outline"

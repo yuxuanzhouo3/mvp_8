@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { 
-  CreditCard, 
-  Wallet, 
-  MessageCircle, 
-  Chrome, 
-  Loader2, 
+import {
+  CreditCard,
+  Wallet,
+  MessageCircle,
+  Chrome,
+  Loader2,
   Check,
   Crown,
   Zap,
@@ -19,6 +19,7 @@ import {
   Shield,
   Star
 } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 interface PaymentModalProps {
   open: boolean
@@ -39,8 +40,8 @@ interface Plan {
 const plans: Plan[] = [
   {
     id: "pro-monthly",
-    name: "Pro Monthly",
-    price: 9.99,
+    name: "Pro",
+    price: 0.50,
     currency: "USD",
     interval: "month",
     features: [
@@ -53,22 +54,22 @@ const plans: Plan[] = [
   },
   {
     id: "pro-yearly",
-    name: "Pro Yearly",
-    price: 99.99,
+    name: "Pro",
+    price: 3.00,
     currency: "USD",
     interval: "year",
     features: [
       "Everything in Pro Monthly",
-      "2 months free",
+      "Save 50%",
       "Early access to features",
       "Exclusive themes"
     ],
     popular: true
   },
   {
-    id: "enterprise",
-    name: "Enterprise",
-    price: 29.99,
+    id: "team-monthly",
+    name: "Team",
+    price: 1.00,
     currency: "USD",
     interval: "month",
     features: [
@@ -77,6 +78,21 @@ const plans: Plan[] = [
       "Advanced security",
       "Custom integrations",
       "Dedicated support"
+    ]
+  },
+  {
+    id: "team-yearly",
+    name: "Team",
+    price: 5.00,
+    currency: "USD",
+    interval: "year",
+    features: [
+      "Everything in Pro",
+      "Team collaboration",
+      "Advanced security",
+      "Custom integrations",
+      "Dedicated support",
+      "Save 58%"
     ]
   }
 ]
@@ -120,6 +136,7 @@ const paymentMethods = [
 ]
 
 export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProps) {
+  const { user } = useAuth()
   const [selectedPlan, setSelectedPlan] = useState<string>("pro-yearly")
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("stripe")
   const [loading, setLoading] = useState(false)
@@ -131,22 +148,63 @@ export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProp
     setError("")
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // In production, this would integrate with your payment provider
-      console.log(`Processing payment for plan: ${selectedPlan} with method: ${selectedPaymentMethod}`)
-      
-      setSuccess(true)
-      setTimeout(() => {
-        onSuccess()
-        onOpenChange(false)
-        setSuccess(false)
-      }, 2000)
-      
-    } catch (err) {
-      setError("Payment failed. Please try again.")
-    } finally {
+      // 检查用户是否登录
+      if (!user || user.type !== 'authenticated') {
+        setError("Please login first to make a payment")
+        setLoading(false)
+        return
+      }
+
+      // 解析套餐信息
+      const planParts = selectedPlan.split('-')
+      const planType = planParts[0] // 'pro' or 'team'
+      const billingCycle = planParts[1] // 'monthly' or 'yearly'
+
+      if (selectedPaymentMethod === 'stripe') {
+        // Stripe支付流程
+        const response = await fetch('/api/payment/stripe/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            planType,
+            billingCycle,
+            userEmail: user.email,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create checkout session')
+        }
+
+        // 重定向到Stripe Checkout
+        if (data.url) {
+          window.location.href = data.url
+        } else {
+          throw new Error('No checkout URL received')
+        }
+      } else if (selectedPaymentMethod === 'paypal') {
+        // PayPal支付流程
+        setError("PayPal payment is under development")
+        setLoading(false)
+      } else if (selectedPaymentMethod === 'wechat') {
+        // 微信支付流程
+        setError("WeChat payment is under development")
+        setLoading(false)
+      } else if (selectedPaymentMethod === 'alipay') {
+        // 支付宝支付流程
+        setError("Alipay payment is under development")
+        setLoading(false)
+      } else {
+        setError("Unsupported payment method")
+        setLoading(false)
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err)
+      setError(err.message || "Payment failed. Please try again.")
       setLoading(false)
     }
   }
