@@ -197,18 +197,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: '密码至少6位' },
-        { status: 400 }
-      )
-    }
-
     // 检测IP
     const clientIP = getClientIP(request)
     const isChina = await isChineseIP(clientIP)
 
     console.log(`📍 IP检测: ${clientIP} → ${isChina ? '🇨🇳 国内' : '🌍 海外'}`)
+
+    // 海外IP才验证密码长度（国内测试账号可以使用短密码）
+    if (!isChina && password.length < 6) {
+      return NextResponse.json(
+        { error: '密码至少6位' },
+        { status: 400 }
+      )
+    }
 
     // 根据IP选择认证方式
     let result
