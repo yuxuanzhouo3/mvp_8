@@ -27,7 +27,20 @@ interface WebsiteCardProps {
 export function WebsiteCard({ site, onClick }: WebsiteCardProps) {
   const handleVisit = (e: React.MouseEvent) => {
     e.stopPropagation()
-    window.open(site.url, "_blank")
+
+    // 检测是否在APP/WebView中
+    const isInApp = window.navigator.userAgent.includes('wv') ||
+                    window.navigator.userAgent.includes('WebView') ||
+                    (window as any).AndroidInterface !== undefined ||
+                    (window as any).webkit?.messageHandlers !== undefined
+
+    if (isInApp) {
+      // 在APP内直接跳转（同一个窗口）
+      window.location.href = site.url
+    } else {
+      // 在浏览器中新标签打开
+      window.open(site.url, "_blank")
+    }
   }
 
   return (

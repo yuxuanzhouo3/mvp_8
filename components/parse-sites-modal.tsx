@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { parseTextToSites, normalizeUrlForComparison, type ParsedSite } from "@/lib/site-parser"
-import { Loader2, ListPlus, Globe, CheckCircle2, Copy } from "lucide-react"
+import { Loader2, ListPlus, Globe, CheckCircle2 } from "lucide-react"
 
 interface ParseSitesModalProps {
   isOpen: boolean
@@ -136,13 +136,13 @@ export function ParseSitesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl bg-slate-900 text-white border-slate-700">
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-full bg-slate-900 text-white border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <ListPlus className="w-5 h-5 text-blue-400" />
             智能解析链接
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-sm sm:text-base text-slate-400">
             粘贴聊天记录或分享文本，自动提取其中的链接，快速批量加入自定义网站。
           </DialogDescription>
         </DialogHeader>
@@ -158,45 +158,52 @@ export function ParseSitesModal({
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-sm text-slate-300">
-              <Badge variant="outline" className="border-slate-600 text-slate-200">
-                共 {parsed.length} 条链接
+          {/* 统计和操作按钮区 - 移动端优化 */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* 统计信息 - 移动端横向滚动 */}
+            <div className="flex items-center gap-2 text-xs sm:text-sm overflow-x-auto pb-1">
+              <Badge variant="outline" className="border-slate-600 text-slate-200 whitespace-nowrap">
+                共 {parsed.length} 条
               </Badge>
-              <Badge variant="outline" className="border-slate-600 text-emerald-200">
-                可添加 {actionableSites.length} 条
+              <Badge variant="outline" className="border-slate-600 text-emerald-200 whitespace-nowrap">
+                可添加 {actionableSites.length}
               </Badge>
               {duplicateCount > 0 && (
-                <Badge variant="outline" className="border-slate-600 text-amber-300">
-                  {duplicateCount} 条已存在
+                <Badge variant="outline" className="border-slate-600 text-amber-300 whitespace-nowrap">
+                  {duplicateCount} 已存在
                 </Badge>
               )}
               {addedCount > 0 && (
-                <Badge variant="outline" className="border-slate-600 text-blue-300">
+                <Badge variant="outline" className="border-slate-600 text-blue-300 whitespace-nowrap">
                   已添加 {addedCount}
                 </Badge>
               )}
-              {!canAddMore && (
-                <Badge variant="destructive">
-                  免费用户最多 10 个，升级 Pro 可无限添加
-                </Badge>
-              )}
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* 操作按钮 - 移动端全宽 */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 disabled={!hasActionableSites || isProcessing || !canAddMore}
                 onClick={handleAddAll}
-                className="border-blue-500 text-blue-300 hover:bg-blue-500/10"
+                className="flex-1 sm:flex-none border-blue-500 text-blue-300 hover:bg-blue-500/10 h-9 text-sm"
               >
-                <Globe className="w-4 h-4 mr-2" />
-                一键添加全部
+                <Globe className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="sm:hidden">添加全部 ({actionableSites.length})</span>
+                <span className="hidden sm:inline">一键添加全部</span>
               </Button>
-              <Button variant="ghost" onClick={onClose} className="text-slate-300 hover:text-white">
+              <Button variant="ghost" onClick={onClose} className="text-slate-300 hover:text-white h-9 text-sm px-3 sm:px-4">
                 关闭
               </Button>
             </div>
           </div>
+
+          {/* Pro提示 - 移动端单独显示 */}
+          {!canAddMore && (
+            <div className="text-xs sm:text-sm text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2.5">
+              免费用户最多 10 个，升级 Pro 可无限添加
+            </div>
+          )}
 
           <div className="relative">
             {isProcessing && (
@@ -213,63 +220,44 @@ export function ParseSitesModal({
               ) : (
                 <div className="space-y-2">
                   {parsed.map((site) => {
-                    const normalized = normalizeUrlForComparison(site.url)
                     const isDisabled = site.isDuplicate || site.isAdded || !canAddMore
 
                     return (
                       <div
                         key={site.id}
-                        className="flex items-start justify-between gap-3 rounded-md border border-slate-800 bg-slate-800/60 px-4 py-3"
+                        className="flex items-center justify-between gap-2 sm:gap-3 rounded-md border border-slate-800 bg-slate-800/60 px-3 py-2.5 sm:px-4 sm:py-3"
                       >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                            <span>{site.logo}</span>
-                            <span>{site.name}</span>
-                            {site.isChina && (
-                              <Badge variant="outline" className="border-green-500 text-green-300">
-                                中国网站
-                              </Badge>
-                            )}
-                            {site.isDuplicate && (
-                              <Badge variant="outline" className="border-slate-600 text-slate-400">
-                                已存在
-                              </Badge>
-                            )}
-                            {site.isAdded && (
-                              <Badge variant="outline" className="border-blue-500 text-blue-300">
-                                已添加
-                              </Badge>
-                            )}
+                        {/* 左侧：网站信息 */}
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 overflow-hidden">
+                          <span className="text-xl sm:text-2xl flex-shrink-0">{site.logo}</span>
+                          <div className="flex-1 min-w-0 space-y-0.5">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <span className="text-xs sm:text-sm font-semibold text-white truncate">{site.name}</span>
+                              {site.isDuplicate && (
+                                <Badge variant="outline" className="border-slate-600 text-slate-400 text-[10px] sm:text-xs px-1 py-0 h-4 sm:h-5">
+                                  已存在
+                                </Badge>
+                              )}
+                              {site.isAdded && (
+                                <Badge variant="outline" className="border-blue-500 text-blue-300 text-[10px] sm:text-xs px-1 py-0 h-4 sm:h-5">
+                                  已添加
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-slate-400 truncate font-mono">{site.url}</div>
                           </div>
-                          <div className="text-xs font-mono text-slate-400">{site.url}</div>
-                          <div className="text-xs text-slate-500">{site.description}</div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Button
-                            size="sm"
-                            disabled={isDisabled}
-                            onClick={() => handleAddSingle(site)}
-                            className="bg-blue-600 hover:bg-blue-700 text-xs"
-                          >
-                            <CheckCircle2 className="w-4 h-4 mr-1" />
-                            添加
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="text-slate-400 hover:text-white"
-                            onClick={() => {
-                              if (typeof navigator !== "undefined" && navigator.clipboard) {
-                                navigator.clipboard.writeText(site.url).then(
-                                  () => setStatusMessage("链接已复制"),
-                                  () => setStatusMessage("复制失败，请手动复制"),
-                                )
-                              }
-                            }}
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                        </div>
+
+                        {/* 右侧：添加按钮 */}
+                        <Button
+                          size="sm"
+                          disabled={isDisabled}
+                          onClick={() => handleAddSingle(site)}
+                          className="bg-blue-600 hover:bg-blue-700 text-xs h-7 sm:h-8 px-2 sm:px-3 flex-shrink-0"
+                        >
+                          <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                          <span className="hidden sm:inline">添加</span>
+                        </Button>
                       </div>
                     )
                   })}

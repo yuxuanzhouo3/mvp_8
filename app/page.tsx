@@ -26,12 +26,11 @@ import { useGeo } from "@/contexts/geo-context"
 import { useLanguage } from "@/contexts/language-context"
 import type { SupportedLanguage } from "@/contexts/language-context"
 import type { Region } from "@/lib/ip-detection"
-import { createClient } from "@/lib/supabase/client"
 import { normalizeUrlForComparison } from "@/lib/site-parser"
 import canonicalData from "@/lib/sitehub-data/canonical.en.json"
 import { zhProducts, zhSites } from "@/lib/sitehub-data/zh-localization"
 import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
-// import { createDatabaseAdapter } from "@/lib/database/adapter"
+import { createDatabaseAdapter, type IDatabaseAdapter } from "@/lib/database/adapter"
 
 interface Site {
   id: string
@@ -200,16 +199,11 @@ const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
 
 export default function SiteHub() {
   const { user } = useAuth()
-  const supabase = createClient()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
   const { language } = useLanguage()
   const text = homeUiText[language]
-  
-  // 创建数据库适配器（根据用户地区和ID）
-  // const dbAdapter = user.type === "authenticated" && user.id
-  //   ? createDatabaseAdapter(isChina, user.id)
-  //   : null
   const toastText = text.toasts
+
   const [sites, setSites] = useState<Site[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -223,6 +217,7 @@ export default function SiteHub() {
   const [favorites, setFavorites] = useState<string[]>([])
   const [regionPriorityApplied, setRegionPriorityApplied] = useState(false)
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
+  const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
 
   const customSitesCount = useMemo(
     () => sites.filter((site) => site.custom).length,
@@ -275,21 +270,31 @@ export default function SiteHub() {
     setCategoryInitialized(true)
   }, [categoryInitialized, geoLoading, regionCategory])
 
+  // Initialize database adapter based on user region
+  useEffect(() => {
+    async function initAdapter() {
+      if (user.type === "authenticated" && user.id && !geoLoading) {
+        console.log(`🔧 [DB] 初始化数据库适配器 - 用户地区: ${isChina ? '🇨🇳 国内' : '🌍 海外'}`)
+        const adapter = await createDatabaseAdapter(isChina, user.id)
+        setDbAdapter(adapter)
+      } else {
+        setDbAdapter(null)
+      }
+    }
+    initAdapter()
+  }, [user.type, user.id, isChina, geoLoading])
+
   // Load favorites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadFavorites() {
-      if (user.type === "authenticated" && user.id) {
-        // Authenticated users: load from Supabase (暂时使用原来的逻辑)
-        const { data: favorites, error } = await supabase
-          .from('web_favorites')
-          .select('site_id')
-          .eq('user_id', user.id)
-
-        if (error) {
-          console.error('Error loading favorites:', error)
-        } else {
-          const favoriteSiteIds = favorites?.map(fav => fav.site_id) || []
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Authenticated users: load from database adapter (CloudBase or Supabase)
+        try {
+          const favoriteSiteIds = await dbAdapter.getFavorites()
           setFavorites(favoriteSiteIds)
+          console.log('✅ [DB] 加载收藏成功:', favoriteSiteIds.length, '个')
+        } catch (error) {
+          console.error('❌ [DB] 加载收藏失败:', error)
         }
       } else {
         // Guest users: use localStorage
@@ -301,26 +306,23 @@ export default function SiteHub() {
     }
 
     loadFavorites()
-  }, [user.type, user.id])
+  }, [user.type, user.id, dbAdapter])
 
-  // Load custom sites from Supabase (for authenticated users) or localStorage (for guests)
+  // Load custom sites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadSites() {
-      if (user.type === "authenticated" && user.id) {
-        // Authenticated users: load custom sites from Supabase
-        const { data, error } = await supabase
-          .from("web_custom_sites")
-          .select("*")
-          .eq("user_id", user.id)
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Authenticated users: load custom sites from database adapter
+        try {
+          const data = await dbAdapter.getCustomSites()
 
-        if (data && !error) {
-          const customSites = data.map((site) => ({
-            id: site.id,
+          const customSites = data.map((site: any) => ({
+            id: site.id || site._id,
             name: site.name,
             nameEn: site.name,
             url: site.url,
             logo: site.logo || "",
-            category: site.category,
+            category: site.category || "tools",
             custom: true,
             featured: false,
             isChina: false,
@@ -332,18 +334,19 @@ export default function SiteHub() {
           const normalizedSites = normalizeSites(mergedSites)
           setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
 
-          // Migrate localStorage custom sites to Supabase if exists
+          console.log('✅ [DB] 加载自定义网站成功:', customSites.length, '个')
+
+          // Migrate localStorage custom sites to database if exists
           const localSites = localStorage.getItem("sitehub-sites")
           if (localSites) {
             const localSitesData = JSON.parse(localSites)
             const customLocalSites = localSitesData.filter((s: Site) => s.custom)
 
             for (const site of customLocalSites) {
-              // Check if site already exists in Supabase
-              const exists = data.some((s) => s.url === site.url)
+              // Check if site already exists
+              const exists = data.some((s: any) => s.url === site.url)
               if (!exists) {
-                await supabase.from("web_custom_sites").insert({
-                  user_id: user.id,
+                await dbAdapter.addCustomSite({
                   name: site.name,
                   url: site.url,
                   logo: site.logo,
@@ -353,7 +356,10 @@ export default function SiteHub() {
             }
             // Clear localStorage after migration
             localStorage.removeItem("sitehub-sites")
+            console.log('✅ [DB] localStorage自定义网站已迁移到数据库')
           }
+        } catch (error) {
+          console.error('❌ [DB] 加载自定义网站失败:', error)
         }
       } else {
         // Guest users: use localStorage
@@ -387,7 +393,7 @@ export default function SiteHub() {
         }
       }
     }
-  }, [user.type, user.id])
+  }, [user.type, user.id, dbAdapter, regionCategory, language])
 
   useEffect(() => {
     if (geoLoading) {
@@ -598,26 +604,30 @@ export default function SiteHub() {
     }
 
     try {
-      if (user.type === "authenticated" && user.id) {
-        const { data, error } = await supabase
-          .from("web_custom_sites")
-          .insert({
-            user_id: user.id,
-            name: newSite.name,
-            url: newSite.url,
-            logo: newSite.logo,
-            category: "tools",
-          })
-          .select()
-          .single()
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Add custom site to database
+        const success = await dbAdapter.addCustomSite({
+          name: newSite.name,
+          url: newSite.url,
+          logo: newSite.logo,
+          category: "tools",
+        })
 
-        if (error || !data) {
-          throw error
+        if (!success) {
+          throw new Error('Failed to add custom site to database')
+        }
+
+        // Reload sites from database to get the new site with ID
+        const customSites = await dbAdapter.getCustomSites()
+        const addedSite = customSites.find((s: any) => s.url === newSite.url)
+
+        if (!addedSite) {
+          throw new Error('Added site not found in database')
         }
 
         const siteWithId: Site = {
           ...newSite,
-          id: data.id,
+          id: addedSite.id || addedSite._id,
           nameEn: newSite.name,
           custom: true,
           category: "tools",
@@ -626,14 +636,12 @@ export default function SiteHub() {
 
         setSites((prev) => [...prev, siteWithId])
 
-        // 保存到Supabase
-        await supabase.from('web_favorites').insert({
-          user_id: user.id,
-          site_id: data.id
-        })
-        setFavorites((prev) => [...prev, data.id])
+        // Add to favorites
+        await dbAdapter.addFavorite(siteWithId.id)
+        setFavorites((prev) => [...prev, siteWithId.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
+        console.log('✅ [DB] 添加自定义网站成功')
         return true
       }
 
@@ -696,51 +704,37 @@ export default function SiteHub() {
     localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
 
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
-    if (user.type === "authenticated" && user.id) {
+    if (user.type === "authenticated" && user.id && dbAdapter) {
       try {
         if (isFavorited) {
-          // Remove favorite from Supabase
-          await supabase
-            .from('web_favorites')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('site_id', siteId)
+          // Remove favorite from database
+          await dbAdapter.removeFavorite(siteId)
         } else {
-          // Add favorite to Supabase
-          await supabase.from('web_favorites').insert({
-            user_id: user.id,
-            site_id: siteId
-          })
+          // Add favorite to database
+          await dbAdapter.addFavorite(siteId)
         }
-        console.log('✅ [Favorite] 云端同步成功')
+        console.log('✅ [DB] 收藏云端同步成功')
       } catch (error) {
-        console.error('❌ [Favorite] 云端同步失败:', error)
+        console.error('❌ [DB] 收藏云端同步失败:', error)
         // 即使云端同步失败，本地状态也已经更新了
       }
     }
   }
 
   const removeSite = async (siteId: string) => {
-    if (user.type === "authenticated" && user.id) {
-      // Authenticated users: delete from Supabase
-      await supabase
-        .from('web_custom_sites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('id', siteId)
+    if (user.type === "authenticated" && user.id && dbAdapter) {
+      // Authenticated users: delete from database
+      await dbAdapter.removeCustomSite(siteId)
 
       // Also remove from favorites if it was favorited
       if (favorites.includes(siteId)) {
-        await supabase
-          .from('web_favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('site_id', siteId)
+        await dbAdapter.removeFavorite(siteId)
         setFavorites(favorites.filter((id) => id !== siteId))
       }
 
       setSites(sites.filter((site) => site.id !== siteId))
       showToast(toastText.removed)
+      console.log('✅ [DB] 删除自定义网站成功')
     } else {
       // Guest users: use localStorage
       const updatedSites = sites.filter((site) => site.id !== siteId)

@@ -113,7 +113,7 @@ function UltraCompactSiteCard({ site, onRemove, favorites, onToggleFavorite, isD
 export function UltraCompactSiteGrid({ sites, onRemove, onReorder, onToggleFavorite, favorites = [], isDragDisabled = false }) {
   return (
     <SortableContext items={sites.map((site) => site.id)} strategy={rectSortingStrategy}>
-      <div className="grid grid-cols-4 xs:grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 2xl:grid-cols-18 gap-1.5 sm:gap-2">
+      <div className="grid grid-cols-3 xs:grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 2xl:grid-cols-18 gap-2 sm:gap-2">
         {sites.map((site) => (
           <UltraCompactSiteCard
             key={site.id}

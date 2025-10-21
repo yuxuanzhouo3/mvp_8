@@ -48,67 +48,76 @@ async function isChineseIP(ip: string): Promise<boolean> {
   }
 }
 
-// 国内用户认证（暂时使用Supabase，添加region标记区分）
+// 国内用户认证（使用腾讯云CloudBase数据库）
 async function cloudbaseEmailAuth(email: string, password: string, mode: 'login' | 'signup') {
   try {
-    // TODO: 等待CloudBase API密钥后切换到真实腾讯云数据库
-    // 暂时使用Supabase，通过metadata中的region字段标记为china
-    console.log('[国内用户] 使用Supabase存储，region标记为china')
+    console.log('[国内用户] 使用腾讯云CloudBase数据库')
 
-    const supabase = createServerClient()
+    // 初始化CloudBase
+    const app = cloudbase.init({
+      env: process.env.NEXT_PUBLIC_WECHAT_CLOUDBASE_ID!,
+      secretId: process.env.CLOUDBASE_SECRET_ID!,
+      secretKey: process.env.CLOUDBASE_SECRET_KEY!
+    })
+
+    const db = app.database()
+    const usersCollection = db.collection('web_users')
 
     if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({
+      // 检查邮箱是否已存在
+      const existingUser = await usersCollection.where({ email }).get()
+      if (existingUser.data && existingUser.data.length > 0) {
+        return { error: '该邮箱已被注册' }
+      }
+
+      // 加密密码
+      const hashedPassword = await bcrypt.hash(password, 10)
+
+      // 创建新用户
+      const newUser = {
         email,
-        password,
-        options: {
-          data: {
-            region: 'china', // 标记为国内用户
-            full_name: email.split('@')[0],
-          }
-        }
-      })
-
-      if (error) {
-        console.error('国内用户注册错误:', error)
-        return { error: error.message.includes('already') ? '该邮箱已被注册' : '注册失败，请稍后重试' }
+        password: hashedPassword,
+        name: email.includes('@') ? email.split('@')[0] : email,
+        pro: false,
+        region: 'china',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
 
-      if (!data.user) {
-        return { error: '注册失败，请稍后重试' }
-      }
+      const result = await usersCollection.add(newUser)
 
       return {
         user: {
-          id: data.user.id,
-          email: data.user.email || email,
-          name: email.split('@')[0],
+          id: result.id,
+          email,
+          name: newUser.name,
           pro: false,
           region: 'china'
         }
       }
     } else {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      // 登录：查找用户
+      const userResult = await usersCollection.where({ email }).get()
 
-      if (error) {
-        console.error('国内用户登录错误:', error)
+      if (!userResult.data || userResult.data.length === 0) {
         return { error: '用户不存在或密码错误' }
       }
 
-      if (!data.user) {
-        return { error: '登录失败，请稍后重试' }
+      const user = userResult.data[0]
+
+      // 验证密码
+      const isPasswordValid = await bcrypt.compare(password, user.password)
+      if (!isPasswordValid) {
+        return { error: '用户不存在或密码错误' }
       }
 
       return {
         user: {
-          id: data.user.id,
-          email: data.user.email || email,
-          name: data.user.user_metadata?.full_name || email.split('@')[0],
-          pro: false,
-          region: data.user.user_metadata?.region || 'china'
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          pro: user.pro || false,
+          region: 'china'
         }
       }
     }
@@ -203,8 +212,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`📍 IP检测: ${clientIP} → ${isChina ? '🇨🇳 国内' : '🌍 海外'}`)
 
-    // 海外IP才验证密码长度（国内测试账号可以使用短密码）
-    if (!isChina && password.length < 6) {
+    // 验证密码长度
+    if (password.length < 6) {
       return NextResponse.json(
         { error: '密码至少6位' },
         { status: 400 }
@@ -214,41 +223,10 @@ export async function POST(request: NextRequest) {
     // 根据IP选择认证方式
     let result
     if (isChina) {
-      // 国内IP用户：仅允许登录，禁止注册
-      if (mode === 'signup') {
-        console.log('🔐 [国内IP] 注册功能暂时关闭')
-        return NextResponse.json({
-          error: '国内用户注册功能正在配置中，请使用已有账号登录。如需测试请联系客服 mornscience@gmail.com',
-          needCloudBase: true
-        }, { status: 503 })
-      }
-
-      // 允许登录：使用测试账号
-      console.log('🔐 [国内IP] 使用测试账号登录')
-
-      // 测试账号验证
-      const TEST_ACCOUNT = {
-        email: '123',
-        password: '123'
-      }
-
-      if (email === TEST_ACCOUNT.email && password === TEST_ACCOUNT.password) {
-        result = {
-          user: {
-            id: 'test-user-china-001',
-            email: '123@test.com',
-            name: '测试用户',
-            pro: false,
-            region: 'china'
-          }
-        }
-      } else {
-        return NextResponse.json({
-          error: '账号或密码错误。测试账号：123 密码：123'
-        }, { status: 401 })
-      }
+      console.log('🔐 [国内IP] 使用CloudBase数据库')
+      result = await cloudbaseEmailAuth(email, password, mode as 'login' | 'signup')
     } else {
-      console.log('🔐 使用Supabase认证')
+      console.log('🔐 [海外IP] 使用Supabase数据库')
       result = await supabaseEmailAuth(email, password, mode as 'login' | 'signup')
     }
 
