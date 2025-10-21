@@ -10,18 +10,30 @@ let app: any = null
 let db: any = null
 let auth: any = null
 
-// 只在浏览器端初始化
-if (typeof window !== 'undefined') {
+// 初始化函数（支持服务器端和浏览器端）
+function initCloudBase() {
+  if (app) return { app, db, auth } // 已初始化
+
   try {
+    const envId = process.env.NEXT_PUBLIC_WECHAT_CLOUDBASE_ID || 'cloudbase-1gnip2iaa08260e5'
+
     app = cloudbase.init({
-      env: process.env.NEXT_PUBLIC_WECHAT_CLOUDBASE_ID || 'cloudbase-1gnip2iaa08260e5'
+      env: envId
     })
+
     db = app.database()
     auth = app.auth()
+
+    console.log('✅ [CloudBase] 初始化成功:', envId)
   } catch (error) {
     console.error('❌ [CloudBase] 初始化失败:', error)
   }
+
+  return { app, db, auth }
 }
+
+// 立即初始化（支持服务器端和浏览器端）
+initCloudBase()
 
 // 导出实例
 export { db, auth }
