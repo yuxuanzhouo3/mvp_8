@@ -34,109 +34,44 @@ async function isChineseIP(ip: string): Promise<boolean> {
   }
 }
 
-// 腾讯云邮箱登录（使用服务器端SDK）
+// 国内用户认证（暂时使用Supabase，添加region标记区分）
 async function cloudbaseEmailAuth(email: string, password: string, mode: 'login' | 'signup') {
   try {
-    // 初始化腾讯云CloudBase服务器端SDK
-    const app = cloudbase.init({
-      env: process.env.NEXT_PUBLIC_WECHAT_CLOUDBASE_ID || 'cloudbase-1gnip2iaa08260e5'
-    })
+    // TODO: 等待CloudBase API密钥后切换到真实腾讯云数据库
+    // 暂时使用Supabase，通过metadata中的region字段标记为china
+    console.log('[国内用户] 使用Supabase存储，region标记为china')
 
-    const db = app.database()
-    const COLLECTIONS = {
-      USERS: 'web_users'
-    }
-
-    console.log('✅ [CloudBase服务器端] 使用真实的腾讯云数据库')
-
-    if (mode === 'signup') {
-      // 注册：检查用户是否存在
-      const existingUser = await db.collection(COLLECTIONS.USERS)
-        .where({ email })
-        .get()
-
-      if (existingUser.data && existingUser.data.length > 0) {
-        return { error: '该邮箱已被注册' }
-      }
-
-      // 密码加密
-      const hashedPassword = await bcrypt.hash(password, 10)
-
-      // 创建用户
-      const result = await db.collection(COLLECTIONS.USERS).add({
-        email,
-        password: hashedPassword,
-        name: email.split('@')[0],
-        created_at: db.serverDate(),
-        updated_at: db.serverDate(),
-        pro: false,
-        email_verified: false
-      })
-
-      return {
-        user: {
-          id: result.id,
-          email,
-          name: email.split('@')[0],
-          pro: false
-        }
-      }
-    } else {
-      // 登录：查找用户
-      const userResult = await db.collection(COLLECTIONS.USERS)
-        .where({ email })
-        .get()
-
-      if (!userResult.data || userResult.data.length === 0) {
-        return { error: '用户不存在' }
-      }
-
-      const user = userResult.data[0]
-
-      // 验证密码
-      const isValid = await bcrypt.compare(password, user.password)
-      if (!isValid) {
-        return { error: '密码错误' }
-      }
-
-      return {
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name || email.split('@')[0],
-          pro: user.pro || false
-        }
-      }
-    }
-  } catch (error) {
-    console.error('腾讯云CloudBase认证错误:', error)
-    return { error: '认证失败，请稍后重试' }
-  }
-}
-
-// Supabase邮箱登录
-async function supabaseEmailAuth(email: string, password: string, mode: 'login' | 'signup') {
-  try {
     const supabase = createClient()
 
     if (mode === 'signup') {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            region: 'china', // 标记为国内用户
+            full_name: email.split('@')[0],
+          }
+        }
       })
 
       if (error) {
-        return { error: error.message }
+        console.error('国内用户注册错误:', error)
+        return { error: error.message.includes('already') ? '该邮箱已被注册' : '注册失败，请稍后重试' }
+      }
+
+      if (!data.user) {
+        return { error: '注册失败，请稍后重试' }
       }
 
       return {
-        user: data.user ? {
+        user: {
           id: data.user.id,
           email: data.user.email || email,
-          name: data.user.user_metadata?.full_name || email.split('@')[0],
+          name: email.split('@')[0],
           pro: false,
-          emailConfirmed: !!data.user.email_confirmed_at
-        } : null
+          region: 'china'
+        }
       }
     } else {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -145,21 +80,95 @@ async function supabaseEmailAuth(email: string, password: string, mode: 'login' 
       })
 
       if (error) {
-        return { error: error.message }
+        console.error('国内用户登录错误:', error)
+        return { error: '用户不存在或密码错误' }
+      }
+
+      if (!data.user) {
+        return { error: '登录失败，请稍后重试' }
       }
 
       return {
-        user: data.user ? {
+        user: {
           id: data.user.id,
           email: data.user.email || email,
           name: data.user.user_metadata?.full_name || email.split('@')[0],
-          pro: false
-        } : null
+          pro: false,
+          region: data.user.user_metadata?.region || 'china'
+        }
       }
     }
   } catch (error) {
-    console.error('Supabase认证错误:', error)
+    console.error('国内用户认证错误:', error)
     return { error: '认证失败，请稍后重试' }
+  }
+}
+
+// 海外用户认证（Supabase，region标记为overseas）
+async function supabaseEmailAuth(email: string, password: string, mode: 'login' | 'signup') {
+  try {
+    console.log('[海外用户] 使用Supabase存储，region标记为overseas')
+
+    const supabase = createClient()
+
+    if (mode === 'signup') {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            region: 'overseas', // 标记为海外用户
+            full_name: email.split('@')[0],
+          }
+        }
+      })
+
+      if (error) {
+        console.error('海外用户注册错误:', error)
+        return { error: error.message }
+      }
+
+      if (!data.user) {
+        return { error: 'Registration failed' }
+      }
+
+      return {
+        user: {
+          id: data.user.id,
+          email: data.user.email || email,
+          name: email.split('@')[0],
+          pro: false,
+          region: 'overseas'
+        }
+      }
+    } else {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        console.error('海外用户登录错误:', error)
+        return { error: error.message }
+      }
+
+      if (!data.user) {
+        return { error: 'Login failed' }
+      }
+
+      return {
+        user: {
+          id: data.user.id,
+          email: data.user.email || email,
+          name: data.user.user_metadata?.full_name || email.split('@')[0],
+          pro: false,
+          region: data.user.user_metadata?.region || 'overseas'
+        }
+      }
+    }
+  } catch (error) {
+    console.error('海外用户认证错误:', error)
+    return { error: 'Authentication failed' }
   }
 }
 
