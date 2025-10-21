@@ -381,7 +381,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
           {showBenefits ? (
             <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 relative">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">What you get:</h4>
+                <h4 className="font-medium text-sm">{languageCode === 'zh' ? '你将获得：' : 'What you get:'}</h4>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -394,19 +394,19 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               <div className="space-y-1 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Unlimited custom sites & favorites</span>
+                  <span>{languageCode === 'zh' ? '无限自定义网站和收藏' : 'Unlimited custom sites & favorites'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Sync across all your devices</span>
+                  <span>{languageCode === 'zh' ? '跨设备同步' : 'Sync across all your devices'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Organize 300+ sites in one place</span>
+                  <span>{languageCode === 'zh' ? '一站式管理300+网站' : 'Organize 300+ sites in one place'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Never lose your data again</span>
+                  <span>{languageCode === 'zh' ? '永不丢失数据' : 'Never lose your data again'}</span>
                 </div>
               </div>
             </div>
@@ -417,7 +417,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               onClick={() => setShowBenefits(true)}
               className="text-xs text-slate-400 hover:text-slate-300"
             >
-              Show benefits
+              {languageCode === 'zh' ? '显示权益' : 'Show benefits'}
             </Button>
           )}
         </div>

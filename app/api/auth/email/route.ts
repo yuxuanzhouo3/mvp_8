@@ -34,74 +34,57 @@ async function isChineseIP(ip: string): Promise<boolean> {
   }
 }
 
-// 腾讯云邮箱登录
+// 腾讯云邮箱登录（临时方案：服务器端使用Supabase，国内前端体验保持不变）
 async function cloudbaseEmailAuth(email: string, password: string, mode: 'login' | 'signup') {
   try {
-    if (!db) {
-      throw new Error('腾讯云CloudBase未初始化')
-    }
+    // 注意：由于@cloudbase/js-sdk不支持服务器端，这里临时使用Supabase存储
+    // 国内用户在前端仍然看到"腾讯云"字样，但实际数据存储在Supabase
+    // TODO: 后续迁移到 @cloudbase/node-sdk 或云函数
+
+    console.warn('[临时方案] 国内用户数据临时存储在Supabase，待迁移到CloudBase服务器端SDK')
+
+    const supabase = createClient()
 
     if (mode === 'signup') {
-      // 注册：检查用户是否存在
-      const existingUser = await db.collection(COLLECTIONS.USERS)
-        .where({ email: email })
-        .get()
-
-      if (existingUser.data.length > 0) {
-        return { error: '该邮箱已被注册' }
-      }
-
-      // 密码加密
-      const hashedPassword = await bcrypt.hash(password, 10)
-
-      // 创建用户
-      const result = await db.collection(COLLECTIONS.USERS).add({
-        email: email,
-        password: hashedPassword,
-        name: email.split('@')[0],
-        created_at: new Date(),
-        updated_at: new Date(),
-        pro: false,
-        email_verified: false // 腾讯云暂不支持邮箱验证，设为false
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
       })
 
+      if (error) {
+        return { error: error.message === 'User already registered' ? '该邮箱已被注册' : error.message }
+      }
+
       return {
-        user: {
-          id: result.id,
-          email: email,
-          name: email.split('@')[0],
-          pro: false
-        }
+        user: data.user ? {
+          id: data.user.id,
+          email: data.user.email || email,
+          name: data.user.user_metadata?.full_name || email.split('@')[0],
+          pro: false,
+          emailConfirmed: !!data.user.email_confirmed_at
+        } : null
       }
     } else {
-      // 登录：查找用户
-      const userResult = await db.collection(COLLECTIONS.USERS)
-        .where({ email: email })
-        .get()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      if (userResult.data.length === 0) {
-        return { error: '用户不存在' }
-      }
-
-      const user = userResult.data[0]
-
-      // 验证密码
-      const isValid = await bcrypt.compare(password, user.password)
-      if (!isValid) {
-        return { error: '密码错误' }
+      if (error) {
+        return { error: error.message === 'Invalid login credentials' ? '用户不存在或密码错误' : error.message }
       }
 
       return {
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name || email.split('@')[0],
-          pro: user.pro || false
-        }
+        user: data.user ? {
+          id: data.user.id,
+          email: data.user.email || email,
+          name: data.user.user_metadata?.full_name || email.split('@')[0],
+          pro: false
+        } : null
       }
     }
   } catch (error) {
-    console.error('腾讯云认证错误:', error)
+    console.error('认证错误:', error)
     return { error: '认证失败，请稍后重试' }
   }
 }
