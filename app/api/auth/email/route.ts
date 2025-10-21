@@ -213,12 +213,39 @@ export async function POST(request: NextRequest) {
     // 根据IP选择认证方式
     let result
     if (isChina) {
-      // 国内IP用户：暂时禁用，等待CloudBase API密钥配置完成
-      console.log('🔐 [国内IP] 注册功能暂时关闭，等待CloudBase配置')
-      return NextResponse.json({
-        error: '国内用户注册功能正在配置中，我们正在部署符合数据安全法规的国内服务器。请稍后再试或联系客服 mornscience@gmail.com',
-        needCloudBase: true
-      }, { status: 503 })
+      // 国内IP用户：仅允许登录，禁止注册
+      if (mode === 'signup') {
+        console.log('🔐 [国内IP] 注册功能暂时关闭')
+        return NextResponse.json({
+          error: '国内用户注册功能正在配置中，请使用已有账号登录。如需测试请联系客服 mornscience@gmail.com',
+          needCloudBase: true
+        }, { status: 503 })
+      }
+
+      // 允许登录：使用测试账号
+      console.log('🔐 [国内IP] 使用测试账号登录')
+
+      // 测试账号验证
+      const TEST_ACCOUNT = {
+        email: 'test@mornhub.com',
+        password: 'test123456'
+      }
+
+      if (email === TEST_ACCOUNT.email && password === TEST_ACCOUNT.password) {
+        result = {
+          user: {
+            id: 'test-user-china-001',
+            email: TEST_ACCOUNT.email,
+            name: '测试用户（国内）',
+            pro: false,
+            region: 'china'
+          }
+        }
+      } else {
+        return NextResponse.json({
+          error: '账号或密码错误。测试账号：test@mornhub.com / test123456'
+        }, { status: 401 })
+      }
     } else {
       console.log('🔐 使用Supabase认证')
       result = await supabaseEmailAuth(email, password, mode as 'login' | 'signup')
