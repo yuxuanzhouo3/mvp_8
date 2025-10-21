@@ -66,6 +66,53 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
     )
   }
 
+  // 国内地区检测 - 显示开发中消息
+  if (isChina === true) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-center">
+              功能开发中
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-center">
+              国内登录和支付功能正在开发中，预计1-2周内上线
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <p className="text-sm text-blue-300 mb-3 font-semibold">即将上线的功能：</p>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-400">▸</span> 微信登录
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-400">▸</span> 邮箱账号注册
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-400">▸</span> 微信支付
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-400">▸</span> 支付宝支付
+                </li>
+              </ul>
+            </div>
+            <p className="text-xs text-slate-400 text-center">
+              您可以先作为游客浏览网站内容，或使用VPN访问海外版本体验完整功能
+            </p>
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              onClick={() => window.open('mailto:mornscience@gmail.com?subject=国内功能咨询', '_blank')}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              联系客服获取通知
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   // Update mode when authMode prop changes
   useEffect(() => {
     setMode(authMode)
