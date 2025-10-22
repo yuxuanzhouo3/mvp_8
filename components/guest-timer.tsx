@@ -57,7 +57,10 @@ export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerPr
     return () => clearInterval(interval)
   }, [user.type, isExpired, onTimeExpired])
 
-  if (user.type !== "guest") return null
+  // Don't return null after hooks - use CSS to hide instead
+  if (user.type !== "guest") {
+    return <div className="hidden" />
+  }
 
   const minutes = Math.floor(timeRemaining / 60)
   const seconds = timeRemaining % 60
