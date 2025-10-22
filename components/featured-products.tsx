@@ -13,6 +13,7 @@ export function FeaturedProducts({ sites }) {
     window.open(url, "_blank")
   }
 
+  // Move early return check AFTER all hooks
   if (!sites?.length) {
     return null
   }

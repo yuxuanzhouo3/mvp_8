@@ -109,14 +109,10 @@ const formatCategory = (key: string) =>
     .replace(/\b\w/g, (char) => char.toUpperCase())
 
 // 可拖放的收藏按钮组件 - 移动端优化
-function DroppableFavoriteButton({ isSelected, onClick, label, icon }: any) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'favorites-dropzone',
-  })
-
+function DroppableFavoriteButton({ isSelected, onClick, label, icon, dropRef, isOver }: any) {
   return (
     <Button
-      ref={setNodeRef}
+      ref={dropRef}
       variant={isSelected ? "default" : "outline"}
       size="sm"
       onClick={onClick}
@@ -147,6 +143,11 @@ export function SearchAndFilters({
   const [showAllCategories, setShowAllCategories] = useState(false)
   const { language } = useLanguage()
   const text = homeUiText[language].search
+
+  // Move useDroppable hook to parent component to prevent conditional hook calls
+  const { setNodeRef: favoritesDropRef, isOver: favoritesIsOver } = useDroppable({
+    id: 'favorites-dropzone',
+  })
 
   const orderedCategories = useMemo(() => {
     const order = categoryOrder && categoryOrder.length > 0 ? categoryOrder : DEFAULT_CATEGORY_ORDER
@@ -243,6 +244,8 @@ export function SearchAndFilters({
                   onClick={() => setSelectedCategory(categoryId)}
                   label={getLabel(categoryId)}
                   icon={getIcon(categoryId)}
+                  dropRef={favoritesDropRef}
+                  isOver={favoritesIsOver}
                 />
               )
             }
