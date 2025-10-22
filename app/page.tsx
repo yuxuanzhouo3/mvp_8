@@ -218,6 +218,7 @@ export default function SiteHub() {
   const [regionPriorityApplied, setRegionPriorityApplied] = useState(false)
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
   const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const customSitesCount = useMemo(
     () => sites.filter((site) => site.custom).length,
@@ -255,6 +256,11 @@ export default function SiteHub() {
   useEffect(() => {
     customCountRef.current = customSitesCount
   }, [customSitesCount])
+
+  // Set mounted flag after client-side hydration to prevent SSR/CSR mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     setRegionPriorityApplied(false)
@@ -471,6 +477,9 @@ export default function SiteHub() {
   const nonFeaturedCount = useMemo(() => sites.filter((site) => !site.featured).length, [sites])
 
   const summaryLabel = useMemo(() => {
+    if (!mounted) {
+      return ""
+    }
     const stats = homeUiText[language].stats
     if (selectedCategory === "custom") {
       return stats.summaryCustom.replace(uiPlaceholders.visible, filteredSites.length.toString())
@@ -481,7 +490,7 @@ export default function SiteHub() {
     return stats.summaryDefault
       .replace(uiPlaceholders.visible, filteredSites.length.toString())
       .replace(uiPlaceholders.total, nonFeaturedCount.toString())
-  }, [language, selectedCategory, filteredSites.length, nonFeaturedCount])
+  }, [mounted, language, selectedCategory, filteredSites.length, nonFeaturedCount])
 
   const handleGuestTimeExpired = () => {
     setIsGuestTimeExpired(true)
@@ -853,24 +862,27 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        <FeaturedProducts sites={sites.filter((site) => site.featured)} />
+        {mounted && <FeaturedProducts sites={sites.filter((site) => site.featured)} />}
 
-        <SearchAndFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          filteredCount={filteredSites.length}
-          categoryOrder={canonicalCategoryOrder}
-          totalCount={nonFeaturedCount}
-        />
+        {mounted && (
+          <SearchAndFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            filteredCount={filteredSites.length}
+            categoryOrder={canonicalCategoryOrder}
+            totalCount={nonFeaturedCount}
+          />
+        )}
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
-          <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold truncate">{text.stats.heading}</h2>
-            <p className="text-xs text-white/60 truncate">{summaryLabel}</p>
-          </div>
-          <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+        {mounted && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-bold truncate">{text.stats.heading}</h2>
+              <p className="text-xs text-white/60 truncate">{summaryLabel}</p>
+            </div>
+            <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -908,17 +920,24 @@ export default function SiteHub() {
               <Shuffle className="w-3 h-3 sm:mr-1" />
               <span className="hidden xs:inline ml-1">{text.buttons.shuffle}</span>
             </Button>
+            </div>
           </div>
-        </div>
+        )}
 
-        <UltraCompactSiteGrid
-          sites={filteredSites}
-          onRemove={removeSite}
-          onReorder={handleReorder}
-          onToggleFavorite={toggleFavorite}
-          favorites={favorites}
-          isDragDisabled={isDragDisabled}
-        />
+        {!mounted ? (
+          <div className="text-center text-white/60 py-8">
+            <div className="animate-pulse">Loading...</div>
+          </div>
+        ) : (
+          <UltraCompactSiteGrid
+            sites={filteredSites}
+            onRemove={removeSite}
+            onReorder={handleReorder}
+            onToggleFavorite={toggleFavorite}
+            favorites={favorites}
+            isDragDisabled={isDragDisabled}
+          />
+        )}
         </main>
       </DndContext>
 
