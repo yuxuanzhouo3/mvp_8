@@ -862,27 +862,24 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        {mounted && <FeaturedProducts sites={sites.filter((site) => site.featured)} />}
+        <FeaturedProducts sites={mounted ? sites.filter((site) => site.featured) : []} />
 
-        {mounted && (
-          <SearchAndFilters
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            filteredCount={filteredSites.length}
-            categoryOrder={canonicalCategoryOrder}
-            totalCount={nonFeaturedCount}
-          />
-        )}
+        <SearchAndFilters
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          filteredCount={mounted ? filteredSites.length : 0}
+          categoryOrder={canonicalCategoryOrder}
+          totalCount={mounted ? nonFeaturedCount : 0}
+        />
 
-        {mounted && (
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-lg font-bold truncate">{text.stats.heading}</h2>
-              <p className="text-xs text-white/60 truncate">{summaryLabel}</p>
-            </div>
-            <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-bold truncate">{text.stats.heading}</h2>
+            <p className="text-xs text-white/60 truncate">{summaryLabel}</p>
+          </div>
+          <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -920,24 +917,17 @@ export default function SiteHub() {
               <Shuffle className="w-3 h-3 sm:mr-1" />
               <span className="hidden xs:inline ml-1">{text.buttons.shuffle}</span>
             </Button>
-            </div>
           </div>
-        )}
+        </div>
 
-        {!mounted ? (
-          <div className="text-center text-white/60 py-8">
-            <div className="animate-pulse">Loading...</div>
-          </div>
-        ) : (
-          <UltraCompactSiteGrid
-            sites={filteredSites}
-            onRemove={removeSite}
-            onReorder={handleReorder}
-            onToggleFavorite={toggleFavorite}
-            favorites={favorites}
-            isDragDisabled={isDragDisabled}
-          />
-        )}
+        <UltraCompactSiteGrid
+          sites={mounted ? filteredSites : []}
+          onRemove={removeSite}
+          onReorder={handleReorder}
+          onToggleFavorite={toggleFavorite}
+          favorites={mounted ? favorites : []}
+          isDragDisabled={isDragDisabled}
+        />
         </main>
       </DndContext>
 
