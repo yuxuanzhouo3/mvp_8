@@ -969,8 +969,9 @@ export default function SiteHub() {
           )}
           
           {isHydrated && (
-          {/* 拖拽提示 - 移动端优化 */}
-          {draggingSiteId && !favorites.includes(draggingSiteId) && (
+            <>
+              {/* 拖拽提示 - 移动端优化 */}
+              {draggingSiteId && !favorites.includes(draggingSiteId) && (
             <div className="fixed top-16 sm:top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg z-50 animate-pulse text-sm sm:text-base max-w-[90%] sm:max-w-none text-center">
               <span className="mr-1 sm:mr-2">⭐</span>
               {language === "zh" ? "拖拽到收藏按钮来添加收藏" : "Drag to ⭐ Favorites to add"}
@@ -1083,6 +1084,7 @@ export default function SiteHub() {
           favorites={isHydrated ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
+            </>
           )}
         </main>
       </DndContext>
