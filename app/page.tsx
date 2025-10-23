@@ -626,6 +626,8 @@ export default function SiteHub() {
   }
 
   const handleUpgradeClick = () => {
+    console.log('🔍 [Upgrade] 点击升级按钮，地区检测:', { isChina, regionCategory })
+    
     // If user is already logged in (authenticated), go to payment page
     if (user.type === 'authenticated') {
       if (isHydrated && typeof window !== 'undefined') {
@@ -634,8 +636,16 @@ export default function SiteHub() {
       return
     }
 
-    // For guest users, show coming soon message
-    alert('注册功能即将上线，敬请期待！')
+    // 根据地区决定是否显示登录功能
+    if (isChina) {
+      // 国内用户显示待开发消息
+      console.log('🔍 [Upgrade] 国内用户，显示待开发消息')
+      alert('注册功能即将上线，敬请期待！')
+    } else {
+      // 海外用户显示升级模态框
+      console.log('🔍 [Upgrade] 海外用户，显示升级模态框')
+      setShowUpgradeModal(true)
+    }
   }
 
   const handleAuth = (provider: string) => {
@@ -1031,9 +1041,7 @@ export default function SiteHub() {
                 </div>
               </div>
               <Button
-                onClick={() => {
-                  alert('注册功能即将上线，敬请期待！')
-                }}
+                onClick={handleUpgradeClick}
                 className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white h-9 sm:h-10 text-sm sm:text-base min-w-[44px] touch-manipulation flex-shrink-0 w-full sm:w-auto"
               >
                 <Crown className="w-4 h-4 mr-2" />
