@@ -44,14 +44,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       wxStorage.remove("sitehub_language")
       setLanguageState(effectiveGeoLanguage)
       setIsAuto(true)
-      window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: effectiveGeoLanguage, mode: "auto" } }))
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: effectiveGeoLanguage, mode: "auto" } }))
+      }
       return
     }
 
     wxStorage.set("sitehub_language", lang)
     setLanguageState(lang)
     setIsAuto(false)
-    window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: lang, mode: "manual" } }))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: lang, mode: "manual" } }))
+    }
   }
 
   const toggleLanguage = () => {

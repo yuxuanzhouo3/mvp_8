@@ -51,7 +51,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("sitehub-settings", JSON.stringify(settings))
         
         // Apply theme
-        if (settings.theme === "dark" || (settings.theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        if (settings.theme === "dark" || (settings.theme === "auto" && typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
           document.documentElement.classList.add("dark")
         } else {
           document.documentElement.classList.remove("dark")
