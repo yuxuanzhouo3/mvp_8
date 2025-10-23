@@ -740,58 +740,27 @@ export default function SiteHub() {
         if (error || !data) {
           console.error('🔍 [AddSite] Supabase插入失败:', error)
           throw error
-
-      const currentCustomCount = customCountRef.current
-
-      if (!user.pro && currentCustomCount >= 10) {
-        showToast("Free limit reached! Upgrade to Pro for unlimited sites.", "error")
-        return false
-      }
-
-      if (user.type === "guest" && isGuestTimeExpired) {
-        setShowUpgradeModal(true)
-        showToast("Sign up to keep adding custom sites.", "info")
-        return false
-      }
-      if (user.type === "authenticated" && user.id && dbAdapter) {
-        // Add custom site to database
-        const success = await dbAdapter.addCustomSite({
-          name: newSite.name,
-          url: newSite.url,
-          logo: newSite.logo,
-          category: "tools",
-        })
-
-        if (!success) {
-          throw new Error('Failed to add custom site to database')
-        }
-
-        // Reload sites from database to get the new site with ID
-        const customSites = await dbAdapter.getCustomSites()
-        const addedSite = customSites.find((s: any) => s.url === newSite.url)
-
-        if (!addedSite) {
-          throw new Error('Added site not found in database')
->>>>>>> 81f18acdfbd9a1a0562c6d9824b69a6a77b6cb75
         }
 
         const siteWithId: Site = {
           ...newSite,
-          id: addedSite.id || addedSite._id,
+          id: data.id,
           nameEn: newSite.name,
           custom: true,
-          category: "tools",
+          featured: false,
           isChina: false,
         }
 
         setSites((prev) => [...prev, siteWithId])
 
-        // Add to favorites
-        await dbAdapter.addFavorite(siteWithId.id)
-        setFavorites((prev) => [...prev, siteWithId.id])
+        // 保存到Supabase
+        await supabase.from('web_favorites').insert({
+          user_id: user.id,
+          site_id: data.id
+        })
+        setFavorites((prev) => [...prev, data.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
-        console.log('✅ [DB] 添加自定义网站成功')
         return true
       }
 
