@@ -327,7 +327,11 @@ export default function SiteHub() {
         if (typeof window !== 'undefined') {
           const savedFavorites = localStorage.getItem("sitehub-favorites")
           if (savedFavorites) {
-            setFavorites(JSON.parse(savedFavorites))
+            try {
+              setFavorites(JSON.parse(savedFavorites))
+            } catch (error) {
+              console.error('❌ [LocalStorage] 解析收藏失败:', error)
+            }
           }
         }
       }
@@ -368,9 +372,11 @@ export default function SiteHub() {
           console.log('✅ [DB] 加载自定义网站成功:', customSites.length, '个')
 
           // Migrate localStorage custom sites to database if exists
-          const localSites = localStorage.getItem("sitehub-sites")
-          if (localSites) {
-            const localSitesData = JSON.parse(localSites)
+          if (typeof window !== 'undefined') {
+            const localSites = localStorage.getItem("sitehub-sites")
+            if (localSites) {
+              try {
+                const localSitesData = JSON.parse(localSites)
             const customLocalSites = localSitesData.filter((s: Site) => s.custom)
 
             for (const site of customLocalSites) {
@@ -385,23 +391,33 @@ export default function SiteHub() {
                 })
               }
             }
-            // Clear localStorage after migration
-            localStorage.removeItem("sitehub-sites")
-            console.log('✅ [DB] localStorage自定义网站已迁移到数据库')
+                // Clear localStorage after migration
+                localStorage.removeItem("sitehub-sites")
+                console.log('✅ [DB] localStorage自定义网站已迁移到数据库')
+              } catch (error) {
+                console.error('❌ [DB] 迁移localStorage自定义网站失败:', error)
+              }
+            }
           }
         } catch (error) {
           console.error('❌ [DB] 加载自定义网站失败:', error)
         }
       } else {
         // Guest users: use localStorage
-        const savedSites = localStorage.getItem("sitehub-sites")
-        if (savedSites) {
-          const parsedSites = JSON.parse(savedSites)
+        if (typeof window !== 'undefined') {
+          const savedSites = localStorage.getItem("sitehub-sites")
+          if (savedSites) {
+            try {
+              const parsedSites = JSON.parse(savedSites)
           const normalizedSites = normalizeSites(parsedSites)
           setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
         } else {
           const defaultSites = getDefaultSites()
           setSites(localizeSites(prioritizeSitesByRegion(defaultSites, regionCategory), language))
+            } catch (error) {
+              console.error('❌ [LocalStorage] 解析自定义网站失败:', error)
+            }
+          }
         }
       }
     }
@@ -409,18 +425,28 @@ export default function SiteHub() {
     loadSites()
 
     // Load shuffle preference
-    const savedShuffle = localStorage.getItem("sitehub-shuffle")
-    if (savedShuffle) {
-      setIsShuffled(JSON.parse(savedShuffle))
+    if (typeof window !== 'undefined') {
+      const savedShuffle = localStorage.getItem("sitehub-shuffle")
+      if (savedShuffle) {
+        try {
+          setIsShuffled(JSON.parse(savedShuffle))
+        } catch (error) {
+          console.error('❌ [LocalStorage] 解析随机偏好失败:', error)
+        }
+      }
     }
 
     // Check if guest time is already expired
-    if (user.type === "guest") {
+    if (user.type === "guest" && typeof window !== 'undefined') {
       const startTime = localStorage.getItem("guest-start-time")
       if (startTime) {
-        const elapsed = Math.floor((Date.now() - Number.parseInt(startTime)) / 1000)
-        if (elapsed >= 600) {
-          setIsGuestTimeExpired(true)
+        try {
+          const elapsed = Math.floor((Date.now() - Number.parseInt(startTime)) / 1000)
+          if (elapsed >= 600) {
+            setIsGuestTimeExpired(true)
+          }
+        } catch (error) {
+          console.error('❌ [LocalStorage] 解析访客时间失败:', error)
         }
       }
     }
@@ -441,10 +467,12 @@ export default function SiteHub() {
     if (!areSiteOrdersEqual(sites, prioritized)) {
       const localizedPrioritized = localizeSites(prioritized, language)
       setSites(localizedPrioritized)
-      try {
-        localStorage.setItem("sitehub-sites", JSON.stringify(localizedPrioritized))
-      } catch (error) {
-        console.warn("Failed to persist regional ordering:", error)
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem("sitehub-sites", JSON.stringify(localizedPrioritized))
+        } catch (error) {
+          console.warn("Failed to persist regional ordering:", error)
+        }
       }
     }
     setRegionPriorityApplied(true)
@@ -456,21 +484,35 @@ export default function SiteHub() {
 
   // Save data with user-specific keys for authenticated users
   const saveUserData = (key: string, data: any) => {
-    if (user.type === "authenticated") {
-      const userKey = `${key}-${user.email}`
-      localStorage.setItem(userKey, JSON.stringify(data))
-    } else {
-      localStorage.setItem(key, JSON.stringify(data))
+    if (typeof window !== 'undefined') {
+      try {
+        if (user.type === "authenticated") {
+          const userKey = `${key}-${user.email}`
+          localStorage.setItem(userKey, JSON.stringify(data))
+        } else {
+          localStorage.setItem(key, JSON.stringify(data))
+        }
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存用户数据失败:', error)
+      }
     }
   }
 
   const loadUserData = (key: string) => {
-    if (user.type === "authenticated") {
-      const userKey = `${key}-${user.email}`
-      return localStorage.getItem(userKey)
-    } else {
-      return localStorage.getItem(key)
+    if (typeof window !== 'undefined') {
+      try {
+        if (user.type === "authenticated") {
+          const userKey = `${key}-${user.email}`
+          return localStorage.getItem(userKey)
+        } else {
+          return localStorage.getItem(key)
+        }
+      } catch (error) {
+        console.error('❌ [LocalStorage] 加载用户数据失败:', error)
+        return null
+      }
     }
+    return null
   }
   // Filter sites based on search and category
   const filteredSites = useMemo(() => {
@@ -525,7 +567,9 @@ export default function SiteHub() {
   const handleUpgradeClick = () => {
     // If user is already logged in (authenticated), go to payment page
     if (user.type === 'authenticated') {
-      window.location.href = '/payment'
+      if (typeof window !== 'undefined') {
+        window.location.href = '/payment'
+      }
       return
     }
 
@@ -579,8 +623,14 @@ export default function SiteHub() {
     setSites(newSites)
     setIsShuffled(!isShuffled)
 
-    localStorage.setItem("webhub-sites", JSON.stringify(newSites))
-    localStorage.setItem("webhub-shuffle", JSON.stringify(!isShuffled))
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem("webhub-sites", JSON.stringify(newSites))
+        localStorage.setItem("webhub-shuffle", JSON.stringify(!isShuffled))
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存随机状态失败:', error)
+      }
+    }
 
     showToast(toastText.shuffled)
   }
@@ -594,7 +644,13 @@ export default function SiteHub() {
     const featuredSites = sites.filter((site) => site.featured)
     const reorderedSites = [...featuredSites, ...newSites]
     setSites(reorderedSites)
-    localStorage.setItem("sitehub-sites", JSON.stringify(reorderedSites))
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem("sitehub-sites", JSON.stringify(reorderedSites))
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存重排序状态失败:', error)
+      }
+    }
     showToast(toastText.reordered)
   }
 
@@ -671,13 +727,25 @@ export default function SiteHub() {
 
       setSites((prev) => {
         const updated = [...prev, siteWithId]
-        localStorage.setItem("sitehub-sites", JSON.stringify(updated))
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem("sitehub-sites", JSON.stringify(updated))
+          } catch (error) {
+            console.error('❌ [LocalStorage] 保存添加网站失败:', error)
+          }
+        }
         return updated
       })
 
       setFavorites((prev) => {
         const updated = [...prev, siteWithId.id]
-        localStorage.setItem("sitehub-favorites", JSON.stringify(updated))
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem("sitehub-favorites", JSON.stringify(updated))
+          } catch (error) {
+            console.error('❌ [LocalStorage] 保存收藏失败:', error)
+          }
+        }
         return updated
       })
 
@@ -716,7 +784,13 @@ export default function SiteHub() {
     }
 
     // 3. 保存到本地存储（立即执行）
-    localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存收藏失败:', error)
+      }
+    }
 
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
     if (user.type === "authenticated" && user.id && dbAdapter) {
@@ -758,10 +832,22 @@ export default function SiteHub() {
       if (favorites.includes(siteId)) {
         const newFavorites = favorites.filter((id) => id !== siteId)
         setFavorites(newFavorites)
-        localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+          } catch (error) {
+            console.error('❌ [LocalStorage] 保存取消收藏失败:', error)
+          }
+        }
       }
 
-      localStorage.setItem("sitehub-sites", JSON.stringify(updatedSites))
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem("sitehub-sites", JSON.stringify(updatedSites))
+        } catch (error) {
+          console.error('❌ [LocalStorage] 保存删除网站失败:', error)
+        }
+      }
       showToast(toastText.removed)
     }
   }
