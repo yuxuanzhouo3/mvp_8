@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
     // Initialize session manager
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ type: "guest", customCount: 0, pro: false })
       } finally {
         setLoading(false)
+        setIsHydrated(true) // 标记hydration完成
       }
     }
 
@@ -152,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     supabaseUser,
     session,
-    loading,
+    loading: loading || !isHydrated, // 在hydration完成前保持loading状态
     signOut,
     signIn
   }
