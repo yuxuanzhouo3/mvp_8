@@ -28,7 +28,10 @@ export function Toast({ message, type = "success" }) {
 
   const Icon = icons[type]
 
-  if (!isVisible) return null
+  // Don't return null after hooks - use CSS to hide instead
+  if (!isVisible) {
+    return <div className="hidden" />
+  }
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">

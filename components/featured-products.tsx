@@ -13,8 +13,9 @@ export function FeaturedProducts({ sites }) {
     window.open(url, "_blank")
   }
 
+  // Don't return null - always return consistent structure to avoid hooks count mismatch
   if (!sites?.length) {
-    return null
+    return <div className="hidden" />
   }
 
   return (

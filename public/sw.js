@@ -1,5 +1,6 @@
 // SiteHub Service Worker - Network First Strategy
-const CACHE_NAME = 'sitehub-v1';
+// Updated cache version to force refresh on mobile devices
+const CACHE_NAME = 'sitehub-v2-20251023';
 
 // Install event - setup cache
 self.addEventListener('install', (event) => {

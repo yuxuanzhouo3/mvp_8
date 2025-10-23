@@ -1,12 +1,15 @@
 /**
  * SiteHub - Your Personal Web Dashboard
- * 
+ *
  * @author Yuxuan Zhou
  * @copyright 2025 Yuxuan Zhou. All rights reserved.
  * @license MIT
  */
 
 "use client"
+
+// Force client-side rendering to avoid SSR hydration mismatch
+export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo, useRef } from "react"
 import { Header } from "@/components/header"
@@ -198,7 +201,7 @@ const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
   list.map((site) => localizeSite(site, language))
 
 export default function SiteHub() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
   const { language } = useLanguage()
   const text = homeUiText[language]
@@ -218,6 +221,7 @@ export default function SiteHub() {
   const [regionPriorityApplied, setRegionPriorityApplied] = useState(false)
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
   const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const customSitesCount = useMemo(
     () => sites.filter((site) => site.custom).length,
@@ -255,6 +259,11 @@ export default function SiteHub() {
   useEffect(() => {
     customCountRef.current = customSitesCount
   }, [customSitesCount])
+
+  // Set mounted flag after client-side hydration to prevent SSR/CSR mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     setRegionPriorityApplied(false)
@@ -471,6 +480,9 @@ export default function SiteHub() {
   const nonFeaturedCount = useMemo(() => sites.filter((site) => !site.featured).length, [sites])
 
   const summaryLabel = useMemo(() => {
+    if (!mounted) {
+      return ""
+    }
     const stats = homeUiText[language].stats
     if (selectedCategory === "custom") {
       return stats.summaryCustom.replace(uiPlaceholders.visible, filteredSites.length.toString())
@@ -481,7 +493,7 @@ export default function SiteHub() {
     return stats.summaryDefault
       .replace(uiPlaceholders.visible, filteredSites.length.toString())
       .replace(uiPlaceholders.total, nonFeaturedCount.toString())
-  }, [language, selectedCategory, filteredSites.length, nonFeaturedCount])
+  }, [mounted, language, selectedCategory, filteredSites.length, nonFeaturedCount])
 
   const handleGuestTimeExpired = () => {
     setIsGuestTimeExpired(true)
@@ -774,6 +786,15 @@ export default function SiteHub() {
     }
   }
 
+  // Show loading screen while contexts initialize (after all hooks are called)
+  if (authLoading || geoLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-white text-xl animate-pulse">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
       <Header
@@ -829,16 +850,16 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        <FeaturedProducts sites={sites.filter((site) => site.featured)} />
+        <FeaturedProducts sites={mounted ? sites.filter((site) => site.featured) : []} />
 
         <SearchAndFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
-          filteredCount={filteredSites.length}
+          filteredCount={mounted ? filteredSites.length : 0}
           categoryOrder={canonicalCategoryOrder}
-          totalCount={nonFeaturedCount}
+          totalCount={mounted ? nonFeaturedCount : 0}
         />
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
@@ -888,11 +909,11 @@ export default function SiteHub() {
         </div>
 
         <UltraCompactSiteGrid
-          sites={filteredSites}
+          sites={mounted ? filteredSites : []}
           onRemove={removeSite}
           onReorder={handleReorder}
           onToggleFavorite={toggleFavorite}
-          favorites={favorites}
+          favorites={mounted ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
         </main>

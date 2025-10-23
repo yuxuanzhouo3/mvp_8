@@ -30,7 +30,10 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
   const [showPassword, setShowPassword] = useState(false)
   const [credentials, setCredentials] = useState({ email: "", password: "" })
 
-  if (!site) return null
+  // Don't return null after hooks - return empty Dialog instead
+  if (!site) {
+    return <div className="hidden" />
+  }
 
   const handleVisit = () => {
     window.open(site.url, "_blank")
