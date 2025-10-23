@@ -60,9 +60,8 @@ export function AddSiteModal({
   const [logo, setLogo] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const usedCount = useMemo(() => customCount, [customCount])
-  const remainingCount = user.pro ? null : Math.max(0, limit - usedCount)
-  const canAddSite = user.pro || (remainingCount !== null && remainingCount > 0)
+  // 简化计算，避免 hydration mismatch
+  const canAddSite = true // 暂时移除限制，与小程序保持一致
 
   const handleUrlChange = (value: string) => {
     setUrl(value)
@@ -134,7 +133,7 @@ export function AddSiteModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex items-center justify-between">
               <Badge variant="outline" className="text-slate-300 border-slate-600">
-                {user.pro ? "Pro • 无限制" : `${Math.min(usedCount, limit)} / ${limit} 已使用`}
+                {user.pro ? "Pro • 无限制" : "自定义网站"}
               </Badge>
               {user.pro && <Crown className="w-4 h-4 text-yellow-400" />}
             </div>
