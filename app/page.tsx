@@ -200,6 +200,9 @@ const localizeSite = (site: Site, language: SupportedLanguage): Site => {
 const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
   list.map((site) => localizeSite(site, language))
 
+// 强制客户端渲染，避免SSR hydration问题
+export const dynamic = 'force-dynamic'
+
 export default function SiteHub() {
   const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
@@ -236,14 +239,15 @@ export default function SiteHub() {
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
   const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   const customSitesCount = useMemo(() => {
-    // 防止hydration mismatch：只在hydration完成后处理sites
-    if (!isHydrated) {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
       return 0
     }
     return sites.filter((site) => site.custom).length
-  }, [sites, isHydrated])
+  }, [sites, isClient])
 
   // 计算是否禁用拖拽（需要在 sensors 之前）
   const isDragDisabled = user.type === "guest" && isGuestTimeExpired
@@ -268,12 +272,12 @@ export default function SiteHub() {
   }, [user.pro, customSitesCount])
 
   const existingUrls = useMemo(() => {
-    // 防止hydration mismatch：只在hydration完成后处理sites
-    if (!isHydrated) {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
       return new Set()
     }
     return new Set(sites.map((site) => normalizeUrlForComparison(site.url)))
-  }, [sites, isHydrated])
+  }, [sites, isClient])
 
   const customCountRef = useRef(0)
 
@@ -285,6 +289,7 @@ export default function SiteHub() {
   useEffect(() => {
     setMounted(true)
     setIsHydrated(true)
+    setIsClient(true)
   }, [])
 
   useEffect(() => {
@@ -528,8 +533,8 @@ export default function SiteHub() {
   }
   // Filter sites based on search and category
   const filteredSites = useMemo(() => {
-    // 防止hydration mismatch：只在hydration完成后处理sites
-    if (!isHydrated) {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
       return []
     }
     
@@ -556,15 +561,15 @@ export default function SiteHub() {
     }
 
     return filtered
-  }, [sites, searchQuery, selectedCategory, favorites, isHydrated])
+  }, [sites, searchQuery, selectedCategory, favorites, isClient])
 
   const nonFeaturedCount = useMemo(() => {
-    // 防止hydration mismatch：只在hydration完成后处理sites
-    if (!isHydrated) {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
       return 0
     }
     return sites.filter((site) => !site.featured).length
-  }, [sites, isHydrated])
+  }, [sites, isClient])
 
   const summaryLabel = useMemo(() => {
     if (!mounted) {
@@ -964,7 +969,7 @@ export default function SiteHub() {
                   <p className="text-xs sm:text-sm text-red-200 mt-0.5">
                     {text.guestBanner.description
                       .replace("{favorites}", favorites.length.toString())
-                      .replace("{custom}", isHydrated ? sites.filter((s) => s.custom).length.toString() : "0")}
+                      .replace("{custom}", isClient ? sites.filter((s) => s.custom).length.toString() : "0")}
                   </p>
                 </div>
               </div>
@@ -986,7 +991,7 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        <FeaturedProducts sites={isHydrated ? sites.filter((site) => site.featured) : []} />
+        <FeaturedProducts sites={isClient ? sites.filter((site) => site.featured) : []} />
 
         <SearchAndFilters
           searchQuery={searchQuery}
@@ -1051,11 +1056,11 @@ export default function SiteHub() {
         </div>
 
         <UltraCompactSiteGrid
-          sites={isHydrated ? filteredSites : []}
+          sites={isClient ? filteredSites : []}
           onRemove={removeSite}
           onReorder={handleReorder}
           onToggleFavorite={toggleFavorite}
-          favorites={isHydrated ? favorites : []}
+          favorites={isClient ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
         </main>
