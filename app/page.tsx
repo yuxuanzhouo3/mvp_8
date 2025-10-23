@@ -203,6 +203,19 @@ const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
 export default function SiteHub() {
   const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
+
+  // 调试日志
+  React.useEffect(() => {
+    console.log('🔍 [Debug] SiteHub render state:', {
+      userType: user.type,
+      userId: user.id,
+      authLoading,
+      geoLoading,
+      isChina,
+      isSSR: typeof window === 'undefined',
+      timestamp: new Date().toISOString()
+    })
+  }, [user.type, user.id, authLoading, geoLoading, isChina])
   const { language } = useLanguage()
   const text = homeUiText[language]
   const toastText = text.toasts
