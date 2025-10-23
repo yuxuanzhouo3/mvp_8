@@ -232,14 +232,18 @@ export default function SiteHub() {
   const [isGuestTimeExpired, setIsGuestTimeExpired] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [regionPriorityApplied, setRegionPriorityApplied] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
   const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  const customSitesCount = useMemo(
-    () => sites.filter((site) => site.custom).length,
-    [sites],
-  )
+  const customSitesCount = useMemo(() => {
+    // 防止hydration mismatch：只在hydration完成后处理sites
+    if (!isHydrated) {
+      return 0
+    }
+    return sites.filter((site) => site.custom).length
+  }, [sites, isHydrated])
 
   // 计算是否禁用拖拽（需要在 sensors 之前）
   const isDragDisabled = user.type === "guest" && isGuestTimeExpired
@@ -264,8 +268,12 @@ export default function SiteHub() {
   }, [user.pro, customSitesCount])
 
   const existingUrls = useMemo(() => {
+    // 防止hydration mismatch：只在hydration完成后处理sites
+    if (!isHydrated) {
+      return new Set()
+    }
     return new Set(sites.map((site) => normalizeUrlForComparison(site.url)))
-  }, [sites])
+  }, [sites, isHydrated])
 
   const customCountRef = useRef(0)
 
@@ -276,6 +284,7 @@ export default function SiteHub() {
   // Set mounted flag after client-side hydration to prevent SSR/CSR mismatch
   useEffect(() => {
     setMounted(true)
+    setIsHydrated(true)
   }, [])
 
   useEffect(() => {
@@ -519,6 +528,11 @@ export default function SiteHub() {
   }
   // Filter sites based on search and category
   const filteredSites = useMemo(() => {
+    // 防止hydration mismatch：只在hydration完成后处理sites
+    if (!isHydrated) {
+      return []
+    }
+    
     let filtered = sites.filter((site) => !site.featured)
 
     // Apply search filter
@@ -542,9 +556,15 @@ export default function SiteHub() {
     }
 
     return filtered
-  }, [sites, searchQuery, selectedCategory, favorites])
+  }, [sites, searchQuery, selectedCategory, favorites, isHydrated])
 
-  const nonFeaturedCount = useMemo(() => sites.filter((site) => !site.featured).length, [sites])
+  const nonFeaturedCount = useMemo(() => {
+    // 防止hydration mismatch：只在hydration完成后处理sites
+    if (!isHydrated) {
+      return 0
+    }
+    return sites.filter((site) => !site.featured).length
+  }, [sites, isHydrated])
 
   const summaryLabel = useMemo(() => {
     if (!mounted) {
@@ -944,7 +964,7 @@ export default function SiteHub() {
                   <p className="text-xs sm:text-sm text-red-200 mt-0.5">
                     {text.guestBanner.description
                       .replace("{favorites}", favorites.length.toString())
-                      .replace("{custom}", sites.filter((s) => s.custom).length.toString())}
+                      .replace("{custom}", isHydrated ? sites.filter((s) => s.custom).length.toString() : "0")}
                   </p>
                 </div>
               </div>
@@ -966,7 +986,7 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        <FeaturedProducts sites={mounted ? sites.filter((site) => site.featured) : []} />
+        <FeaturedProducts sites={isHydrated ? sites.filter((site) => site.featured) : []} />
 
         <SearchAndFilters
           searchQuery={searchQuery}
@@ -1031,11 +1051,11 @@ export default function SiteHub() {
         </div>
 
         <UltraCompactSiteGrid
-          sites={mounted ? filteredSites : []}
+          sites={isHydrated ? filteredSites : []}
           onRemove={removeSite}
           onReorder={handleReorder}
           onToggleFavorite={toggleFavorite}
-          favorites={mounted ? favorites : []}
+          favorites={isHydrated ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
         </main>
