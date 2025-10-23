@@ -11,7 +11,7 @@
 // Force client-side rendering to avoid SSR hydration mismatch
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useMemo, useRef } from "react"
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { Header } from "@/components/header"
 import { FeaturedProducts } from "@/components/featured-products"
 import { SearchAndFilters } from "@/components/search-and-filters"
