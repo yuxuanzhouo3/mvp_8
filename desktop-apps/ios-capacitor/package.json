@@ -1,0 +1,15 @@
+{
+  "name": "sitehub-ios",
+  "version": "1.0.0",
+  "description": "SiteHub iOS App",
+  "scripts": {
+    "open": "npx cap open ios",
+    "sync": "npx cap sync ios",
+    "build": "npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^5.5.0",
+    "@capacitor/core": "^5.5.0",
+    "@capacitor/ios": "^5.5.0"
+  }
+}

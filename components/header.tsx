@@ -37,8 +37,9 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
   // Listen for custom events to open auth modal
   useEffect(() => {
     const handleOpenAuthModal = (event: CustomEvent) => {
-      setAuthMode(event.detail.mode || "login")
-      setShowAuthModal(true)
+      // 显示功能待上线提示
+      const message = headerText.loginComingSoon || '登录功能即将上线，敬请期待！'
+      alert(message)
     }
 
     window.addEventListener('openAuthModal', handleOpenAuthModal as EventListener)
@@ -172,8 +173,8 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
                   <>
                     <DropdownMenuItem 
                       onClick={() => {
-                        setAuthMode("signup")
-                        setShowAuthModal(true)
+                        const message = headerText.loginComingSoon || '登录功能即将上线，敬请期待！'
+                        alert(message)
                       }} 
                       className="text-white hover:bg-slate-700"
                     >

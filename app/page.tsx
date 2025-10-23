@@ -1,6 +1,6 @@
 /**
  * SiteHub - Your Personal Web Dashboard
- * 
+ *
  * @author Yuxuan Zhou
  * @copyright 2025 Yuxuan Zhou. All rights reserved.
  * @license MIT
@@ -8,7 +8,10 @@
 
 "use client"
 
-import { useState, useEffect, useMemo, useRef } from "react"
+// Force client-side rendering to avoid SSR hydration mismatch
+export const dynamic = 'force-dynamic'
+
+import React, { useState, useEffect, useMemo, useRef } from "react"
 import { Header } from "@/components/header"
 import { FeaturedProducts } from "@/components/featured-products"
 import { SearchAndFilters } from "@/components/search-and-filters"
@@ -26,12 +29,11 @@ import { useGeo } from "@/contexts/geo-context"
 import { useLanguage } from "@/contexts/language-context"
 import type { SupportedLanguage } from "@/contexts/language-context"
 import type { Region } from "@/lib/ip-detection"
-import { createClient } from "@/lib/supabase/client"
 import { normalizeUrlForComparison } from "@/lib/site-parser"
 import canonicalData from "@/lib/sitehub-data/canonical.en.json"
 import { zhProducts, zhSites } from "@/lib/sitehub-data/zh-localization"
 import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
-// import { createDatabaseAdapter } from "@/lib/database/adapter"
+import { createDatabaseAdapter, type IDatabaseAdapter } from "@/lib/database/adapter"
 
 interface Site {
   id: string
@@ -198,9 +200,11 @@ const localizeSite = (site: Site, language: SupportedLanguage): Site => {
 const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
   list.map((site) => localizeSite(site, language))
 
+// 强制客户端渲染，避免SSR hydration问题
+export const dynamic = 'force-dynamic'
+
 export default function SiteHub() {
-  const { user } = useAuth()
-  const supabase = createClient()
+  const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
   
   // 检查Supabase配置
@@ -214,14 +218,23 @@ export default function SiteHub() {
       keyValid: supabaseKey && supabaseKey !== 'placeholder_key'
     })
   }, [])
+
+  // 调试日志
+  React.useEffect(() => {
+    console.log('🔍 [Debug] SiteHub render state:', {
+      userType: user.type,
+      userId: user.id,
+      authLoading,
+      geoLoading,
+      isChina,
+      isSSR: typeof window === 'undefined',
+      timestamp: new Date().toISOString()
+    })
+  }, [user.type, user.id, authLoading, geoLoading, isChina])
   const { language } = useLanguage()
   const text = homeUiText[language]
-  
-  // 创建数据库适配器（根据用户地区和ID）
-  // const dbAdapter = user.type === "authenticated" && user.id
-  //   ? createDatabaseAdapter(isChina, user.id)
-  //   : null
   const toastText = text.toasts
+
   const [sites, setSites] = useState<Site[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
@@ -234,12 +247,19 @@ export default function SiteHub() {
   const [isGuestTimeExpired, setIsGuestTimeExpired] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [regionPriorityApplied, setRegionPriorityApplied] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
+  const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
-  const customSitesCount = useMemo(
-    () => sites.filter((site) => site.custom).length,
-    [sites],
-  )
+  const customSitesCount = useMemo(() => {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
+      return 0
+    }
+    return sites.filter((site) => site.custom).length
+  }, [sites, isClient])
 
   // 计算是否禁用拖拽（需要在 sensors 之前）
   const isDragDisabled = user.type === "guest" && isGuestTimeExpired
@@ -264,14 +284,25 @@ export default function SiteHub() {
   }, [user.pro, customSitesCount])
 
   const existingUrls = useMemo(() => {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
+      return new Set()
+    }
     return new Set(sites.map((site) => normalizeUrlForComparison(site.url)))
-  }, [sites])
+  }, [sites, isClient])
 
   const customCountRef = useRef(0)
 
   useEffect(() => {
     customCountRef.current = customSitesCount
   }, [customSitesCount])
+
+  // Set mounted flag after client-side hydration to prevent SSR/CSR mismatch
+  useEffect(() => {
+    setMounted(true)
+    setIsHydrated(true)
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     setRegionPriorityApplied(false)
@@ -287,52 +318,72 @@ export default function SiteHub() {
     setCategoryInitialized(true)
   }, [categoryInitialized, geoLoading, regionCategory])
 
+  // Initialize database adapter based on user region
+  useEffect(() => {
+    async function initAdapter() {
+      // 只有在hydration完成且不是loading状态时才初始化
+      if (!authLoading && !geoLoading && user.type === "authenticated" && user.id) {
+        console.log(`🔧 [DB] 初始化数据库适配器 - 用户地区: ${isChina ? '🇨🇳 国内' : '🌍 海外'}`)
+        const adapter = await createDatabaseAdapter(isChina, user.id)
+        setDbAdapter(adapter)
+      } else {
+        setDbAdapter(null)
+      }
+    }
+    initAdapter()
+  }, [authLoading, geoLoading, user.type, user.id, isChina])
+
   // Load favorites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadFavorites() {
-      if (user.type === "authenticated" && user.id) {
-        // Authenticated users: load from Supabase (暂时使用原来的逻辑)
-        const { data: favorites, error } = await supabase
-          .from('web_favorites')
-          .select('site_id')
-          .eq('user_id', user.id)
-
-        if (error) {
-          console.error('Error loading favorites:', error)
-        } else {
-          const favoriteSiteIds = favorites?.map(fav => fav.site_id) || []
+      // 只有在hydration完成且不是loading状态时才加载
+      if (authLoading || geoLoading) return
+      
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Authenticated users: load from database adapter (CloudBase or Supabase)
+        try {
+          const favoriteSiteIds = await dbAdapter.getFavorites()
           setFavorites(favoriteSiteIds)
+          console.log('✅ [DB] 加载收藏成功:', favoriteSiteIds.length, '个')
+        } catch (error) {
+          console.error('❌ [DB] 加载收藏失败:', error)
         }
       } else {
         // Guest users: use localStorage
-        const savedFavorites = localStorage.getItem("sitehub-favorites")
-        if (savedFavorites) {
-          setFavorites(JSON.parse(savedFavorites))
+        if (typeof window !== 'undefined') {
+          const savedFavorites = localStorage.getItem("sitehub-favorites")
+          if (savedFavorites) {
+            try {
+              setFavorites(JSON.parse(savedFavorites))
+            } catch (error) {
+              console.error('❌ [LocalStorage] 解析收藏失败:', error)
+            }
+          }
         }
       }
     }
 
     loadFavorites()
-  }, [user.type, user.id])
+  }, [authLoading, geoLoading, user.type, user.id, dbAdapter])
 
-  // Load custom sites from Supabase (for authenticated users) or localStorage (for guests)
+  // Load custom sites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadSites() {
-      if (user.type === "authenticated" && user.id) {
-        // Authenticated users: load custom sites from Supabase
-        const { data, error } = await supabase
-          .from("web_custom_sites")
-          .select("*")
-          .eq("user_id", user.id)
+      // 只有在hydration完成且不是loading状态时才加载
+      if (authLoading || geoLoading) return
+      
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Authenticated users: load custom sites from database adapter
+        try {
+          const data = await dbAdapter.getCustomSites()
 
-        if (data && !error) {
-          const customSites = data.map((site) => ({
-            id: site.id,
+          const customSites = data.map((site: any) => ({
+            id: site.id || site._id,
             name: site.name,
             nameEn: site.name,
             url: site.url,
             logo: site.logo || "",
-            category: site.category,
+            category: site.category || "tools",
             custom: true,
             featured: false,
             isChina: false,
@@ -344,18 +395,21 @@ export default function SiteHub() {
           const normalizedSites = normalizeSites(mergedSites)
           setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
 
-          // Migrate localStorage custom sites to Supabase if exists
-          const localSites = localStorage.getItem("sitehub-sites")
-          if (localSites) {
-            const localSitesData = JSON.parse(localSites)
+          console.log('✅ [DB] 加载自定义网站成功:', customSites.length, '个')
+
+          // Migrate localStorage custom sites to database if exists
+          if (typeof window !== 'undefined') {
+            const localSites = localStorage.getItem("sitehub-sites")
+            if (localSites) {
+              try {
+                const localSitesData = JSON.parse(localSites)
             const customLocalSites = localSitesData.filter((s: Site) => s.custom)
 
             for (const site of customLocalSites) {
-              // Check if site already exists in Supabase
-              const exists = data.some((s) => s.url === site.url)
+              // Check if site already exists
+              const exists = data.some((s: any) => s.url === site.url)
               if (!exists) {
-                await supabase.from("web_custom_sites").insert({
-                  user_id: user.id,
+                await dbAdapter.addCustomSite({
                   name: site.name,
                   url: site.url,
                   logo: site.logo,
@@ -363,17 +417,33 @@ export default function SiteHub() {
                 })
               }
             }
-            // Clear localStorage after migration
-            localStorage.removeItem("sitehub-sites")
+                // Clear localStorage after migration
+                localStorage.removeItem("sitehub-sites")
+                console.log('✅ [DB] localStorage自定义网站已迁移到数据库')
+              } catch (error) {
+                console.error('❌ [DB] 迁移localStorage自定义网站失败:', error)
+              }
+            }
           }
+        } catch (error) {
+          console.error('❌ [DB] 加载自定义网站失败:', error)
         }
       } else {
         // Guest users: use localStorage
-        const savedSites = localStorage.getItem("sitehub-sites")
-        if (savedSites) {
-          const parsedSites = JSON.parse(savedSites)
-          const normalizedSites = normalizeSites(parsedSites)
-          setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
+        if (typeof window !== 'undefined') {
+          const savedSites = localStorage.getItem("sitehub-sites")
+          if (savedSites) {
+            try {
+              const parsedSites = JSON.parse(savedSites)
+              const normalizedSites = normalizeSites(parsedSites)
+              setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
+            } catch (error) {
+              console.error('❌ [LocalStorage] 解析自定义网站失败:', error)
+            }
+          } else {
+            const defaultSites = getDefaultSites()
+            setSites(localizeSites(prioritizeSitesByRegion(defaultSites, regionCategory), language))
+          }
         } else {
           const defaultSites = getDefaultSites()
           setSites(localizeSites(prioritizeSitesByRegion(defaultSites, regionCategory), language))
@@ -384,22 +454,32 @@ export default function SiteHub() {
     loadSites()
 
     // Load shuffle preference
-    const savedShuffle = localStorage.getItem("sitehub-shuffle")
-    if (savedShuffle) {
-      setIsShuffled(JSON.parse(savedShuffle))
-    }
-
-    // Check if guest time is already expired
-    if (user.type === "guest") {
-      const startTime = localStorage.getItem("guest-start-time")
-      if (startTime) {
-        const elapsed = Math.floor((Date.now() - Number.parseInt(startTime)) / 1000)
-        if (elapsed >= 600) {
-          setIsGuestTimeExpired(true)
+    if (typeof window !== 'undefined') {
+      const savedShuffle = localStorage.getItem("sitehub-shuffle")
+      if (savedShuffle) {
+        try {
+          setIsShuffled(JSON.parse(savedShuffle))
+        } catch (error) {
+          console.error('❌ [LocalStorage] 解析随机偏好失败:', error)
         }
       }
     }
-  }, [user.type, user.id])
+
+    // Check if guest time is already expired
+    if (user.type === "guest" && typeof window !== 'undefined') {
+      const startTime = localStorage.getItem("guest-start-time")
+      if (startTime) {
+        try {
+          const elapsed = Math.floor((Date.now() - Number.parseInt(startTime)) / 1000)
+          if (elapsed >= 600) {
+            setIsGuestTimeExpired(true)
+          }
+        } catch (error) {
+          console.error('❌ [LocalStorage] 解析访客时间失败:', error)
+        }
+      }
+    }
+  }, [authLoading, geoLoading, user.type, user.id, dbAdapter, regionCategory, language])
 
   useEffect(() => {
     if (geoLoading) {
@@ -416,10 +496,12 @@ export default function SiteHub() {
     if (!areSiteOrdersEqual(sites, prioritized)) {
       const localizedPrioritized = localizeSites(prioritized, language)
       setSites(localizedPrioritized)
-      try {
-        localStorage.setItem("sitehub-sites", JSON.stringify(localizedPrioritized))
-      } catch (error) {
-        console.warn("Failed to persist regional ordering:", error)
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem("sitehub-sites", JSON.stringify(localizedPrioritized))
+        } catch (error) {
+          console.warn("Failed to persist regional ordering:", error)
+        }
       }
     }
     setRegionPriorityApplied(true)
@@ -431,24 +513,43 @@ export default function SiteHub() {
 
   // Save data with user-specific keys for authenticated users
   const saveUserData = (key: string, data: any) => {
-    if (user.type === "authenticated") {
-      const userKey = `${key}-${user.email}`
-      localStorage.setItem(userKey, JSON.stringify(data))
-    } else {
-      localStorage.setItem(key, JSON.stringify(data))
+    if (typeof window !== 'undefined') {
+      try {
+        if (user.type === "authenticated") {
+          const userKey = `${key}-${user.email}`
+          localStorage.setItem(userKey, JSON.stringify(data))
+        } else {
+          localStorage.setItem(key, JSON.stringify(data))
+        }
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存用户数据失败:', error)
+      }
     }
   }
 
   const loadUserData = (key: string) => {
-    if (user.type === "authenticated") {
-      const userKey = `${key}-${user.email}`
-      return localStorage.getItem(userKey)
-    } else {
-      return localStorage.getItem(key)
+    if (typeof window !== 'undefined') {
+      try {
+        if (user.type === "authenticated") {
+          const userKey = `${key}-${user.email}`
+          return localStorage.getItem(userKey)
+        } else {
+          return localStorage.getItem(key)
+        }
+      } catch (error) {
+        console.error('❌ [LocalStorage] 加载用户数据失败:', error)
+        return null
+      }
     }
+    return null
   }
   // Filter sites based on search and category
   const filteredSites = useMemo(() => {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
+      return []
+    }
+    
     let filtered = sites.filter((site) => !site.featured)
 
     // Apply search filter
@@ -472,11 +573,20 @@ export default function SiteHub() {
     }
 
     return filtered
-  }, [sites, searchQuery, selectedCategory, favorites])
+  }, [sites, searchQuery, selectedCategory, favorites, isClient])
 
-  const nonFeaturedCount = useMemo(() => sites.filter((site) => !site.featured).length, [sites])
+  const nonFeaturedCount = useMemo(() => {
+    // 防止hydration mismatch：只在客户端渲染完成后处理sites
+    if (!isClient) {
+      return 0
+    }
+    return sites.filter((site) => !site.featured).length
+  }, [sites, isClient])
 
   const summaryLabel = useMemo(() => {
+    if (!mounted) {
+      return ""
+    }
     const stats = homeUiText[language].stats
     if (selectedCategory === "custom") {
       return stats.summaryCustom.replace(uiPlaceholders.visible, filteredSites.length.toString())
@@ -487,7 +597,7 @@ export default function SiteHub() {
     return stats.summaryDefault
       .replace(uiPlaceholders.visible, filteredSites.length.toString())
       .replace(uiPlaceholders.total, nonFeaturedCount.toString())
-  }, [language, selectedCategory, filteredSites.length, nonFeaturedCount])
+  }, [mounted, language, selectedCategory, filteredSites.length, nonFeaturedCount])
 
   const handleGuestTimeExpired = () => {
     setIsGuestTimeExpired(true)
@@ -497,57 +607,44 @@ export default function SiteHub() {
   const handleUpgradeClick = () => {
     // If user is already logged in (authenticated), go to payment page
     if (user.type === 'authenticated') {
-      window.location.href = '/payment'
+      if (typeof window !== 'undefined') {
+        window.location.href = '/payment'
+      }
       return
     }
 
-    // For guest users, trigger the auth modal in signup mode
-    setTimeout(() => {
-      const event = new CustomEvent('openAuthModal', {
-        detail: { mode: 'signup' }
-      })
-      window.dispatchEvent(event)
-    }, 100)
+    // For guest users, show coming soon message
+    alert('注册功能即将上线，敬请期待！')
   }
 
   const handleAuth = (provider: string) => {
     // Close the upgrade modal first
     setShowUpgradeModal(false)
     
-    // Trigger the auth modal with the appropriate mode
+    // Show coming soon message for all auth providers
     if (provider === "login") {
-      // This will be handled by the header's auth modal
-      // We need to trigger the sign-in modal
-      setTimeout(() => {
-        // Trigger the auth modal through the header
-        const event = new CustomEvent('openAuthModal', { 
-          detail: { mode: 'login' } 
-        })
-        window.dispatchEvent(event)
-      }, 100)
+      alert('登录功能即将上线，敬请期待！')
     } else {
-      // For other providers, trigger the auth modal in signup mode
-      setTimeout(() => {
-        const event = new CustomEvent('openAuthModal', { 
-          detail: { mode: 'signup', provider } 
-        })
-        window.dispatchEvent(event)
-      }, 100)
+      alert('注册功能即将上线，敬请期待！')
     }
   }
 
   const handleOpenParseModal = () => {
-    if (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0) {
-      showToast(toastText.limitReached, "error")
-      return
-    }
+    try {
+      if (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0) {
+        showToast(toastText.limitReached, "error")
+        return
+      }
 
-    if (user.type === "guest" && isGuestTimeExpired) {
-      setShowUpgradeModal(true)
-      return
-    }
+      if (user.type === "guest" && isGuestTimeExpired) {
+        setShowUpgradeModal(true)
+        return
+      }
 
-    setShowParseModal(true)
+      setShowParseModal(true)
+    } catch (error) {
+      console.error('🚨 [Parse Modal Error]', error)
+    }
   }
 
   const shuffleSites = () => {
@@ -570,8 +667,14 @@ export default function SiteHub() {
     setSites(newSites)
     setIsShuffled(!isShuffled)
 
-    localStorage.setItem("webhub-sites", JSON.stringify(newSites))
-    localStorage.setItem("webhub-shuffle", JSON.stringify(!isShuffled))
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem("webhub-sites", JSON.stringify(newSites))
+        localStorage.setItem("webhub-shuffle", JSON.stringify(!isShuffled))
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存随机状态失败:', error)
+      }
+    }
 
     showToast(toastText.shuffled)
   }
@@ -585,7 +688,13 @@ export default function SiteHub() {
     const featuredSites = sites.filter((site) => site.featured)
     const reorderedSites = [...featuredSites, ...newSites]
     setSites(reorderedSites)
-    localStorage.setItem("sitehub-sites", JSON.stringify(reorderedSites))
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem("sitehub-sites", JSON.stringify(reorderedSites))
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存重排序状态失败:', error)
+      }
+    }
     showToast(toastText.reordered)
   }
 
@@ -631,11 +740,44 @@ export default function SiteHub() {
         if (error || !data) {
           console.error('🔍 [AddSite] Supabase插入失败:', error)
           throw error
+
+      const currentCustomCount = customCountRef.current
+
+      if (!user.pro && currentCustomCount >= 10) {
+        showToast("Free limit reached! Upgrade to Pro for unlimited sites.", "error")
+        return false
+      }
+
+      if (user.type === "guest" && isGuestTimeExpired) {
+        setShowUpgradeModal(true)
+        showToast("Sign up to keep adding custom sites.", "info")
+        return false
+      }
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        // Add custom site to database
+        const success = await dbAdapter.addCustomSite({
+          name: newSite.name,
+          url: newSite.url,
+          logo: newSite.logo,
+          category: "tools",
+        })
+
+        if (!success) {
+          throw new Error('Failed to add custom site to database')
+        }
+
+        // Reload sites from database to get the new site with ID
+        const customSites = await dbAdapter.getCustomSites()
+        const addedSite = customSites.find((s: any) => s.url === newSite.url)
+
+        if (!addedSite) {
+          throw new Error('Added site not found in database')
+>>>>>>> 81f18acdfbd9a1a0562c6d9824b69a6a77b6cb75
         }
 
         const siteWithId: Site = {
           ...newSite,
-          id: data.id,
+          id: addedSite.id || addedSite._id,
           nameEn: newSite.name,
           custom: true,
           category: "tools",
@@ -644,14 +786,12 @@ export default function SiteHub() {
 
         setSites((prev) => [...prev, siteWithId])
 
-        // 保存到Supabase
-        await supabase.from('web_favorites').insert({
-          user_id: user.id,
-          site_id: data.id
-        })
-        setFavorites((prev) => [...prev, data.id])
+        // Add to favorites
+        await dbAdapter.addFavorite(siteWithId.id)
+        setFavorites((prev) => [...prev, siteWithId.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
+        console.log('✅ [DB] 添加自定义网站成功')
         return true
       }
 
@@ -666,13 +806,25 @@ export default function SiteHub() {
 
       setSites((prev) => {
         const updated = [...prev, siteWithId]
-        localStorage.setItem("sitehub-sites", JSON.stringify(updated))
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem("sitehub-sites", JSON.stringify(updated))
+          } catch (error) {
+            console.error('❌ [LocalStorage] 保存添加网站失败:', error)
+          }
+        }
         return updated
       })
 
       setFavorites((prev) => {
         const updated = [...prev, siteWithId.id]
-        localStorage.setItem("sitehub-favorites", JSON.stringify(updated))
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem("sitehub-favorites", JSON.stringify(updated))
+          } catch (error) {
+            console.error('❌ [LocalStorage] 保存收藏失败:', error)
+          }
+        }
         return updated
       })
 
@@ -711,54 +863,46 @@ export default function SiteHub() {
     }
 
     // 3. 保存到本地存储（立即执行）
-    localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+      } catch (error) {
+        console.error('❌ [LocalStorage] 保存收藏失败:', error)
+      }
+    }
 
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
-    if (user.type === "authenticated" && user.id) {
+    if (user.type === "authenticated" && user.id && dbAdapter) {
       try {
         if (isFavorited) {
-          // Remove favorite from Supabase
-          await supabase
-            .from('web_favorites')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('site_id', siteId)
+          // Remove favorite from database
+          await dbAdapter.removeFavorite(siteId)
         } else {
-          // Add favorite to Supabase
-          await supabase.from('web_favorites').insert({
-            user_id: user.id,
-            site_id: siteId
-          })
+          // Add favorite to database
+          await dbAdapter.addFavorite(siteId)
         }
-        console.log('✅ [Favorite] 云端同步成功')
+        console.log('✅ [DB] 收藏云端同步成功')
       } catch (error) {
-        console.error('❌ [Favorite] 云端同步失败:', error)
+        console.error('❌ [DB] 收藏云端同步失败:', error)
         // 即使云端同步失败，本地状态也已经更新了
       }
     }
   }
 
   const removeSite = async (siteId: string) => {
-    if (user.type === "authenticated" && user.id) {
-      // Authenticated users: delete from Supabase
-      await supabase
-        .from('web_custom_sites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('id', siteId)
+    if (user.type === "authenticated" && user.id && dbAdapter) {
+      // Authenticated users: delete from database
+      await dbAdapter.removeCustomSite(siteId)
 
       // Also remove from favorites if it was favorited
       if (favorites.includes(siteId)) {
-        await supabase
-          .from('web_favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('site_id', siteId)
+        await dbAdapter.removeFavorite(siteId)
         setFavorites(favorites.filter((id) => id !== siteId))
       }
 
       setSites(sites.filter((site) => site.id !== siteId))
       showToast(toastText.removed)
+      console.log('✅ [DB] 删除自定义网站成功')
     } else {
       // Guest users: use localStorage
       const updatedSites = sites.filter((site) => site.id !== siteId)
@@ -767,10 +911,22 @@ export default function SiteHub() {
       if (favorites.includes(siteId)) {
         const newFavorites = favorites.filter((id) => id !== siteId)
         setFavorites(newFavorites)
-        localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
+          } catch (error) {
+            console.error('❌ [LocalStorage] 保存取消收藏失败:', error)
+          }
+        }
       }
 
-      localStorage.setItem("sitehub-sites", JSON.stringify(updatedSites))
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem("sitehub-sites", JSON.stringify(updatedSites))
+        } catch (error) {
+          console.error('❌ [LocalStorage] 保存删除网站失败:', error)
+        }
+      }
       showToast(toastText.removed)
     }
   }
@@ -817,6 +973,15 @@ export default function SiteHub() {
     }
   }
 
+  // Show loading screen while contexts initialize (after all hooks are called)
+  if (authLoading || geoLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-white text-xl animate-pulse">Loading...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
       <Header
@@ -850,18 +1015,13 @@ export default function SiteHub() {
                   <p className="text-xs sm:text-sm text-red-200 mt-0.5">
                     {text.guestBanner.description
                       .replace("{favorites}", favorites.length.toString())
-                      .replace("{custom}", sites.filter((s) => s.custom).length.toString())}
+                      .replace("{custom}", isClient ? sites.filter((s) => s.custom).length.toString() : "0")}
                   </p>
                 </div>
               </div>
               <Button
                 onClick={() => {
-                  setTimeout(() => {
-                    const event = new CustomEvent('openAuthModal', {
-                      detail: { mode: 'signup' }
-                    })
-                    window.dispatchEvent(event)
-                  }, 100)
+                  alert('注册功能即将上线，敬请期待！')
                 }}
                 className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white h-9 sm:h-10 text-sm sm:text-base min-w-[44px] touch-manipulation flex-shrink-0 w-full sm:w-auto"
               >
@@ -877,16 +1037,16 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        <FeaturedProducts sites={sites.filter((site) => site.featured)} />
+        <FeaturedProducts sites={isClient ? sites.filter((site) => site.featured) : []} />
 
         <SearchAndFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
-          filteredCount={filteredSites.length}
+          filteredCount={mounted ? filteredSites.length : 0}
           categoryOrder={canonicalCategoryOrder}
-          totalCount={nonFeaturedCount}
+          totalCount={mounted ? nonFeaturedCount : 0}
         />
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
@@ -900,7 +1060,11 @@ export default function SiteHub() {
               size="sm"
               onClick={() => {
                 console.log('🔍 [AddSite] 按钮点击，准备打开模态框')
-                setShowAddModal(true)
+                try {
+                  setShowAddModal(true)
+                } catch (error) {
+                  console.error('🚨 [Add Modal Error]', error)
+                }
               }}
               className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial"
             >
@@ -939,11 +1103,11 @@ export default function SiteHub() {
         </div>
 
         <UltraCompactSiteGrid
-          sites={filteredSites}
+          sites={isClient ? filteredSites : []}
           onRemove={removeSite}
           onReorder={handleReorder}
           onToggleFavorite={toggleFavorite}
-          favorites={favorites}
+          favorites={isClient ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
         </main>
