@@ -409,15 +409,18 @@ export default function SiteHub() {
           if (savedSites) {
             try {
               const parsedSites = JSON.parse(savedSites)
-          const normalizedSites = normalizeSites(parsedSites)
-          setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
-        } else {
-          const defaultSites = getDefaultSites()
-          setSites(localizeSites(prioritizeSitesByRegion(defaultSites, regionCategory), language))
+              const normalizedSites = normalizeSites(parsedSites)
+              setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
             } catch (error) {
               console.error('❌ [LocalStorage] 解析自定义网站失败:', error)
             }
+          } else {
+            const defaultSites = getDefaultSites()
+            setSites(localizeSites(prioritizeSitesByRegion(defaultSites, regionCategory), language))
           }
+        } else {
+          const defaultSites = getDefaultSites()
+          setSites(localizeSites(prioritizeSitesByRegion(defaultSites, regionCategory), language))
         }
       }
     }
