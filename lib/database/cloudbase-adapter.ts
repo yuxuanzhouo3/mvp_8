@@ -3,16 +3,29 @@
  * 用于官网国内IP用户的数据存储
  */
 
-import { db, COLLECTIONS } from './cloudbase-client'
+import { db, COLLECTIONS, getCollection } from './cloudbase-client'
 
 /**
  * CloudBase适配器类
  */
 export class CloudBaseAdapter {
   private userId: string
+  private db: any
 
   constructor(userId: string) {
     this.userId = userId
+    // 确保db已初始化
+    this.db = db
+  }
+
+  // 辅助方法：安全获取db实例
+  private getDb() {
+    if (!this.db && typeof window !== 'undefined') {
+      // 重新尝试获取db
+      const { db: freshDb } = require('./cloudbase-client')
+      this.db = freshDb
+    }
+    return this.db
   }
 
   // ==========================================
@@ -21,10 +34,16 @@ export class CloudBaseAdapter {
 
   async getFavorites(): Promise<string[]> {
     try {
-      const res = await db.collection(COLLECTIONS.FAVORITES)
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return []
+      }
+
+      const res = await database.collection(COLLECTIONS.FAVORITES)
         .where({ user_id: this.userId })
         .get()
-      
+
       console.log('✅ [DB-腾讯云] 获取收藏:', res.data.length)
       return res.data.map((f: any) => f.site_id)
     } catch (error) {
@@ -35,12 +54,18 @@ export class CloudBaseAdapter {
 
   async addFavorite(siteId: string): Promise<boolean> {
     try {
-      await db.collection(COLLECTIONS.FAVORITES).add({
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return false
+      }
+
+      await database.collection(COLLECTIONS.FAVORITES).add({
         user_id: this.userId,
         site_id: siteId,
         created_at: new Date()
       })
-      
+
       console.log('✅ [DB-腾讯云] 添加收藏成功:', siteId)
       return true
     } catch (error) {
@@ -51,13 +76,19 @@ export class CloudBaseAdapter {
 
   async removeFavorite(siteId: string): Promise<boolean> {
     try {
-      await db.collection(COLLECTIONS.FAVORITES)
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return false
+      }
+
+      await database.collection(COLLECTIONS.FAVORITES)
         .where({
           user_id: this.userId,
           site_id: siteId
         })
         .remove()
-      
+
       console.log('✅ [DB-腾讯云] 删除收藏成功:', siteId)
       return true
     } catch (error) {
@@ -72,11 +103,17 @@ export class CloudBaseAdapter {
 
   async getCustomSites(): Promise<any[]> {
     try {
-      const res = await db.collection(COLLECTIONS.CUSTOM_SITES)
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return []
+      }
+
+      const res = await database.collection(COLLECTIONS.CUSTOM_SITES)
         .where({ user_id: this.userId })
         .orderBy('created_at', 'desc')
         .get()
-      
+
       console.log('✅ [DB-腾讯云] 获取自定义网站:', res.data.length)
       return res.data
     } catch (error) {
@@ -87,7 +124,13 @@ export class CloudBaseAdapter {
 
   async addCustomSite(site: any): Promise<boolean> {
     try {
-      await db.collection(COLLECTIONS.CUSTOM_SITES).add({
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return false
+      }
+
+      await database.collection(COLLECTIONS.CUSTOM_SITES).add({
         user_id: this.userId,
         name: site.name,
         url: site.url,
@@ -97,7 +140,7 @@ export class CloudBaseAdapter {
         created_at: new Date(),
         updated_at: new Date()
       })
-      
+
       console.log('✅ [DB-腾讯云] 添加自定义网站成功')
       return true
     } catch (error) {
@@ -108,10 +151,16 @@ export class CloudBaseAdapter {
 
   async removeCustomSite(siteId: string): Promise<boolean> {
     try {
-      await db.collection(COLLECTIONS.CUSTOM_SITES)
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return false
+      }
+
+      await database.collection(COLLECTIONS.CUSTOM_SITES)
         .doc(siteId)
         .remove()
-      
+
       console.log('✅ [DB-腾讯云] 删除自定义网站成功')
       return true
     } catch (error) {
@@ -126,12 +175,18 @@ export class CloudBaseAdapter {
 
   async getSubscription(): Promise<any | null> {
     try {
-      const res = await db.collection(COLLECTIONS.SUBSCRIPTIONS)
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return null
+      }
+
+      const res = await database.collection(COLLECTIONS.SUBSCRIPTIONS)
         .where({ user_id: this.userId })
         .orderBy('created_at', 'desc')
         .limit(1)
         .get()
-      
+
       const subscription = res.data[0] || null
       console.log('✅ [DB-腾讯云] 获取订阅状态:', subscription ? '有订阅' : '无订阅')
       return subscription
@@ -143,12 +198,18 @@ export class CloudBaseAdapter {
 
   async upsertSubscription(subscription: any): Promise<boolean> {
     try {
+      const database = this.getDb()
+      if (!database) {
+        console.warn('⚠️ [DB-腾讯云] 数据库未初始化')
+        return false
+      }
+
       // 先查询是否存在
       const existing = await this.getSubscription()
-      
+
       if (existing && existing._id) {
         // 更新现有订阅
-        await db.collection(COLLECTIONS.SUBSCRIPTIONS)
+        await database.collection(COLLECTIONS.SUBSCRIPTIONS)
           .doc(existing._id)
           .update({
             ...subscription,
@@ -156,14 +217,14 @@ export class CloudBaseAdapter {
           })
       } else {
         // 创建新订阅
-        await db.collection(COLLECTIONS.SUBSCRIPTIONS).add({
+        await database.collection(COLLECTIONS.SUBSCRIPTIONS).add({
           user_id: this.userId,
           ...subscription,
           created_at: new Date(),
           updated_at: new Date()
         })
       }
-      
+
       console.log('✅ [DB-腾讯云] 更新订阅成功')
       return true
     } catch (error) {

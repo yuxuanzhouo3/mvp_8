@@ -114,14 +114,14 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired }: Upgrade
               </div>
             </div>
 
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleEmailSignup}>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => alert('注册功能即将上线，敬请期待！')}>
               <Mail className="w-4 h-4 mr-2" />
               Create Free Account
             </Button>
 
             <div className="text-center text-xs text-slate-400">
               Already have an account?{" "}
-              <button className="text-blue-400 hover:underline" onClick={() => onAuth("login")}>
+              <button className="text-blue-400 hover:underline" onClick={() => alert('登录功能即将上线，敬请期待！')}>
                 Sign in
               </button>
             </div>

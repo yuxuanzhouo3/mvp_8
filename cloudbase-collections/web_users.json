@@ -1,0 +1,1 @@
+{"_id":"example_user_1","email":"example@qq.com","password_hash":"$2a$12$exampleHashWillBeReplacedByRealUserData","nickname":"示例用户","avatar":"","is_pro":false,"region":"china","created_at":{"$date":"2025-01-23T00:00:00.000Z"},"updated_at":{"$date":"2025-01-23T00:00:00.000Z"}}

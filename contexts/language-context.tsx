@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { useGeo } from "@/contexts/geo-context"
 import { wxStorage } from "@/lib/adapters/wechat-web"
 
@@ -44,14 +44,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       wxStorage.remove("sitehub_language")
       setLanguageState(effectiveGeoLanguage)
       setIsAuto(true)
-      window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: effectiveGeoLanguage, mode: "auto" } }))
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: effectiveGeoLanguage, mode: "auto" } }))
+      }
       return
     }
 
     wxStorage.set("sitehub_language", lang)
     setLanguageState(lang)
     setIsAuto(false)
-    window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: lang, mode: "manual" } }))
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent("sitehub-language-change", { detail: { language: lang, mode: "manual" } }))
+    }
   }
 
   const toggleLanguage = () => {

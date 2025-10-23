@@ -13,8 +13,12 @@ export function FeaturedProducts({ sites }) {
     window.open(url, "_blank")
   }
 
-  if (!sites?.length) {
-    return null
+  // 防止hydration mismatch：确保sites数组安全
+  const safeSites = Array.isArray(sites) ? sites : []
+
+  // Don't return null - always return consistent structure to avoid hooks count mismatch
+  if (!safeSites?.length) {
+    return <div className="hidden" />
   }
 
   return (
@@ -27,7 +31,7 @@ export function FeaturedProducts({ sites }) {
       </div>
 
       <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
-        {sites.map((site) => (
+        {safeSites.map((site) => (
           <div
             key={site.id}
             onClick={() => handleSiteClick(site.url)}

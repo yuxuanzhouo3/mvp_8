@@ -96,6 +96,9 @@ function SortableSiteCard({ site, onRemove, favorites, toggleFavorite, isDragDis
 export function DraggableSiteGrid({ sites, onRemove, onReorder, isDragDisabled = false }) {
   const [favorites, setFavorites] = useState(new Set())
 
+  // 防止hydration mismatch：确保sites数组安全
+  const safeSites = Array.isArray(sites) ? sites : []
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -121,19 +124,19 @@ export function DraggableSiteGrid({ sites, onRemove, onReorder, isDragDisabled =
     const { active, over } = event
 
     if (active.id !== over?.id) {
-      const oldIndex = sites.findIndex((site) => site.id === active.id)
-      const newIndex = sites.findIndex((site) => site.id === over.id)
+      const oldIndex = safeSites.findIndex((site) => site.id === active.id)
+      const newIndex = safeSites.findIndex((site) => site.id === over.id)
 
-      const newSites = arrayMove(sites, oldIndex, newIndex)
+      const newSites = arrayMove(safeSites, oldIndex, newIndex)
       onReorder(newSites)
     }
   }
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={sites.map((site) => site.id)} strategy={rectSortingStrategy}>
+      <SortableContext items={safeSites.map((site) => site.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-          {sites.map((site) => (
+          {safeSites.map((site) => (
             <SortableSiteCard
               key={site.id}
               site={site}
