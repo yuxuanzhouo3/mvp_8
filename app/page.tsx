@@ -559,7 +559,7 @@ export default function SiteHub() {
   // Filter sites based on search and category
   const filteredSites = useMemo(() => {
     // 防止hydration mismatch：只在客户端渲染完成后处理sites
-    if (!isClient) {
+    if (!isHydrated) {
       return []
     }
     
@@ -586,15 +586,15 @@ export default function SiteHub() {
     }
 
     return filtered
-  }, [sites, searchQuery, selectedCategory, favorites, isClient])
+  }, [sites, searchQuery, selectedCategory, favorites, isHydrated])
 
   const nonFeaturedCount = useMemo(() => {
     // 防止hydration mismatch：只在客户端渲染完成后处理sites
-    if (!isClient) {
+    if (!isHydrated) {
       return 0
     }
     return sites.filter((site) => !site.featured).length
-  }, [sites, isClient])
+  }, [sites, isHydrated])
 
   const summaryLabel = useMemo(() => {
     if (!mounted) {
@@ -1003,7 +1003,7 @@ export default function SiteHub() {
                   <p className="text-xs sm:text-sm text-red-200 mt-0.5">
                     {text.guestBanner.description
                       .replace("{favorites}", favorites.length.toString())
-                      .replace("{custom}", isClient ? sites.filter((s) => s.custom).length.toString() : "0")}
+                      .replace("{custom}", isHydrated ? sites.filter((s) => s.custom).length.toString() : "0")}
                   </p>
                 </div>
               </div>
