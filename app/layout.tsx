@@ -56,18 +56,35 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
   }, [])
 
   if (hasError) {
-    return (
-      <div className="p-8 bg-red-50 border border-red-200 rounded-lg">
-        <h2 className="text-red-800 font-bold mb-4">🚨 Application Error</h2>
-        <div className="text-red-700 text-sm">
-          <p><strong>Message:</strong> {errorInfo?.message}</p>
-          <p><strong>File:</strong> {errorInfo?.filename}:{errorInfo?.lineno}</p>
-          <pre className="mt-2 p-2 bg-red-100 rounded text-xs overflow-auto">
-            {errorInfo?.stack}
-          </pre>
+    // 在生产环境中只记录错误，不显示错误UI
+    if (process.env.NODE_ENV === 'development') {
+      return (
+        <div className="p-8 bg-red-50 border border-red-200 rounded-lg">
+          <h2 className="text-red-800 font-bold mb-4">🚨 Application Error</h2>
+          <div className="text-red-700 text-sm">
+            <p><strong>Message:</strong> {errorInfo?.message}</p>
+            <p><strong>File:</strong> {errorInfo?.filename}:{errorInfo?.lineno}</p>
+            <pre className="mt-2 p-2 bg-red-100 rounded text-xs overflow-auto">
+              {errorInfo?.stack}
+            </pre>
+          </div>
         </div>
-      </div>
-    )
+      )
+    } else {
+      // 生产环境：显示友好的错误页面
+      return (
+        <div className="p-8 text-center">
+          <h2 className="text-lg font-semibold mb-4">Something went wrong</h2>
+          <p className="text-gray-600 mb-4">We're working to fix this issue.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Reload Page
+          </button>
+        </div>
+      )
+    }
   }
 
   return <>{children}</>
