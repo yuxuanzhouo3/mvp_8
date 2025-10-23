@@ -65,15 +65,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(customUser)
           localStorage.setItem("sitehub-user", JSON.stringify(customUser))
         } else {
-          // Check for guest data in localStorage
-          const savedUser = localStorage.getItem("sitehub-user")
-          if (savedUser) {
-            try {
-              const userData = JSON.parse(savedUser)
-              setUser(userData)
-            } catch (error) {
-              console.error("Failed to parse saved user data:", error)
-              setUser({ type: "guest", customCount: 0, pro: false })
+          // Check for guest data in localStorage (only on client-side)
+          if (typeof window !== 'undefined') {
+            const savedUser = localStorage.getItem("sitehub-user")
+            if (savedUser) {
+              try {
+                const userData = JSON.parse(savedUser)
+                setUser(userData)
+              } catch (error) {
+                console.error("Failed to parse saved user data:", error)
+                setUser({ type: "guest", customCount: 0, pro: false })
+              }
             }
           }
         }
