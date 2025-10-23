@@ -593,17 +593,21 @@ export default function SiteHub() {
   }
 
   const handleOpenParseModal = () => {
-    if (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0) {
-      showToast(toastText.limitReached, "error")
-      return
-    }
+    try {
+      if (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0) {
+        showToast(toastText.limitReached, "error")
+        return
+      }
 
-    if (user.type === "guest" && isGuestTimeExpired) {
-      setShowUpgradeModal(true)
-      return
-    }
+      if (user.type === "guest" && isGuestTimeExpired) {
+        setShowUpgradeModal(true)
+        return
+      }
 
-    setShowParseModal(true)
+      setShowParseModal(true)
+    } catch (error) {
+      console.error('🚨 [Parse Modal Error]', error)
+    }
   }
 
   const shuffleSites = () => {
@@ -658,26 +662,27 @@ export default function SiteHub() {
   }
 
   const addCustomSite = async (newSite: any): Promise<boolean> => {
-    const normalizedUrl = normalizeUrlForComparison(newSite.url)
-    if (existingUrls.has(normalizedUrl)) {
-      showToast("This link already exists in your collection.", "info")
-      return false
-    }
-
-    const currentCustomCount = customCountRef.current
-
-    if (!user.pro && currentCustomCount >= 10) {
-      showToast("Free limit reached! Upgrade to Pro for unlimited sites.", "error")
-      return false
-    }
-
-    if (user.type === "guest" && isGuestTimeExpired) {
-      setShowUpgradeModal(true)
-      showToast("Sign up to keep adding custom sites.", "info")
-      return false
-    }
-
     try {
+      console.log('🔍 [AddCustomSite] Starting:', { newSite, userType: user.type })
+      
+      const normalizedUrl = normalizeUrlForComparison(newSite.url)
+      if (existingUrls.has(normalizedUrl)) {
+        showToast("This link already exists in your collection.", "info")
+        return false
+      }
+
+      const currentCustomCount = customCountRef.current
+
+      if (!user.pro && currentCustomCount >= 10) {
+        showToast("Free limit reached! Upgrade to Pro for unlimited sites.", "error")
+        return false
+      }
+
+      if (user.type === "guest" && isGuestTimeExpired) {
+        setShowUpgradeModal(true)
+        showToast("Sign up to keep adding custom sites.", "info")
+        return false
+      }
       if (user.type === "authenticated" && user.id && dbAdapter) {
         // Add custom site to database
         const success = await dbAdapter.addCustomSite({
@@ -982,7 +987,13 @@ export default function SiteHub() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+                try {
+                  setShowAddModal(true)
+                } catch (error) {
+                  console.error('🚨 [Add Modal Error]', error)
+                }
+              }}
               className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial"
             >
               <Plus className="w-3 h-3 sm:mr-1" />
