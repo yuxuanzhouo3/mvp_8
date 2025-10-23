@@ -17,7 +17,7 @@ import { FeaturedProducts } from "@/components/featured-products"
 import { SearchAndFilters } from "@/components/search-and-filters"
 import { UltraCompactSiteGrid } from "@/components/ultra-compact-site-grid"
 import { AddSiteModal } from "@/components/add-site-modal"
-import { ParseSitesModal } from "@/components/parse-sites-modal"
+import { SimpleParseModal } from "@/components/simple-parse-modal"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { Toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
@@ -1114,13 +1114,10 @@ export default function SiteHub() {
             limit={10}
           />
 
-          <ParseSitesModal
+          <SimpleParseModal
             isOpen={showParseModal}
             onClose={() => setShowParseModal(false)}
             onAddSite={addCustomSite}
-            existingUrls={existingUrls}
-            isProUser={user.pro}
-            remainingSlots={remainingCustomSlots}
           />
 
           <UpgradeModal
