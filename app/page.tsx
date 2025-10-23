@@ -495,38 +495,19 @@ export default function SiteHub() {
       return
     }
 
-    // For guest users, trigger the auth modal in signup mode
-    setTimeout(() => {
-      const event = new CustomEvent('openAuthModal', {
-        detail: { mode: 'signup' }
-      })
-      window.dispatchEvent(event)
-    }, 100)
+    // For guest users, show coming soon message
+    alert('注册功能即将上线，敬请期待！')
   }
 
   const handleAuth = (provider: string) => {
     // Close the upgrade modal first
     setShowUpgradeModal(false)
     
-    // Trigger the auth modal with the appropriate mode
+    // Show coming soon message for all auth providers
     if (provider === "login") {
-      // This will be handled by the header's auth modal
-      // We need to trigger the sign-in modal
-      setTimeout(() => {
-        // Trigger the auth modal through the header
-        const event = new CustomEvent('openAuthModal', { 
-          detail: { mode: 'login' } 
-        })
-        window.dispatchEvent(event)
-      }, 100)
+      alert('登录功能即将上线，敬请期待！')
     } else {
-      // For other providers, trigger the auth modal in signup mode
-      setTimeout(() => {
-        const event = new CustomEvent('openAuthModal', { 
-          detail: { mode: 'signup', provider } 
-        })
-        window.dispatchEvent(event)
-      }, 100)
+      alert('注册功能即将上线，敬请期待！')
     }
   }
 
@@ -832,12 +813,7 @@ export default function SiteHub() {
               </div>
               <Button
                 onClick={() => {
-                  setTimeout(() => {
-                    const event = new CustomEvent('openAuthModal', {
-                      detail: { mode: 'signup' }
-                    })
-                    window.dispatchEvent(event)
-                  }, 100)
+                  alert('注册功能即将上线，敬请期待！')
                 }}
                 className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white h-9 sm:h-10 text-sm sm:text-base min-w-[44px] touch-manipulation flex-shrink-0 w-full sm:w-auto"
               >

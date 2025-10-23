@@ -261,121 +261,24 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
             )}
           </div>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-600" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-800 px-2 text-slate-400">
-                {mode === "login" ? t.login.orContinueWith : t.signup.orContinueWith}
-              </span>
-            </div>
-          </div>
-
-          {/* Email Form */}
+          {/* 邮箱登录功能暂时隐藏 */}
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium">
-                {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-sm font-medium">
-                {mode === "login" ? t.login.passwordLabel : t.signup.passwordLabel}
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
-                  disabled={loading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4 text-slate-400" />
-                  ) : (
-                    <Eye className="w-4 h-4 text-slate-400" />
-                  )}
-                </Button>
+            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="text-yellow-400">ℹ️</div>
+                <div>
+                  <p className="text-yellow-300 text-sm font-medium">
+                    {languageCode === 'zh' ? '登录功能暂时维护中' : 'Login temporarily under maintenance'}
+                  </p>
+                  <p className="text-yellow-200 text-xs mt-1">
+                    {languageCode === 'zh' 
+                      ? '您可以继续以游客身份使用所有功能' 
+                      : 'You can continue using all features as a guest'
+                    }
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {success && (
-            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <p className="text-green-400 text-sm">{success}</p>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <Button
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            onClick={handleEmailAuth}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Mail className="w-4 h-4 mr-2" />
-            )}
-            {mode === "login"
-              ? (loading ? t.login.submitting : t.login.submitButton)
-              : (loading ? t.signup.submitting : t.signup.submitButton)
-            }
-          </Button>
-
-          {/* Mode Toggle */}
-          <div className="text-center text-sm space-y-2">
-            <button
-              onClick={toggleMode}
-              className="text-blue-400 hover:underline block"
-              disabled={loading}
-            >
-              {mode === "login"
-                ? `${t.login.noAccount} ${t.login.signUpLink}`
-                : `${t.signup.hasAccount} ${t.signup.loginLink}`
-              }
-            </button>
-
-            {/* Forgot Password Link - Only show in login mode */}
-            {mode === "login" && (
-              <button
-                onClick={() => window.open('/auth/forgot-password', '_blank')}
-                className="text-slate-400 hover:text-slate-300 text-xs block"
-                disabled={loading}
-              >
-                {t.login.forgotPassword}
-              </button>
-            )}
           </div>
 
           {/* Benefits - Collapsible */}
