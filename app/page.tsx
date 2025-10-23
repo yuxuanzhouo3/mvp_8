@@ -725,29 +725,32 @@ export default function SiteHub() {
     }
 
     try {
-      if (user.type === "authenticated" && user.id) {
-        console.log('🔍 [AddSite] 准备插入Supabase，用户ID:', user.id)
-        const { data, error } = await supabase
-          .from("web_custom_sites")
-          .insert({
-            user_id: user.id,
-            name: newSite.name,
-            url: newSite.url,
-            logo: newSite.logo,
-            category: "tools",
-          })
-          .select()
-          .single()
+      if (user.type === "authenticated" && user.id && dbAdapter) {
+        console.log('🔍 [AddSite] 使用数据库适配器添加网站，用户ID:', user.id)
+        
+        // 使用数据库适配器添加网站
+        const success = await dbAdapter.addCustomSite({
+          name: newSite.name,
+          url: newSite.url,
+          logo: newSite.logo,
+          category: "tools",
+        })
 
-        console.log('🔍 [AddSite] Supabase插入结果:', { data, error })
-        if (error || !data) {
-          console.error('🔍 [AddSite] Supabase插入失败:', error)
-          throw error
+        if (!success) {
+          throw new Error('Failed to add custom site to database')
+        }
+
+        // 重新加载网站列表以获取新添加的网站
+        const customSites = await dbAdapter.getCustomSites()
+        const addedSite = customSites.find((s: any) => s.url === newSite.url)
+
+        if (!addedSite) {
+          throw new Error('Added site not found in database')
         }
 
         const siteWithId: Site = {
           ...newSite,
-          id: data.id,
+          id: addedSite.id || addedSite._id,
           nameEn: newSite.name,
           custom: true,
           featured: false,
@@ -756,12 +759,9 @@ export default function SiteHub() {
 
         setSites((prev) => [...prev, siteWithId])
 
-        // 保存到Supabase
-        await supabase.from('web_favorites').insert({
-          user_id: user.id,
-          site_id: data.id
-        })
-        setFavorites((prev) => [...prev, data.id])
+        // 添加到收藏
+        await dbAdapter.addFavorite(siteWithId.id)
+        setFavorites((prev) => [...prev, siteWithId.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
         return true
