@@ -36,6 +36,25 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
   const [showBenefits, setShowBenefits] = useState(true)
   // const [showPhoneAuth, setShowPhoneAuth] = useState(false)
 
+  // ✅ CRITICAL: All hooks MUST be called before any conditional returns
+  // Update mode when authMode prop changes
+  useEffect(() => {
+    setMode(authMode)
+  }, [authMode])
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      setEmail("")
+      setPassword("")
+      setError("")
+      setSuccess("")
+      setShowPassword(false)
+      setLoading(false)
+      setShowBenefits(true)
+    }
+  }, [open])
+
   // 欧洲地区检测 - 显示屏蔽消息
   if (isEurope) {
     return (
@@ -65,25 +84,6 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
       </Dialog>
     )
   }
-
-
-  // Update mode when authMode prop changes
-  useEffect(() => {
-    setMode(authMode)
-  }, [authMode])
-
-  // Reset form when modal opens/closes
-  useEffect(() => {
-    if (open) {
-      setEmail("")
-      setPassword("")
-      setError("")
-      setSuccess("")
-      setShowPassword(false)
-      setLoading(false)
-      setShowBenefits(true)
-    }
-  }, [open])
 
   const handleEmailAuth = async () => {
     if (!email || !password) {
