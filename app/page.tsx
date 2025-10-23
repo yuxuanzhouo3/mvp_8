@@ -264,15 +264,14 @@ export default function SiteHub() {
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
   const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
   const [mounted, setMounted] = useState(false)
-  const [isClient, setIsClient] = useState(false)
 
   const customSitesCount = useMemo(() => {
-    // 防止hydration mismatch：只在客户端渲染完成后处理sites
-    if (!isClient) {
+    // 简化逻辑，避免复杂的异步状态
+    if (!isHydrated) {
       return 0
     }
     return sites.filter((site) => site.custom).length
-  }, [sites, isClient])
+  }, [sites, isHydrated])
 
   // 计算是否禁用拖拽（需要在 sensors 之前）
   // 小程序没有这个限制，官网也应该保持一致
@@ -300,12 +299,12 @@ export default function SiteHub() {
   }, [isHydrated, user.pro, customSitesCount])
 
   const existingUrls = useMemo(() => {
-    // 防止hydration mismatch：只在客户端渲染完成后处理sites
-    if (!isClient) {
+    // 简化逻辑，避免复杂的异步状态
+    if (!isHydrated) {
       return new Set()
     }
     return new Set(sites.map((site) => normalizeUrlForComparison(site.url)))
-  }, [sites, isClient])
+  }, [sites, isHydrated])
 
   const customCountRef = useRef(0)
 
@@ -316,7 +315,6 @@ export default function SiteHub() {
   // Set mounted flag after client-side hydration to prevent SSR/CSR mismatch
   useEffect(() => {
     setMounted(true)
-    setIsClient(true)
   }, [])
 
   useEffect(() => {
@@ -1027,7 +1025,7 @@ export default function SiteHub() {
           <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
         </section>
 
-        <FeaturedProducts sites={isClient ? sites.filter((site) => site.featured) : []} />
+        <FeaturedProducts sites={isHydrated ? sites.filter((site) => site.featured) : []} />
 
         <SearchAndFilters
           searchQuery={searchQuery}
@@ -1105,32 +1103,34 @@ export default function SiteHub() {
         </main>
       </DndContext>
 
+      {isHydrated && (
+        <>
+          <AddSiteModal
+            isOpen={showAddModal}
+            onClose={() => setShowAddModal(false)}
+            onAdd={addCustomSite}
+            user={user}
+            customCount={customSitesCount}
+            limit={10}
+          />
 
+          <ParseSitesModal
+            isOpen={showParseModal}
+            onClose={() => setShowParseModal(false)}
+            onAddSite={addCustomSite}
+            existingUrls={existingUrls}
+            isProUser={user.pro}
+            remainingSlots={remainingCustomSlots}
+          />
 
-      <AddSiteModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={addCustomSite}
-        user={user}
-        customCount={customSitesCount}
-        limit={10}
-      />
-
-      <ParseSitesModal
-        isOpen={showParseModal}
-        onClose={() => setShowParseModal(false)}
-        onAddSite={addCustomSite}
-        existingUrls={existingUrls}
-        isProUser={user.pro}
-        remainingSlots={remainingCustomSlots}
-      />
-
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        onAuth={handleAuth}
-        isTimeExpired={isGuestTimeExpired}
-      />
+          <UpgradeModal
+            isOpen={showUpgradeModal}
+            onClose={() => setShowUpgradeModal(false)}
+            onAuth={handleAuth}
+            isTimeExpired={isGuestTimeExpired}
+          />
+        </>
+      )}
 
       {toast && <Toast message={toast.message} type={toast.type} />}
     </div>
