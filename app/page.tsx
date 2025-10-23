@@ -945,14 +945,8 @@ export default function SiteHub() {
     }
   }
 
-  // Show loading screen while contexts initialize (after all hooks are called)
-  if (authLoading || geoLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-white text-xl animate-pulse">Loading...</div>
-      </div>
-    )
-  }
+  // 不再显示 loading 屏幕，避免 hydration mismatch
+  // 用 isHydrated 控制内容显示
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
@@ -968,6 +962,13 @@ export default function SiteHub() {
         onDragEnd={handleDragEnd}
       >
         <main className="container mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3">
+          {!isHydrated && (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-white text-xl animate-pulse">Loading...</div>
+            </div>
+          )}
+          
+          {isHydrated && (
           {/* 拖拽提示 - 移动端优化 */}
           {draggingSiteId && !favorites.includes(draggingSiteId) && (
             <div className="fixed top-16 sm:top-4 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg z-50 animate-pulse text-sm sm:text-base max-w-[90%] sm:max-w-none text-center">
@@ -1082,6 +1083,7 @@ export default function SiteHub() {
           favorites={isHydrated ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
+          )}
         </main>
       </DndContext>
 
