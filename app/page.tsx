@@ -200,9 +200,6 @@ const localizeSite = (site: Site, language: SupportedLanguage): Site => {
 const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
   list.map((site) => localizeSite(site, language))
 
-// 强制客户端渲染，避免SSR hydration问题
-export const dynamic = 'force-dynamic'
-
 export default function SiteHub() {
   const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
