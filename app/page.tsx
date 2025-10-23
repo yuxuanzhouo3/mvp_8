@@ -251,7 +251,6 @@ export default function SiteHub() {
   const [isGuestTimeExpired, setIsGuestTimeExpired] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
   const [regionPriorityApplied, setRegionPriorityApplied] = useState(false)
-  const [isHydrated, setIsHydrated] = useState(false)
   const [draggingSiteId, setDraggingSiteId] = useState<string | null>(null)
   const [dbAdapter, setDbAdapter] = useState<IDatabaseAdapter | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -305,7 +304,6 @@ export default function SiteHub() {
   // Set mounted flag after client-side hydration to prevent SSR/CSR mismatch
   useEffect(() => {
     setMounted(true)
-    setIsHydrated(true)
     setIsClient(true)
   }, [])
 
