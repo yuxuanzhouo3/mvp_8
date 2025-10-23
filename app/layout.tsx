@@ -7,6 +7,10 @@ import { SettingsProvider } from "@/contexts/settings-context"
 import { GeoProvider } from "@/contexts/geo-context"
 import { LanguageProvider } from "@/contexts/language-context"
 
+// Force dynamic rendering to prevent hydration issues
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
