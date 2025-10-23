@@ -626,7 +626,7 @@ export default function SiteHub() {
   }
 
   const handleUpgradeClick = () => {
-    console.log('🔍 [Upgrade] 点击升级按钮，地区检测:', { isChina, regionCategory })
+    console.log('🔍 [Upgrade] 点击升级按钮，地区检测:', { isChina, regionCategory, timestamp: new Date().toISOString() })
     
     // If user is already logged in (authenticated), go to payment page
     if (user.type === 'authenticated') {
