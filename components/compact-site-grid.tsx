@@ -94,6 +94,9 @@ function CompactSiteCard({ site, onRemove, favorites, toggleFavorite, isDragDisa
 export function CompactSiteGrid({ sites, onRemove, onReorder, isDragDisabled = false }) {
   const [favorites, setFavorites] = useState(new Set())
 
+  // 防止hydration mismatch：确保sites数组安全
+  const safeSites = Array.isArray(sites) ? sites : []
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -119,19 +122,19 @@ export function CompactSiteGrid({ sites, onRemove, onReorder, isDragDisabled = f
     const { active, over } = event
 
     if (active.id !== over?.id) {
-      const oldIndex = sites.findIndex((site) => site.id === active.id)
-      const newIndex = sites.findIndex((site) => site.id === over.id)
+      const oldIndex = safeSites.findIndex((site) => site.id === active.id)
+      const newIndex = safeSites.findIndex((site) => site.id === over.id)
 
-      const newSites = arrayMove(sites, oldIndex, newIndex)
+      const newSites = arrayMove(safeSites, oldIndex, newIndex)
       onReorder(newSites)
     }
   }
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={sites.map((site) => site.id)} strategy={rectSortingStrategy}>
+      <SortableContext items={safeSites.map((site) => site.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-15 xl:grid-cols-18 2xl:grid-cols-20 gap-1">
-          {sites.map((site) => (
+          {safeSites.map((site) => (
             <CompactSiteCard
               key={site.id}
               site={site}
