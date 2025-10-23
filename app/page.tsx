@@ -363,7 +363,7 @@ export default function SiteHub() {
         }
       } else {
         // Guest users: use localStorage
-        if (typeof window !== 'undefined') {
+        if (isHydrated && typeof window !== 'undefined') {
           const savedFavorites = localStorage.getItem("sitehub-favorites")
           if (savedFavorites) {
             try {
@@ -411,7 +411,7 @@ export default function SiteHub() {
           console.log('✅ [DB] 加载自定义网站成功:', customSites.length, '个')
 
           // Migrate localStorage custom sites to database if exists
-          if (typeof window !== 'undefined') {
+          if (isHydrated && typeof window !== 'undefined') {
             const localSites = localStorage.getItem("sitehub-sites")
             if (localSites) {
               try {
@@ -443,7 +443,7 @@ export default function SiteHub() {
         }
       } else {
         // Guest users: use localStorage
-        if (typeof window !== 'undefined') {
+        if (isHydrated && typeof window !== 'undefined') {
           const savedSites = localStorage.getItem("sitehub-sites")
           if (savedSites) {
             try {
@@ -467,7 +467,7 @@ export default function SiteHub() {
     loadSites()
 
     // Load shuffle preference
-    if (typeof window !== 'undefined') {
+    if (isHydrated && typeof window !== 'undefined') {
       const savedShuffle = localStorage.getItem("sitehub-shuffle")
       if (savedShuffle) {
         try {
@@ -479,7 +479,7 @@ export default function SiteHub() {
     }
 
     // Check if guest time is already expired
-    if (user.type === "guest" && typeof window !== 'undefined') {
+    if (user.type === "guest" && isHydrated && typeof window !== 'undefined') {
       const startTime = localStorage.getItem("guest-start-time")
       if (startTime) {
         try {
@@ -509,7 +509,7 @@ export default function SiteHub() {
     if (!areSiteOrdersEqual(sites, prioritized)) {
       const localizedPrioritized = localizeSites(prioritized, language)
       setSites(localizedPrioritized)
-      if (typeof window !== 'undefined') {
+      if (isHydrated && typeof window !== 'undefined') {
         try {
           localStorage.setItem("sitehub-sites", JSON.stringify(localizedPrioritized))
         } catch (error) {
@@ -620,7 +620,7 @@ export default function SiteHub() {
   const handleUpgradeClick = () => {
     // If user is already logged in (authenticated), go to payment page
     if (user.type === 'authenticated') {
-      if (typeof window !== 'undefined') {
+      if (isHydrated && typeof window !== 'undefined') {
         window.location.href = '/payment'
       }
       return
@@ -668,7 +668,7 @@ export default function SiteHub() {
     setSites(newSites)
     setIsShuffled(!isShuffled)
 
-    if (typeof window !== 'undefined') {
+    if (isHydrated && typeof window !== 'undefined') {
       try {
         localStorage.setItem("webhub-sites", JSON.stringify(newSites))
         localStorage.setItem("webhub-shuffle", JSON.stringify(!isShuffled))
@@ -689,7 +689,7 @@ export default function SiteHub() {
     const featuredSites = sites.filter((site) => site.featured)
     const reorderedSites = [...featuredSites, ...newSites]
     setSites(reorderedSites)
-    if (typeof window !== 'undefined') {
+    if (isHydrated && typeof window !== 'undefined') {
       try {
         localStorage.setItem("sitehub-sites", JSON.stringify(reorderedSites))
       } catch (error) {
@@ -776,7 +776,7 @@ export default function SiteHub() {
 
       setSites((prev) => {
         const updated = [...prev, siteWithId]
-        if (typeof window !== 'undefined') {
+        if (isHydrated && typeof window !== 'undefined') {
           try {
             localStorage.setItem("sitehub-sites", JSON.stringify(updated))
           } catch (error) {
@@ -788,7 +788,7 @@ export default function SiteHub() {
 
       setFavorites((prev) => {
         const updated = [...prev, siteWithId.id]
-        if (typeof window !== 'undefined') {
+        if (isHydrated && typeof window !== 'undefined') {
           try {
             localStorage.setItem("sitehub-favorites", JSON.stringify(updated))
           } catch (error) {
@@ -833,7 +833,7 @@ export default function SiteHub() {
     }
 
     // 3. 保存到本地存储（立即执行）
-    if (typeof window !== 'undefined') {
+    if (isHydrated && typeof window !== 'undefined') {
       try {
         localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
       } catch (error) {
@@ -897,7 +897,7 @@ export default function SiteHub() {
       if (favorites.includes(siteId)) {
         const newFavorites = favorites.filter((id) => id !== siteId)
         setFavorites(newFavorites)
-        if (typeof window !== 'undefined') {
+        if (isHydrated && typeof window !== 'undefined') {
           try {
             localStorage.setItem("sitehub-favorites", JSON.stringify(newFavorites))
           } catch (error) {
@@ -906,7 +906,7 @@ export default function SiteHub() {
         }
       }
 
-      if (typeof window !== 'undefined') {
+      if (isHydrated && typeof window !== 'undefined') {
         try {
           localStorage.setItem("sitehub-sites", JSON.stringify(updatedSites))
         } catch (error) {
