@@ -19,6 +19,7 @@ import { UltraCompactSiteGrid } from "@/components/ultra-compact-site-grid"
 import { AddSiteModal } from "@/components/add-site-modal"
 import { SimpleParseModal } from "@/components/simple-parse-modal"
 import { UpgradeModal } from "@/components/upgrade-modal"
+import { AuthModal } from "@/components/auth-modal"
 import { Toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
 import { Shuffle, Plus, Crown, Sparkles } from "lucide-react"
@@ -262,6 +263,8 @@ export default function SiteHub() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showParseModal, setShowParseModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login")
   const [toast, setToast] = useState<any>(null)
   const [isGuestTimeExpired, setIsGuestTimeExpired] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
@@ -639,11 +642,26 @@ export default function SiteHub() {
     // Close the upgrade modal first
     setShowUpgradeModal(false)
     
-    // Show coming soon message for all auth providers
-    if (provider === "login") {
-      alert('登录功能即将上线，敬请期待！')
+    // 根据地区决定是否显示登录功能
+    if (isChina) {
+      // 国内用户显示待开发消息
+      if (provider === "login") {
+        alert('登录功能即将上线，敬请期待！')
+      } else {
+        alert('注册功能即将上线，敬请期待！')
+      }
     } else {
-      alert('注册功能即将上线，敬请期待！')
+      // 海外用户正常显示登录模态框
+      if (provider === "login") {
+        setShowAuthModal(true)
+        setAuthMode("login")
+      } else if (provider === "email") {
+        setShowAuthModal(true)
+        setAuthMode("signup")
+      } else {
+        setShowAuthModal(true)
+        setAuthMode("signup")
+      }
     }
   }
 
@@ -1130,6 +1148,16 @@ export default function SiteHub() {
             onClose={() => setShowUpgradeModal(false)}
             onAuth={handleAuth}
             isTimeExpired={isGuestTimeExpired}
+          />
+
+          <AuthModal
+            open={showAuthModal}
+            onOpenChange={setShowAuthModal}
+            onAuth={(userData) => {
+              console.log('🔍 [Auth] 用户认证成功:', userData)
+              setShowAuthModal(false)
+            }}
+            authMode={authMode}
           />
         </>
       )}
