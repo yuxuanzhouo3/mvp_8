@@ -216,6 +216,13 @@ export default function SiteHub() {
     })
   }, [])
 
+  // Hydration 探针
+  const [isHydrated, setIsHydrated] = useState(false)
+  useEffect(() => {
+    setIsHydrated(true)
+    console.log('🔍 [Hydration] 客户端已水合')
+  }, [])
+
   // 调试日志
   React.useEffect(() => {
     console.log('🔍 [Debug] SiteHub render state:', {
@@ -259,7 +266,7 @@ export default function SiteHub() {
   }, [sites, isClient])
 
   // 计算是否禁用拖拽（需要在 sensors 之前）
-  const isDragDisabled = user.type === "guest" && isGuestTimeExpired
+  const isDragDisabled = isHydrated && user.type === "guest" && isGuestTimeExpired
 
   // DnD sensors
   const sensors = useSensors(
@@ -274,11 +281,12 @@ export default function SiteHub() {
   )
 
   const remainingCustomSlots = useMemo(() => {
+    if (!isHydrated) return null // 服务端渲染时返回 null
     if (user.pro) {
       return null
     }
     return Math.max(0, 10 - customSitesCount)
-  }, [user.pro, customSitesCount])
+  }, [isHydrated, user.pro, customSitesCount])
 
   const existingUrls = useMemo(() => {
     // 防止hydration mismatch：只在客户端渲染完成后处理sites
@@ -1041,9 +1049,9 @@ export default function SiteHub() {
               variant="outline"
               size="sm"
               onClick={handleOpenParseModal}
-              disabled={!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0}
+              disabled={!isHydrated || (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0)}
               className={`bg-white/10 border-white/20 hover:bg-white/20 hover:border-blue-400 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial ${
-                !user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0
+                !isHydrated || (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0)
                   ? "opacity-40 cursor-not-allowed"
                   : ""
               }`}
@@ -1055,9 +1063,9 @@ export default function SiteHub() {
               variant="outline"
               size="sm"
               onClick={shuffleSites}
-              disabled={isDragDisabled}
+              disabled={!isHydrated || isDragDisabled}
               className={`text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial ${
-                isDragDisabled
+                !isHydrated || isDragDisabled
                   ? "bg-white/5 border-white/10 text-white/40 cursor-not-allowed"
                   : "bg-white/10 border-white/20 hover:bg-white/20 text-white"
               }`}
@@ -1069,11 +1077,11 @@ export default function SiteHub() {
         </div>
 
         <UltraCompactSiteGrid
-          sites={isClient ? filteredSites : []}
+          sites={isHydrated ? filteredSites : []}
           onRemove={removeSite}
           onReorder={handleReorder}
           onToggleFavorite={toggleFavorite}
-          favorites={isClient ? favorites : []}
+          favorites={isHydrated ? favorites : []}
           isDragDisabled={isDragDisabled}
         />
         </main>
