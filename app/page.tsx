@@ -226,11 +226,16 @@ export default function SiteHub() {
     }
   }, [])
 
-  // Hydration 探针
+  // Hydration 探针 - 更安全的实现
   const [isHydrated, setIsHydrated] = useState(false)
   useEffect(() => {
-    setIsHydrated(true)
-    console.log('🔍 [Hydration] 客户端已水合')
+    // 使用 setTimeout 确保在下一个事件循环中设置，避免 SSR/CSR 不一致
+    const timer = setTimeout(() => {
+      setIsHydrated(true)
+      console.log('🔍 [Hydration] 客户端已水合')
+    }, 0)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   // 调试日志

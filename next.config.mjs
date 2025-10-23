@@ -13,11 +13,11 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons'],
   },
-  // 确保构建时的严格模式
-  reactStrictMode: true,
-  // 优化编译输出
+  // 确保构建时的严格模式 - 生产环境可能有问题，暂时禁用
+  reactStrictMode: false,
+  // 优化编译输出 - 保留调试日志用于生产环境调试
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: false, // 保留console.log用于调试
   },
 }
 
