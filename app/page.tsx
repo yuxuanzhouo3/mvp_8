@@ -212,8 +212,18 @@ export default function SiteHub() {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseKey,
       urlValid: supabaseUrl && !supabaseUrl.includes('placeholder'),
-      keyValid: supabaseKey && supabaseKey !== 'placeholder_key'
+      keyValid: supabaseKey && supabaseKey !== 'placeholder_key',
+      url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'undefined',
+      key: supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'undefined'
     })
+    
+    // 测试Supabase连接
+    if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder') && supabaseKey !== 'placeholder_key') {
+      console.log('🔍 [Supabase] 配置有效，测试连接...')
+      // 这里可以添加一个简单的连接测试
+    } else {
+      console.warn('⚠️ [Supabase] 配置无效，将使用模拟客户端')
+    }
   }, [])
 
   // Hydration 探针
@@ -265,7 +275,8 @@ export default function SiteHub() {
   }, [sites, isClient])
 
   // 计算是否禁用拖拽（需要在 sensors 之前）
-  const isDragDisabled = isHydrated && user.type === "guest" && isGuestTimeExpired
+  // 小程序没有这个限制，官网也应该保持一致
+  const isDragDisabled = false
 
   // DnD sensors
   const sensors = useSensors(
@@ -282,9 +293,10 @@ export default function SiteHub() {
   const remainingCustomSlots = useMemo(() => {
     if (!isHydrated) return null // 服务端渲染时返回 null
     if (user.pro) {
-      return null
+      return null // Pro用户无限制
     }
-    return Math.max(0, 10 - customSitesCount)
+    // 小程序没有这个限制，官网也应该保持一致
+    return null
   }, [isHydrated, user.pro, customSitesCount])
 
   const existingUrls = useMemo(() => {
@@ -634,16 +646,7 @@ export default function SiteHub() {
 
   const handleOpenParseModal = () => {
     try {
-      if (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0) {
-        showToast(toastText.limitReached, "error")
-        return
-      }
-
-      if (user.type === "guest" && isGuestTimeExpired) {
-        setShowUpgradeModal(true)
-        return
-      }
-
+      console.log('🔍 [ParseModal] 打开智能解析模态框')
       setShowParseModal(true)
     } catch (error) {
       console.error('🚨 [Parse Modal Error]', error)
@@ -651,10 +654,7 @@ export default function SiteHub() {
   }
 
   const shuffleSites = () => {
-    if (user.type === "guest" && isGuestTimeExpired) {
-      setShowUpgradeModal(true)
-      return
-    }
+    console.log('🔍 [Shuffle] 开始随机排序网站')
 
     const featuredSites = sites.filter((site) => site.featured)
     const regularSites = sites.filter((site) => !site.featured)
@@ -846,18 +846,34 @@ export default function SiteHub() {
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
     if (user.type === "authenticated" && user.id && dbAdapter) {
       try {
+        console.log('🔍 [Favorite] 开始云端同步:', {
+          siteId,
+          isFavorited,
+          userId: user.id,
+          isChina,
+          hasDbAdapter: !!dbAdapter
+        })
+        
         if (isFavorited) {
           // Remove favorite from database
-          await dbAdapter.removeFavorite(siteId)
+          const success = await dbAdapter.removeFavorite(siteId)
+          console.log('🔍 [Favorite] 删除收藏结果:', success)
         } else {
           // Add favorite to database
-          await dbAdapter.addFavorite(siteId)
+          const success = await dbAdapter.addFavorite(siteId)
+          console.log('🔍 [Favorite] 添加收藏结果:', success)
         }
         console.log('✅ [DB] 收藏云端同步成功')
       } catch (error) {
         console.error('❌ [DB] 收藏云端同步失败:', error)
         // 即使云端同步失败，本地状态也已经更新了
       }
+    } else {
+      console.log('🔍 [Favorite] 跳过云端同步:', {
+        userType: user.type,
+        hasUserId: !!user.id,
+        hasDbAdapter: !!dbAdapter
+      })
     }
   }
 
@@ -1049,9 +1065,9 @@ export default function SiteHub() {
               variant="outline"
               size="sm"
               onClick={handleOpenParseModal}
-              disabled={!isHydrated || (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0)}
+              disabled={!isHydrated}
               className={`bg-white/10 border-white/20 hover:bg-white/20 hover:border-blue-400 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial ${
-                !isHydrated || (!user.pro && remainingCustomSlots !== null && remainingCustomSlots <= 0)
+                !isHydrated
                   ? "opacity-40 cursor-not-allowed"
                   : ""
               }`}
@@ -1063,9 +1079,9 @@ export default function SiteHub() {
               variant="outline"
               size="sm"
               onClick={shuffleSites}
-              disabled={!isHydrated || isDragDisabled}
+              disabled={!isHydrated}
               className={`text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial ${
-                !isHydrated || isDragDisabled
+                !isHydrated
                   ? "bg-white/5 border-white/10 text-white/40 cursor-not-allowed"
                   : "bg-white/10 border-white/20 hover:bg-white/20 text-white"
               }`}
