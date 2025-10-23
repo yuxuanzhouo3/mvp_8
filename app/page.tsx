@@ -1,12 +1,15 @@
 /**
  * SiteHub - Your Personal Web Dashboard
- * 
+ *
  * @author Yuxuan Zhou
  * @copyright 2025 Yuxuan Zhou. All rights reserved.
  * @license MIT
  */
 
 "use client"
+
+// Force client-side rendering to avoid SSR hydration mismatch
+export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useMemo, useRef } from "react"
 import { Header } from "@/components/header"
