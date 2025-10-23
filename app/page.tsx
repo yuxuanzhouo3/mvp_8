@@ -202,6 +202,18 @@ export default function SiteHub() {
   const { user } = useAuth()
   const supabase = createClient()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
+  
+  // 检查Supabase配置
+  useEffect(() => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    console.log('🔍 [Supabase] 配置检查:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseKey,
+      urlValid: supabaseUrl && !supabaseUrl.includes('placeholder'),
+      keyValid: supabaseKey && supabaseKey !== 'placeholder_key'
+    })
+  }, [])
   const { language } = useLanguage()
   const text = homeUiText[language]
   
@@ -578,11 +590,14 @@ export default function SiteHub() {
   }
 
   const addCustomSite = async (newSite: any): Promise<boolean> => {
+    console.log('🔍 [AddSite] 开始添加网站:', newSite)
     const normalizedUrl = normalizeUrlForComparison(newSite.url)
     if (existingUrls.has(normalizedUrl)) {
+      console.log('🔍 [AddSite] URL重复，拒绝添加')
       showToast("This link already exists in your collection.", "info")
       return false
     }
+    console.log('🔍 [AddSite] URL验证通过:', newSite.url)
 
     const currentCustomCount = customCountRef.current
 
@@ -599,6 +614,7 @@ export default function SiteHub() {
 
     try {
       if (user.type === "authenticated" && user.id) {
+        console.log('🔍 [AddSite] 准备插入Supabase，用户ID:', user.id)
         const { data, error } = await supabase
           .from("web_custom_sites")
           .insert({
@@ -611,7 +627,9 @@ export default function SiteHub() {
           .select()
           .single()
 
+        console.log('🔍 [AddSite] Supabase插入结果:', { data, error })
         if (error || !data) {
+          console.error('🔍 [AddSite] Supabase插入失败:', error)
           throw error
         }
 
@@ -880,7 +898,10 @@ export default function SiteHub() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+                console.log('🔍 [AddSite] 按钮点击，准备打开模态框')
+                setShowAddModal(true)
+              }}
               className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white text-[10px] sm:text-xs h-8 sm:h-9 px-2 sm:px-3 min-w-[44px] touch-manipulation flex-1 sm:flex-initial"
             >
               <Plus className="w-3 h-3 sm:mr-1" />
