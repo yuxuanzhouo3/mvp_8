@@ -283,7 +283,7 @@ export default function SiteHub() {
   useEffect(() => {
     async function initAdapter() {
       // 只有在hydration完成且不是loading状态时才初始化
-      if (!loading && user.type === "authenticated" && user.id && !geoLoading) {
+      if (!authLoading && !geoLoading && user.type === "authenticated" && user.id) {
         console.log(`🔧 [DB] 初始化数据库适配器 - 用户地区: ${isChina ? '🇨🇳 国内' : '🌍 海外'}`)
         const adapter = await createDatabaseAdapter(isChina, user.id)
         setDbAdapter(adapter)
@@ -292,13 +292,13 @@ export default function SiteHub() {
       }
     }
     initAdapter()
-  }, [loading, user.type, user.id, isChina, geoLoading])
+  }, [authLoading, geoLoading, user.type, user.id, isChina])
 
   // Load favorites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadFavorites() {
       // 只有在hydration完成且不是loading状态时才加载
-      if (loading) return
+      if (authLoading || geoLoading) return
       
       if (user.type === "authenticated" && user.id && dbAdapter) {
         // Authenticated users: load from database adapter (CloudBase or Supabase)
@@ -321,13 +321,13 @@ export default function SiteHub() {
     }
 
     loadFavorites()
-  }, [loading, user.type, user.id, dbAdapter])
+  }, [authLoading, geoLoading, user.type, user.id, dbAdapter])
 
   // Load custom sites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
     async function loadSites() {
       // 只有在hydration完成且不是loading状态时才加载
-      if (loading) return
+      if (authLoading || geoLoading) return
       
       if (user.type === "authenticated" && user.id && dbAdapter) {
         // Authenticated users: load custom sites from database adapter
@@ -411,7 +411,7 @@ export default function SiteHub() {
         }
       }
     }
-  }, [loading, user.type, user.id, dbAdapter, regionCategory, language])
+  }, [authLoading, geoLoading, user.type, user.id, dbAdapter, regionCategory, language])
 
   useEffect(() => {
     if (geoLoading) {
