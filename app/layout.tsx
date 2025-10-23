@@ -61,17 +61,15 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <ErrorBoundary>
-          <AuthProvider>
-            <SettingsProvider>
-              <GeoProvider>
-                <LanguageProvider>
-                  {children}
-                </LanguageProvider>
-              </GeoProvider>
-            </SettingsProvider>
-          </AuthProvider>
-        </ErrorBoundary>
+        <AuthProvider>
+          <SettingsProvider>
+            <GeoProvider>
+              <LanguageProvider>
+                {children}
+              </LanguageProvider>
+            </GeoProvider>
+          </SettingsProvider>
+        </AuthProvider>
       </body>
     </html>
   )
