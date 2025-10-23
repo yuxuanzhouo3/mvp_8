@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react"
 import { useGeo } from "@/contexts/geo-context"
 import { wxStorage } from "@/lib/adapters/wechat-web"
 
