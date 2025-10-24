@@ -17,7 +17,7 @@ import { FeaturedProducts } from "@/components/featured-products"
 import { SearchAndFilters } from "@/components/search-and-filters"
 import { UltraCompactSiteGrid } from "@/components/ultra-compact-site-grid"
 import { AddSiteModal } from "@/components/add-site-modal"
-import { SimpleParseModal } from "@/components/simple-parse-modal"
+import { ParseSitesModal } from "@/components/parse-sites-modal"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { AuthModal } from "@/components/auth-modal"
 import { Toast } from "@/components/toast"
@@ -309,7 +309,7 @@ export default function SiteHub() {
   const existingUrls = useMemo(() => {
     // 简化逻辑，避免复杂的异步状态
     if (!isHydrated) {
-      return new Set()
+      return new Set<string>()
     }
     return new Set(sites.map((site) => normalizeUrlForComparison(site.url)))
   }, [sites, isHydrated])
@@ -1145,10 +1145,13 @@ export default function SiteHub() {
             limit={10}
           />
 
-          <SimpleParseModal
+          <ParseSitesModal
             isOpen={showParseModal}
             onClose={() => setShowParseModal(false)}
             onAddSite={addCustomSite}
+            existingUrls={existingUrls}
+            isProUser={user.pro}
+            remainingSlots={remainingCustomSlots}
           />
 
           <UpgradeModal

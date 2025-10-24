@@ -23,7 +23,7 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: AuthModalProps) {
   const { signIn } = useAuth()
-  const { isEurope, isChina, languageCode } = useGeo()
+  const { isEurope, languageCode } = useGeo()
   const t = languageCode === 'zh' ? authTranslationsZh : authTranslationsEn
 
   const [mode, setMode] = useState(authMode)
@@ -35,25 +35,6 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
   const [success, setSuccess] = useState("")
   const [showBenefits, setShowBenefits] = useState(true)
   // const [showPhoneAuth, setShowPhoneAuth] = useState(false)
-
-  // ✅ CRITICAL: All hooks MUST be called before any conditional returns
-  // Update mode when authMode prop changes
-  useEffect(() => {
-    setMode(authMode)
-  }, [authMode])
-
-  // Reset form when modal opens/closes
-  useEffect(() => {
-    if (open) {
-      setEmail("")
-      setPassword("")
-      setError("")
-      setSuccess("")
-      setShowPassword(false)
-      setLoading(false)
-      setShowBenefits(true)
-    }
-  }, [open])
 
   // 欧洲地区检测 - 显示屏蔽消息
   if (isEurope) {
@@ -85,14 +66,27 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
     )
   }
 
+  // Update mode when authMode prop changes
+  useEffect(() => {
+    setMode(authMode)
+  }, [authMode])
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      setEmail("")
+      setPassword("")
+      setError("")
+      setSuccess("")
+      setShowPassword(false)
+      setLoading(false)
+      setShowBenefits(true)
+    }
+  }, [open])
+
   const handleEmailAuth = async () => {
     if (!email || !password) {
-      setError(languageCode === 'zh' ? "请填写完整信息" : "Please fill in all fields")
-      return
-    }
-
-    if (password.length < 6) {
-      setError(languageCode === 'zh' ? "密码至少6位" : "Password must be at least 6 characters")
+      setError("Please fill in all fields")
       return
     }
 
@@ -100,71 +94,64 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
     setError("")
 
     try {
-      // 调用双认证API（自动根据IP选择数据库）
-      const response = await fetch('/api/auth/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          mode: mode // 'login' or 'signup'
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || result.error) {
-        setError(result.error || (languageCode === 'zh' ? '认证失败' : 'Authentication failed'))
-        return
-      }
-
-      // 认证成功
-      const dbInfo = result.database === 'cloudbase' ? '腾讯云' : 'Supabase'
-      console.log(`✅ 登录成功 [${dbInfo}数据库]`, result.user)
-
-      if (mode === "signup" && result.user && !result.user.emailConfirmed) {
-        // 注册成功但需要邮箱验证（仅Supabase）
-        if (result.database === 'supabase') {
-          setSuccess(languageCode === 'zh'
-            ? "注册成功！请检查邮箱确认账户。"
-            : "Account created! Please check your email to confirm your account.")
+      if (mode === "signup") {
+        // Sign up
+        const { data, error } = await auth.signUp(email, password)
+        if (error) {
+          setError(error.message)
           return
         }
-      }
-
-      if (result.user) {
-        const userData = {
-          type: "authenticated" as const,
-          name: result.user.name || (email.includes("@") ? email.split("@")[0] : email),
-          email: result.user.email || email,
-          customCount: 0,
-          pro: result.user.pro || false,
-          id: result.user.id,
-          database: result.database, // 记录用户使用的数据库
-          region: result.region // 记录用户地区
+        
+        if (data.user) {
+          // Check if email confirmation is required
+          if (!data.user.email_confirmed_at) {
+            setSuccess("Account created successfully! Please check your email to confirm your account.")
+            return
+          }
+          
+          const userData = {
+            type: "authenticated" as const,
+            name: data.user.user_metadata?.full_name || email.split("@")[0],
+            email: data.user.email || email,
+            customCount: 0,
+            pro: false,
+            id: data.user.id
+          }
+          signIn(userData)
+          onAuth(userData)
+          onOpenChange(false)
+        } else {
+          setSuccess("Account created! Please check your email to confirm your account.")
         }
-
-        signIn(userData)
-        onAuth(userData)
-
-        // 显示成功消息
-        const regionText = result.region === 'china' ? '国内' : '海外'
-        console.log(`🎉 ${mode === 'login' ? '登录' : '注册'}成功 [${regionText}用户]`)
-
-        onOpenChange(false)
+      } else {
+        // Sign in
+        const { data, error } = await auth.signIn(email, password)
+        if (error) {
+          setError(error.message)
+          return
+        }
+        
+        if (data.user) {
+          const userData = {
+            type: "authenticated" as const,
+            name: data.user.user_metadata?.full_name || email.split("@")[0],
+            email: data.user.email || email,
+            customCount: 0,
+            pro: false,
+            id: data.user.id
+          }
+          signIn(userData)
+          onAuth(userData)
+          onOpenChange(false)
+        }
       }
-
+      
       // Reset form
       setEmail("")
       setPassword("")
       setError("")
-    } catch (err: any) {
-      console.error('邮箱认证错误:', err)
-      setError(languageCode === 'zh'
-        ? '登录失败，请稍后再试'
-        : 'Authentication failed. Please try again.')
+    } catch (err) {
+      setError("Authentication failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -178,36 +165,20 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
       if (provider === "google") {
         const { data, error } = await auth.signInWithGoogle()
         if (error) {
-          if (error.message.includes('Supabase not configured')) {
-            setError(languageCode === 'zh' 
-              ? '登录功能正在配置中，请稍后再试' 
-              : 'Login feature is being configured, please try again later')
-          } else {
-            setError(error.message)
-          }
+          setError(error.message)
           setLoading(false)
           return
         }
         // OAuth redirects to callback, keep loading state
         // Don't close modal or reset loading - user will be redirected
       }
-      else if (provider === "wechat") {
-        // 微信登录功能开发中
-        setError(languageCode === 'zh' 
-          ? '微信登录功能正在开发中，请使用邮箱登录' 
-          : 'WeChat login is under development, please use email login')
-        setLoading(false)
-        return
-      }
       else {
-        setError(`${provider} authentication is temporarily disabled. Please use ${isChina ? 'WeChat' : 'Google'} or email login.`)
+        setError(`${provider} authentication is temporarily disabled. Please use Google or email login.`)
         setLoading(false)
         return
       }
     } catch (err) {
-      setError(languageCode === 'zh' 
-        ? '登录功能正在配置中，请稍后再试' 
-        : 'Login feature is being configured, please try again later')
+      setError(`${provider} authentication failed. Please try again.`)
       setLoading(false)
     }
   }
@@ -232,60 +203,165 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Social Login Buttons - IP自适应 */}
-          {/* 微信登录已隐藏，等待二次迭代开发 */}
+          {/* Social Login Buttons */}
           <div className="grid gap-3">
-            {!isChina && (
-              /* 海外IP：显示Google登录 */
-              <Button
-                variant="outline"
-                className="bg-white text-black hover:bg-gray-100 relative"
-                onClick={() => handleSocialAuth("google")}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
-                  </>
-                ) : (
-                  <>
-                    <Chrome className="w-4 h-4 mr-2" />
-                    <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
-                  </>
-                )}
-                <Badge className="absolute -top-2 -right-2 bg-blue-500">
-                  {languageCode === 'zh' ? '推荐' : 'Recommended'}
-                </Badge>
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              className="bg-white text-black hover:bg-gray-100 relative"
+              onClick={() => handleSocialAuth("google")}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
+                </>
+              ) : (
+                <>
+                  <Chrome className="w-4 h-4 mr-2" />
+                  <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
+                </>
+              )}
+            </Button>
+            {/* Phone Auth - Temporarily Disabled
+            <Button
+              variant="outline"
+              className="bg-green-600 text-white hover:bg-green-700"
+              onClick={() => setShowPhoneAuth(true)}
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Phone className="w-4 h-4 mr-2" />
+              )}
+              Continue with Phone
+            </Button>
+            */}
           </div>
 
-          {/* 邮箱登录功能暂时隐藏 */}
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-slate-600" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-slate-800 px-2 text-slate-400">
+                {mode === "login" ? t.login.orContinueWith : t.signup.orContinueWith}
+              </span>
+            </div>
+          </div>
+
+          {/* Email Form */}
           <div className="space-y-4">
-            <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div className="text-yellow-400">ℹ️</div>
-                <div>
-                  <p className="text-yellow-300 text-sm font-medium">
-                    {languageCode === 'zh' ? '登录功能暂时维护中' : 'Login temporarily under maintenance'}
-                  </p>
-                  <p className="text-yellow-200 text-xs mt-1">
-                    {languageCode === 'zh' 
-                      ? '您可以继续以游客身份使用所有功能' 
-                      : 'You can continue using all features as a guest'
-                    }
-                  </p>
-                </div>
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium">
+                {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password" className="text-sm font-medium">
+                {mode === "login" ? t.login.passwordLabel : t.signup.passwordLabel}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
+                  disabled={loading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-600"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-slate-400" />
+                  )}
+                </Button>
               </div>
             </div>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {success && (
+            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <p className="text-green-400 text-sm">{success}</p>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700"
+            onClick={handleEmailAuth}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Mail className="w-4 h-4 mr-2" />
+            )}
+            {mode === "login"
+              ? (loading ? t.login.submitting : t.login.submitButton)
+              : (loading ? t.signup.submitting : t.signup.submitButton)
+            }
+          </Button>
+
+          {/* Mode Toggle */}
+          <div className="text-center text-sm space-y-2">
+            <button
+              onClick={toggleMode}
+              className="text-blue-400 hover:underline block"
+              disabled={loading}
+            >
+              {mode === "login"
+                ? `${t.login.noAccount} ${t.login.signUpLink}`
+                : `${t.signup.hasAccount} ${t.signup.loginLink}`
+              }
+            </button>
+
+            {/* Forgot Password Link - Only show in login mode */}
+            {mode === "login" && (
+              <button
+                onClick={() => window.open('/auth/forgot-password', '_blank')}
+                className="text-slate-400 hover:text-slate-300 text-xs block"
+                disabled={loading}
+              >
+                {t.login.forgotPassword}
+              </button>
+            )}
           </div>
 
           {/* Benefits - Collapsible */}
           {showBenefits ? (
             <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 relative">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">{languageCode === 'zh' ? '你将获得：' : 'What you get:'}</h4>
+                <h4 className="font-medium text-sm">What you get:</h4>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -298,19 +374,19 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               <div className="space-y-1 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>{languageCode === 'zh' ? '无限自定义网站和收藏' : 'Unlimited custom sites & favorites'}</span>
+                  <span>Unlimited custom sites & favorites</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>{languageCode === 'zh' ? '跨设备同步' : 'Sync across all your devices'}</span>
+                  <span>Sync across all your devices</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>{languageCode === 'zh' ? '一站式管理300+网站' : 'Organize 300+ sites in one place'}</span>
+                  <span>Organize 300+ sites in one place</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>{languageCode === 'zh' ? '永不丢失数据' : 'Never lose your data again'}</span>
+                  <span>Never lose your data again</span>
                 </div>
               </div>
             </div>
@@ -321,7 +397,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               onClick={() => setShowBenefits(true)}
               className="text-xs text-slate-400 hover:text-slate-300"
             >
-              {languageCode === 'zh' ? '显示权益' : 'Show benefits'}
+              Show benefits
             </Button>
           )}
         </div>

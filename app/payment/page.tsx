@@ -313,99 +313,96 @@ export default function PaymentPage() {
       : 'bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-600'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-10 px-4">
-      <div className="max-w-6xl mx-auto space-y-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-4 px-4">
+      <div className="max-w-6xl mx-auto space-y-4">
         {/* Header */}
-        <div className="text-center space-y-3">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+        <div className="text-center space-y-1">
+          <h1 className="text-3xl font-bold text-slate-900">
             {t.title}
           </h1>
-          <p className="text-xl text-slate-600">
+          <p className="text-base text-slate-600">
             {t.subtitle}
           </p>
 
           {/* Location Badge */}
           {!geoLoading && location && (
-            <div className="flex items-center justify-center gap-2 mt-4">
-              <Badge variant="outline" className="text-sm border-slate-400 text-slate-700 bg-white">
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <Badge variant="outline" className="text-xs border-slate-400 text-slate-700 bg-white">
                 <Globe className="w-3 h-3 mr-1" />
                 {location.city ? `${location.city}, ${location.country}` : location.country}
               </Badge>
-              <Badge className="text-sm bg-blue-600 text-white">
+              <Badge className="text-xs bg-blue-600 text-white">
                 {location.currency}
               </Badge>
             </div>
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.3fr,1fr] items-start">
-          <div className="space-y-6">
+        <div className="grid gap-4 lg:grid-cols-[1.3fr,1fr] items-start">
+          <div className="space-y-3">
             {/* Billing Cycle Toggle */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-3">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-2">
               <Button
                 variant="outline"
-                size="lg"
                 onClick={() => setBillingCycle('monthly')}
-                className={`w-32 md:w-36 ${cycleButtonClass('monthly')}`}
+                className={`w-28 h-9 text-sm ${cycleButtonClass('monthly')}`}
               >
                 {t.planSelector.monthly}
               </Button>
               <Button
                 variant="outline"
-                size="lg"
                 onClick={() => setBillingCycle('yearly')}
-                className={`w-32 md:w-36 relative ${cycleButtonClass('yearly')}`}
+                className={`w-28 h-9 text-sm relative ${cycleButtonClass('yearly')}`}
               >
                 {t.planSelector.yearly}
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                   {t.planSelector.save.replace('{amount}', '30%')}
                 </span>
               </Button>
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid gap-6 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {/* Pro Plan */}
               <Card className={`${planCardClass('pro')} relative`}>
                 {pricingPlans.pro.isPopular && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">
+                  <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs">
                     {languageCode === 'zh' ? '最受欢迎' : 'Most Popular'}
                   </Badge>
                 )}
-                <CardHeader className="text-center pt-8">
-                  <CardTitle className="text-2xl mb-2 text-slate-900">{pricingPlans.pro.name}</CardTitle>
-                  <CardDescription className="text-slate-600 min-h-[48px]">
+                <CardHeader className="text-center pt-6 pb-3">
+                  <CardTitle className="text-xl mb-1 text-slate-900">{pricingPlans.pro.name}</CardTitle>
+                  <CardDescription className="text-slate-600 text-sm">
                     {pricingPlans.pro.description}
                   </CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold text-blue-600">
+                  <div className="pt-2">
+                    <span className="text-3xl font-bold text-blue-600">
                       ${billingCycle === 'monthly' ? pricingPlans.pro.monthlyPrice : (pricingPlans.pro.yearlyPrice / 12).toFixed(2)}
                     </span>
-                    <span className="text-slate-500">{t.planSelector.perMonth}</span>
+                    <span className="text-slate-500 text-sm">{t.planSelector.perMonth}</span>
                     {billingCycle === 'yearly' && (
-                      <div className="text-sm text-green-600 mt-1">
-                        ${pricingPlans.pro.yearlyPrice}{t.planSelector.perYear} ({t.planSelector.billedYearly})
+                      <div className="text-xs text-green-600 mt-0.5">
+                        ${pricingPlans.pro.yearlyPrice}{t.planSelector.perYear}
                       </div>
                     )}
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-3">
-                  <ul className="space-y-3">
-                    {pricingPlans.pro.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-slate-700 text-sm">{feature}</span>
+                <CardContent className="py-3">
+                  <ul className="space-y-1.5">
+                    {pricingPlans.pro.features.slice(0, 5).map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-xs">{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
 
-                <CardFooter>
+                <CardFooter className="pt-3">
                   <Button
                     variant="default"
-                    className={`w-full ${planButtonClass('pro')} transition-all`}
-                    size="lg"
+                    className={`w-full ${planButtonClass('pro')} transition-all h-9 text-sm`}
                     onClick={() => setSelectedPlan('pro')}
                   >
                     {pricingPlans.pro.buttonText}
@@ -415,40 +412,39 @@ export default function PaymentPage() {
 
               {/* Team Plan */}
               <Card className={`${planCardClass('team')}`}>
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl mb-2 text-slate-900">{pricingPlans.team.name}</CardTitle>
-                  <CardDescription className="text-slate-600 min-h-[48px]">
+                <CardHeader className="text-center pt-6 pb-3">
+                  <CardTitle className="text-xl mb-1 text-slate-900">{pricingPlans.team.name}</CardTitle>
+                  <CardDescription className="text-slate-600 text-sm">
                     {pricingPlans.team.description}
                   </CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold text-slate-900">
+                  <div className="pt-2">
+                    <span className="text-3xl font-bold text-slate-900">
                       ${billingCycle === 'monthly' ? pricingPlans.team.monthlyPrice : (pricingPlans.team.yearlyPrice / 12).toFixed(2)}
                     </span>
-                    <span className="text-slate-500">{t.planSelector.perMonth}</span>
+                    <span className="text-slate-500 text-sm">{t.planSelector.perMonth}</span>
                     {billingCycle === 'yearly' && (
-                      <div className="text-sm text-green-600 mt-1">
-                        ${pricingPlans.team.yearlyPrice}{t.planSelector.perYear} ({t.planSelector.billedYearly})
+                      <div className="text-xs text-green-600 mt-0.5">
+                        ${pricingPlans.team.yearlyPrice}{t.planSelector.perYear}
                       </div>
                     )}
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-3">
-                  <ul className="space-y-3">
-                    {pricingPlans.team.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-slate-700 text-sm">{feature}</span>
+                <CardContent className="py-3">
+                  <ul className="space-y-1.5">
+                    {pricingPlans.team.features.slice(0, 5).map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-slate-700 text-xs">{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </CardContent>
 
-                <CardFooter>
+                <CardFooter className="pt-3">
                   <Button
                     variant="default"
-                    className={`w-full ${planButtonClass('team')} transition-all`}
-                    size="lg"
+                    className={`w-full ${planButtonClass('team')} transition-all h-9 text-sm`}
                     onClick={() => setSelectedPlan('team')}
                   >
                     {pricingPlans.team.buttonText}
@@ -459,17 +455,17 @@ export default function PaymentPage() {
           </div>
 
           {/* Selected Plan Checkout */}
-          <Card className="shadow-xl border border-purple-400 bg-slate-800 lg:sticky lg:top-10">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-white">
-                {languageCode === 'zh' ? `完成 ${pricingPlans[selectedPlan].name} 购买` : `Complete Your ${pricingPlans[selectedPlan].name} Plan Purchase`}
+          <Card className="shadow-xl border border-purple-400 bg-slate-800 lg:sticky lg:top-4">
+            <CardHeader className="text-center py-4">
+              <CardTitle className="text-lg text-white">
+                {languageCode === 'zh' ? `完成 ${pricingPlans[selectedPlan].name} 购买` : `Complete Your ${pricingPlans[selectedPlan].name} Plan`}
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="space-y-4 max-w-2xl mx-auto">
+            <CardContent className="space-y-2 px-4 py-2">
               {/* Email Input */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                <label htmlFor="email" className="block text-xs font-medium text-slate-300 mb-1">
                   {t.email.label}
                 </label>
                 <input
@@ -478,49 +474,49 @@ export default function PaymentPage() {
                   value={userEmail}
                   onChange={(e) => setUserEmail(e.target.value)}
                   placeholder={t.email.placeholder}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-400"
+                  className="w-full px-3 py-2 text-sm bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder:text-slate-400"
                   required
                 />
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-col gap-4 max-w-2xl mx-auto w-full">
+            <CardFooter className="flex flex-col gap-2 px-4 py-3 w-full">
               {/* 支付方式选择标题 */}
               <div className="w-full">
-                <h3 className="text-lg font-semibold text-white mb-3">{t.paymentMethod.title}</h3>
+                <h3 className="text-xs font-semibold text-white mb-1.5">{t.paymentMethod.title}</h3>
 
                 {/* 支付方式选择卡片 */}
-                <div className="grid gap-3">
+                <div className="grid gap-1.5">
                   {/* 根据地理位置显示不同支付方式 */}
                   {isChina ? (
                     <>
                       {/* 中国用户: 微信支付 + 支付宝 */}
                       <button
-                        onClick={() => setSelectedPaymentMethod('wechat')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        onClick={() => setSelectedPaymentMethod('wechat' as any)}
+                        className={`w-full p-2.5 rounded-lg border-2 transition-all text-left ${
                           selectedPaymentMethod === 'wechat'
                             ? 'border-green-500 bg-green-500/20 ring-2 ring-green-400'
                             : 'border-slate-600 bg-slate-700/50 hover:border-green-400'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                               selectedPaymentMethod === 'wechat' ? 'border-green-500' : 'border-slate-500'
                             }`}>
                               {selectedPaymentMethod === 'wechat' && (
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <div className="w-2 h-2 rounded-full bg-green-500"></div>
                               )}
                             </div>
-                            <span className="text-white font-medium">微信支付 (WeChat Pay)</span>
+                            <span className="text-white text-sm font-medium">微信支付 (WeChat Pay)</span>
                           </div>
-                          <Badge className="bg-green-500">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
+                          <Badge className="bg-green-500 text-xs">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
                         </div>
                       </button>
 
                       <button
                         onClick={() => setSelectedPaymentMethod('alipay')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        className={`w-full p-2.5 rounded-lg border-2 transition-all text-left ${
                           selectedPaymentMethod === 'alipay'
                             ? 'border-blue-500 bg-blue-500/20 ring-2 ring-blue-400'
                             : 'border-slate-600 bg-slate-700/50 hover:border-blue-400'
@@ -543,64 +539,64 @@ export default function PaymentPage() {
                       {/* 国际用户: Stripe/PayPal 优先 */}
                       <button
                         onClick={() => setSelectedPaymentMethod('stripe')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        className={`w-full p-2.5 rounded-lg border-2 transition-all text-left ${
                           selectedPaymentMethod === 'stripe'
                             ? 'border-blue-600 bg-blue-600/20 ring-2 ring-blue-500'
                             : 'border-slate-600 bg-slate-700/50 hover:border-blue-500'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          <div className="flex items-center gap-2">
+                            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                               selectedPaymentMethod === 'stripe' ? 'border-blue-600' : 'border-slate-500'
                             }`}>
                               {selectedPaymentMethod === 'stripe' && (
-                                <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                                <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
                               )}
                             </div>
-                            <span className="text-white font-medium">Credit Card (Stripe)</span>
+                            <span className="text-white text-sm font-medium">Credit Card (Stripe)</span>
                           </div>
-                          <Badge className="bg-green-500">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
+                          <Badge className="bg-green-500 text-xs">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
                         </div>
                       </button>
 
                       <button
                         onClick={() => setSelectedPaymentMethod('paypal')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        className={`w-full p-2.5 rounded-lg border-2 transition-all text-left ${
                           selectedPaymentMethod === 'paypal'
                             ? 'border-blue-400 bg-blue-400/20 ring-2 ring-blue-300'
                             : 'border-slate-600 bg-slate-700/50 hover:border-blue-300'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                             selectedPaymentMethod === 'paypal' ? 'border-blue-400' : 'border-slate-500'
                           }`}>
                             {selectedPaymentMethod === 'paypal' && (
-                              <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                              <div className="w-2.5 h-2.5 rounded-full bg-blue-400"></div>
                             )}
                           </div>
-                          <span className="text-white font-medium">PayPal</span>
+                          <span className="text-white text-sm font-medium">PayPal</span>
                         </div>
                       </button>
 
                       <button
                         onClick={() => setSelectedPaymentMethod('alipay')}
-                        className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                        className={`w-full p-2.5 rounded-lg border-2 transition-all text-left ${
                           selectedPaymentMethod === 'alipay'
                             ? 'border-blue-300 bg-blue-300/20 ring-2 ring-blue-200'
                             : 'border-slate-600 bg-slate-700/50 hover:border-blue-200'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                             selectedPaymentMethod === 'alipay' ? 'border-blue-300' : 'border-slate-500'
                           }`}>
                             {selectedPaymentMethod === 'alipay' && (
-                              <div className="w-3 h-3 rounded-full bg-blue-300"></div>
+                              <div className="w-2.5 h-2.5 rounded-full bg-blue-300"></div>
                             )}
                           </div>
-                          <span className="text-white font-medium">支付宝支付 (Alipay)</span>
+                          <span className="text-white text-sm font-medium">支付宝支付 (Alipay)</span>
                         </div>
                       </button>
                     </>
@@ -617,13 +613,12 @@ export default function PaymentPage() {
                   else if (selectedPaymentMethod === 'alipay') handleAlipayCheckout()
                 }}
                 disabled={loadingAlipay || loadingStripe || loadingPayPal || !userEmail}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg py-6"
-                size="lg"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-base py-3"
               >
                 {(loadingStripe || loadingPayPal || loadingAlipay) ? t.buttons.subscribing : t.buttons.subscribe}
               </Button>
 
-              <p className="text-xs text-slate-400 text-center mt-2">
+              <p className="text-xs text-slate-400 text-center mt-1">
                 {languageCode === 'zh'
                   ? `继续即表示您同意我们的服务条款和隐私政策。安全支付由 ${isChina ? '微信支付、支付宝' : 'Stripe、PayPal 或支付宝'} 处理。`
                   : `By continuing, you agree to our Terms of Service and Privacy Policy. Secure payment processed by ${isChina ? 'WeChat Pay or Alipay' : 'Stripe, PayPal, or Alipay'}.`}

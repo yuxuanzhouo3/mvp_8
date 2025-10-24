@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { sessionManager } from '@/lib/session-manager'
@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
     // Initialize session manager
@@ -66,17 +65,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(customUser)
           localStorage.setItem("sitehub-user", JSON.stringify(customUser))
         } else {
-          // Check for guest data in localStorage (only on client-side)
-          if (typeof window !== 'undefined') {
-            const savedUser = localStorage.getItem("sitehub-user")
-            if (savedUser) {
-              try {
-                const userData = JSON.parse(savedUser)
-                setUser(userData)
-              } catch (error) {
-                console.error("Failed to parse saved user data:", error)
-                setUser({ type: "guest", customCount: 0, pro: false })
-              }
+          // Check for guest data in localStorage
+          const savedUser = localStorage.getItem("sitehub-user")
+          if (savedUser) {
+            try {
+              const userData = JSON.parse(savedUser)
+              setUser(userData)
+            } catch (error) {
+              console.error("Failed to parse saved user data:", error)
+              setUser({ type: "guest", customCount: 0, pro: false })
             }
           }
         }
@@ -85,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ type: "guest", customCount: 0, pro: false })
       } finally {
         setLoading(false)
-        setIsHydrated(true) // 标记hydration完成
       }
     }
 
@@ -154,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     supabaseUser,
     session,
-    loading: loading || !isHydrated, // 在hydration完成前保持loading状态
+    loading,
     signOut,
     signIn
   }
