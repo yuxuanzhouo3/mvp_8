@@ -47,6 +47,9 @@ export function ParseSitesModal({
   existingUrlsRef.current = existingUrls
   addedUrlsRef.current = addedUrls
 
+  // ✅ 关键修复：添加 isMountedRef 来防止组件卸载后设置状态
+  const isMountedRef = useRef(true)
+
   useEffect(() => {
     if (!isOpen) {
       setRawText("")
@@ -56,6 +59,14 @@ export function ParseSitesModal({
       setStatusMessage("")
     }
   }, [isOpen])
+
+  // ✅ 关键修复：清理函数重置 isMountedRef
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!rawText) {
@@ -76,8 +87,11 @@ export function ParseSitesModal({
         }
       })
 
-      setParsed(enriched)
-      setIsProcessing(false)
+      // ✅ 关键修复：只在组件仍挂载时设置状态
+      if (isMountedRef.current) {
+        setParsed(enriched)
+        setIsProcessing(false)
+      }
     }, 350)
 
     return () => clearTimeout(handler)

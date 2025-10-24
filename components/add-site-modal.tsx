@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -60,6 +60,16 @@ export function AddSiteModal({
   const [logo, setLogo] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
+  // ✅ 关键修复：添加 isMountedRef 来防止组件卸载后设置状态
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   // 简化计算，避免 hydration mismatch
   const canAddSite = true // 暂时移除限制，与小程序保持一致
 
@@ -98,11 +108,14 @@ export function AddSiteModal({
       logo: (logo || "🌐").trim() || "🌐",
     })
 
-    setIsLoading(false)
+    // ✅ 关键修复：只在组件仍挂载时设置状态
+    if (isMountedRef.current) {
+      setIsLoading(false)
 
-    if (success) {
-      resetForm()
-      onClose()
+      if (success) {
+        resetForm()
+        onClose()
+      }
     }
   }
 
