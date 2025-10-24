@@ -38,19 +38,20 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
 
   // Update mode when authMode prop changes
   useEffect(() => {
-    setMode(authMode)
+    setMode(prev => prev === authMode ? prev : authMode)
   }, [authMode])
 
   // Reset form when modal opens/closes
   useEffect(() => {
     if (open) {
-      setEmail("")
-      setPassword("")
-      setError("")
-      setSuccess("")
-      setShowPassword(false)
-      setLoading(false)
-      setShowBenefits(true)
+      // ✅ 只在需要时重置，避免不必要的更新
+      setEmail(prev => prev ? "" : prev)
+      setPassword(prev => prev ? "" : prev)
+      setError(prev => prev ? "" : prev)
+      setSuccess(prev => prev ? "" : prev)
+      setShowPassword(prev => prev ? false : prev)
+      setLoading(prev => prev ? false : prev)
+      setShowBenefits(prev => !prev ? true : prev)
     }
   }, [open])
 
