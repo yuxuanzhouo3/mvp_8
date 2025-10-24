@@ -36,36 +36,6 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
   const [showBenefits, setShowBenefits] = useState(true)
   // const [showPhoneAuth, setShowPhoneAuth] = useState(false)
 
-  // 欧洲地区检测 - 显示屏蔽消息
-  if (isEurope) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-center">
-              Service Not Available in Europe
-            </DialogTitle>
-            <DialogDescription className="text-slate-400 text-center">
-              Due to regulatory requirements (GDPR), we are currently unable to offer authentication services in European countries.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-slate-300 text-center">
-              We apologize for any inconvenience. You can still browse our content as a guest.
-            </p>
-            <Button
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              onClick={() => window.open('mailto:mornscience@gmail.com?subject=Inquiry from Europe', '_blank')}
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Contact Us
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
   // Update mode when authMode prop changes
   useEffect(() => {
     setMode(authMode)
@@ -193,16 +163,41 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
   return (
     <Dialog open={open} onOpenChange={onOpenChange} key={`auth-modal-${mode}`}>
       <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">
-            {mode === "login" ? t.login.title : t.signup.title}
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            {mode === "login" ? t.login.subtitle : t.signup.subtitle}
-          </DialogDescription>
-        </DialogHeader>
+        {isEurope ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-center">
+                Service Not Available in Europe
+              </DialogTitle>
+              <DialogDescription className="text-slate-400 text-center">
+                Due to regulatory requirements (GDPR), we are currently unable to offer authentication services in European countries.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-slate-300 text-center">
+                We apologize for any inconvenience. You can still browse our content as a guest.
+              </p>
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                onClick={() => window.open('mailto:mornscience@gmail.com?subject=Inquiry from Europe', '_blank')}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Contact Us
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">
+                {mode === "login" ? t.login.title : t.signup.title}
+              </DialogTitle>
+              <DialogDescription className="text-slate-400">
+                {mode === "login" ? t.login.subtitle : t.signup.subtitle}
+              </DialogDescription>
+            </DialogHeader>
 
-        <div className="space-y-4">
+            <div className="space-y-4">
           {/* Social Login Buttons */}
           <div className="grid gap-3">
             <Button
@@ -401,6 +396,8 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
             </Button>
           )}
         </div>
+          </>
+        )}
       </DialogContent>
       
       {/* Phone Auth Modal */}
