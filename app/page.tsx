@@ -956,6 +956,16 @@ export default function SiteHub() {
     setTimeout(() => setToast(null), 3000)
   }
 
+  // ✅ 关键修复：所有模态框回调函数都用 useCallback 包装
+  const handleCloseAddModal = useCallback(() => setShowAddModal(false), [])
+  const handleCloseParseModal = useCallback(() => setShowParseModal(false), [])
+  const handleCloseUpgradeModal = useCallback(() => setShowUpgradeModal(false), [])
+  const handleCloseAuthModal = useCallback(() => setShowAuthModal(false), [])
+  const handleAuthSuccess = useCallback((userData: any) => {
+    console.log('🔍 [Auth] 用户认证成功:', userData)
+    setShowAuthModal(false)
+  }, [])
+
   // 拖拽处理
   const handleDragStart = (event: any) => {
     setDraggingSiteId(event.active.id)
@@ -1138,7 +1148,7 @@ export default function SiteHub() {
       {/* 模态框总是渲染，保持 Hook 数量一致 */}
       <AddSiteModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={handleCloseAddModal}
         onAdd={addCustomSite}
         user={user}
         customCount={customSitesCount}
@@ -1147,7 +1157,7 @@ export default function SiteHub() {
 
       <ParseSitesModal
         isOpen={showParseModal}
-        onClose={() => setShowParseModal(false)}
+        onClose={handleCloseParseModal}
         onAddSite={addCustomSite}
         existingUrls={existingUrls}
         isProUser={user.pro}
@@ -1156,18 +1166,15 @@ export default function SiteHub() {
 
       <UpgradeModal
         isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
+        onClose={handleCloseUpgradeModal}
         onAuth={handleAuth}
         isTimeExpired={isGuestTimeExpired}
       />
 
       <AuthModal
         open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        onAuth={(userData) => {
-          console.log('🔍 [Auth] 用户认证成功:', userData)
-          setShowAuthModal(false)
-        }}
+        onOpenChange={handleCloseAuthModal}
+        onAuth={handleAuthSuccess}
         authMode={authMode}
       />
 
