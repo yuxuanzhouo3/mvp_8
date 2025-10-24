@@ -31,6 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  
+  // ✅ 关键修复：添加 isMountedRef 来防止组件卸载后设置状态
+  const isMountedRef = React.useRef(true)
 
   useEffect(() => {
     // Initialize session manager
@@ -92,6 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         console.log("Auth state change:", event, session?.user?.email)
         
+        // ✅ 关键修复：只在组件仍挂载时处理状态更新
+        if (!isMountedRef.current) return
+        
         try {
           // ✅ 修复回路：只在值真正变化时才更新
           setSession(prev => {
@@ -147,12 +153,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error("Error in auth state change:", error)
         } finally {
-          setLoading(false)
+          // ✅ 关键修复：只在组件仍挂载时设置 loading
+          if (isMountedRef.current) {
+            setLoading(false)
+          }
         }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMountedRef.current = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signOut = async () => {
