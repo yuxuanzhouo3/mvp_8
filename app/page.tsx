@@ -1134,44 +1134,41 @@ export default function SiteHub() {
         </main>
       </DndContext>
 
-      {isHydrated && (
-        <>
-          <AddSiteModal
-            isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
-            onAdd={addCustomSite}
-            user={user}
-            customCount={customSitesCount}
-            limit={10}
-          />
+      {/* 模态框总是渲染，保持 Hook 数量一致 */}
+      <AddSiteModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={addCustomSite}
+        user={user}
+        customCount={customSitesCount}
+        limit={10}
+      />
 
-          <ParseSitesModal
-            isOpen={showParseModal}
-            onClose={() => setShowParseModal(false)}
-            onAddSite={addCustomSite}
-            existingUrls={existingUrls}
-            isProUser={user.pro}
-            remainingSlots={remainingCustomSlots}
-          />
+      <ParseSitesModal
+        isOpen={showParseModal}
+        onClose={() => setShowParseModal(false)}
+        onAddSite={addCustomSite}
+        existingUrls={existingUrls}
+        isProUser={user.pro}
+        remainingSlots={remainingCustomSlots}
+      />
 
-          <UpgradeModal
-            isOpen={showUpgradeModal}
-            onClose={() => setShowUpgradeModal(false)}
-            onAuth={handleAuth}
-            isTimeExpired={isGuestTimeExpired}
-          />
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        onAuth={handleAuth}
+        isTimeExpired={isGuestTimeExpired}
+      />
 
-          <AuthModal
-            open={showAuthModal}
-            onOpenChange={setShowAuthModal}
-            onAuth={(userData) => {
-              console.log('🔍 [Auth] 用户认证成功:', userData)
-              setShowAuthModal(false)
-            }}
-            authMode={authMode}
-          />
-        </>
-      )}
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onAuth={(userData) => {
+          console.log('🔍 [Auth] 用户认证成功:', userData)
+          setShowAuthModal(false)
+        }}
+        authMode={authMode}
+      />
 
       {toast && <Toast message={toast.message} type={toast.type} />}
     </div>
