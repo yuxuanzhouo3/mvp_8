@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,6 +19,16 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired }: Upgrade
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   
+  // ✅ 关键修复：添加 isMountedRef 来防止 Presence 动画期间的状态更新
+  const isMountedRef = useRef(true)
+  
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+  
   const features = [
     { icon: Zap, text: "Unlimited drag & drop reordering", premium: false },
     { icon: Heart, text: "Save unlimited custom sites", premium: true },
@@ -31,7 +41,10 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired }: Upgrade
       alert("Please fill in both email and password")
       return
     }
-    onAuth("email")
+    // ✅ 关键修复：只在组件仍挂载时调用回调
+    if (isMountedRef.current) {
+      onAuth("email")
+    }
   }
 
   return (
@@ -73,7 +86,11 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired }: Upgrade
               <Button
                 variant="outline"
                 className="bg-white text-black hover:bg-gray-100"
-                onClick={() => onAuth("google")}
+                onClick={() => {
+                  if (isMountedRef.current) {
+                    onAuth("google")
+                  }
+                }}
               >
                 <Chrome className="w-4 h-4 mr-2" />
                 Continue with Google
@@ -121,7 +138,11 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired }: Upgrade
 
             <div className="text-center text-xs text-slate-400">
               Already have an account?{" "}
-              <button className="text-blue-400 hover:underline" onClick={() => onAuth("login")}>
+              <button className="text-blue-400 hover:underline" onClick={() => {
+                if (isMountedRef.current) {
+                  onAuth("login")
+                }
+              }}>
                 Sign in
               </button>
             </div>
