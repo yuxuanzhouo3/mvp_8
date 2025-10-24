@@ -24,13 +24,19 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = wxStorage.get<string>("sitehub_language")
-    if (stored === "zh" || stored === "en") {
-      setLanguageState(stored)
-      setIsAuto(false)
-    } else {
-      setLanguageState(effectiveGeoLanguage)
-      setIsAuto(true)
-    }
+    const newLanguage = stored === "zh" || stored === "en" ? stored : effectiveGeoLanguage
+    const shouldBeAuto = !(stored === "zh" || stored === "en")
+    
+    // ✅ 修复无限循环：只在值真正变化时才更新
+    setLanguageState(prev => {
+      if (prev === newLanguage) return prev
+      return newLanguage
+    })
+    
+    setIsAuto(prev => {
+      if (prev === shouldBeAuto) return prev
+      return shouldBeAuto
+    })
   }, [effectiveGeoLanguage])
 
   useEffect(() => {
