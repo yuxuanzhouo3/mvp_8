@@ -116,6 +116,9 @@ export function ParseSitesModal({
       logo: site.logo,
     })
 
+    // ✅ 关键修复：只在组件仍挂载时设置状态
+    if (!isMountedRef.current) return false
+
     if (success) {
       setAddedUrls((prev) => {
         const updated = new Set(prev)
@@ -143,13 +146,17 @@ export function ParseSitesModal({
     let successCount = 0
 
     for (const site of actionableSites) {
+      // ✅ 关键修复：检查组件是否仍挂载
+      if (!isMountedRef.current) break
+      
       const ok = await handleAddSingle(site)
       if (ok) {
         successCount += 1
       }
     }
 
-    if (successCount > 0) {
+    // ✅ 关键修复：只在组件仍挂载时设置状态
+    if (isMountedRef.current && successCount > 0) {
       setStatusMessage(`成功添加 ${successCount} 个网站`)
     }
   }
