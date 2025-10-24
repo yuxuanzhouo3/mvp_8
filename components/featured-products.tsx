@@ -16,13 +16,9 @@ export function FeaturedProducts({ sites }) {
   // 防止hydration mismatch：确保sites数组安全
   const safeSites = Array.isArray(sites) ? sites : []
 
-  // Don't return null - always return consistent structure to avoid hooks count mismatch
-  if (!safeSites?.length) {
-    return <div className="hidden" />
-  }
-
+  // Always return the same structure, use CSS to hide when no sites
   return (
-    <section className="mb-2">
+    <section className={`mb-2 ${!safeSites?.length ? "hidden" : ""}`}>
       <div className="flex items-center gap-2 mb-3">
         <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white animate-pulse text-xs">
           <Sparkles className="w-3 h-3 mr-1" />
