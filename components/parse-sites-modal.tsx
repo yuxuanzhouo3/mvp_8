@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,6 +39,12 @@ export function ParseSitesModal({
 
   const canAddMore = isProUser || remainingSlots === null || remainingSlots > 0
 
+  // ✅ 修复无限循环：使用 useRef 稳定化 existingUrls
+  const existingUrlsRef = useRef(existingUrls)
+  useEffect(() => {
+    existingUrlsRef.current = existingUrls
+  }, [existingUrls])
+
   useEffect(() => {
     if (!isOpen) {
       setRawText("")
@@ -59,7 +65,7 @@ export function ParseSitesModal({
       const results = parseTextToSites(rawText)
       const enriched: EnrichedParsedSite[] = results.map((site) => {
         const normalized = normalizeUrlForComparison(site.url)
-        const isDuplicate = existingUrls.has(normalized)
+        const isDuplicate = existingUrlsRef.current.has(normalized)
         return {
           ...site,
           isDuplicate,
@@ -72,7 +78,7 @@ export function ParseSitesModal({
     }, 350)
 
     return () => clearTimeout(handler)
-  }, [rawText, existingUrls, addedUrls])
+  }, [rawText, addedUrls])  // ✅ 移除 existingUrls 依赖
 
   const actionableSites = useMemo(
     () => parsed.filter((site) => !site.isDuplicate && !site.isAdded),
