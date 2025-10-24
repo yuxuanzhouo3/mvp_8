@@ -30,32 +30,32 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
   const [showPassword, setShowPassword] = useState(false)
   const [credentials, setCredentials] = useState({ email: "", password: "" })
 
-  // Don't return null after hooks - return empty Dialog instead
-  if (!site) {
-    return <div className="hidden" />
-  }
-
   const handleVisit = () => {
-    window.open(site.url, "_blank")
+    if (site) {
+      window.open(site.url, "_blank")
+    }
   }
 
   const handleSaveCredentials = () => {
     // TODO: Implement credential saving
-    console.log("Saving credentials for", site.name, credentials)
+    if (site) {
+      console.log("Saving credentials for", site.name, credentials)
+    }
   }
 
+  // Always return the same structure, handle null site gracefully
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className={`max-w-md ${!site ? "hidden" : ""}`}>
         <DialogHeader>
           <div className="text-center space-y-4">
             <div
-              className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl ${site.bgColor} shadow-xl`}
+              className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center text-4xl ${site?.bgColor || "bg-gray-200"} shadow-xl`}
             >
-              {site.logo}
+              {site?.logo || "🌐"}
             </div>
-            <DialogTitle className="text-2xl">{site.name}</DialogTitle>
-            <DialogDescription className="text-base">{site.description}</DialogDescription>
+            <DialogTitle className="text-2xl">{site?.name || "Unknown"}</DialogTitle>
+            <DialogDescription className="text-base">{site?.description || ""}</DialogDescription>
           </div>
         </DialogHeader>
 
@@ -64,10 +64,10 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-1">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-medium">{site.rating}</span>
+              <span className="font-medium">{site?.rating || 0}</span>
             </div>
-            <Badge variant="outline">{site.category}</Badge>
-            {site.supportsLogin && (
+            <Badge variant="outline">{site?.category || "Unknown"}</Badge>
+            {site?.supportsLogin && (
               <Badge variant="secondary" className="bg-green-100 text-green-700">
                 <Shield className="w-3 h-3 mr-1" />
                 Login Enabled
@@ -85,7 +85,7 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
           </Button>
 
           {/* Login Section */}
-          {site.supportsLogin && (
+          {site?.supportsLogin && (
             <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
               <h4 className="font-semibold text-gray-900">Save Login Credentials</h4>
 
