@@ -19,6 +19,17 @@ const nextConfig = {
   compiler: {
     removeConsole: false, // 保留console.log用于调试
   },
+  // ✅ 启用生产环境 source map 以获取详细错误信息
+  productionBrowserSourceMaps: true,
+  
+  // ✅ 配置 webpack 以优化错误信息
+  webpack: (config, { dev, isServer }) => {
+    // 在生产环境也生成 source map
+    if (!dev) {
+      config.devtool = 'source-map'
+    }
+    return config
+  },
 }
 
 export default nextConfig
