@@ -84,7 +84,7 @@ export function ParseSitesModal({
     }, 350)
 
     return () => clearTimeout(handler)
-  }, [rawText])  // ✅ 只依赖 rawText
+  }, [rawText])  // ✅ 只依赖 rawText，使用 useRef 访问 existingUrls 和 addedUrls
 
   const actionableSites = useMemo(
     () => parsed.filter((site) => !site.isDuplicate && !site.isAdded),
