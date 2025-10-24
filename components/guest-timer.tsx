@@ -75,29 +75,29 @@ export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerPr
 
   // Always return the same structure, use CSS to hide when not guest
   return (
-    <div className={`flex items-center gap-3 ${user.type !== "guest" ? "hidden" : ""}`}>
-      <Badge className={`${getTimerColor()} text-white animate-pulse`}>
+    <div className={`flex items-center gap-1 sm:gap-3 ${user.type !== "guest" ? "hidden" : ""}`}>
+      <Badge className={`${getTimerColor()} text-white animate-pulse text-xs px-2 py-1`}>
         <Clock className="w-3 h-3 mr-1" />
         {isExpired ? text.expired : `${minutes}:${seconds.toString().padStart(2, "0")}`}
       </Badge>
 
       {getWarningMessage() && (
-        <div className="text-xs text-red-400 animate-pulse">
+        <div className="hidden sm:block text-xs text-red-400 animate-pulse">
           {getWarningMessage()}
         </div>
       )}
 
       {(timeRemaining < 120 || isExpired) && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             size="sm"
             onClick={onUpgradeClick}
-            className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white"
+            className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white text-xs px-2 sm:px-3"
           >
-            <Crown className="w-4 h-4 mr-2" />
-            {isExpired ? text.upgradeCtaExpired : text.upgradeCtaActive}
+            <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{isExpired ? text.upgradeCtaExpired : text.upgradeCtaActive}</span>
           </Button>
-          <span className="text-xs text-yellow-300">
+          <span className="hidden sm:inline text-xs text-yellow-300">
             {isExpired ? text.upgradeHintExpired : text.upgradeHintActive}
           </span>
         </div>
