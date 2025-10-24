@@ -39,23 +39,20 @@ export function ParseSitesModal({
 
   const canAddMore = isProUser || remainingSlots === null || remainingSlots > 0
 
-  // ✅ 修复无限循环：使用 useRef 稳定化依赖
+  // ✅ 修复无限循环：使用 useRef 稳定化依赖，不在 useEffect 中更新
   const existingUrlsRef = useRef(existingUrls)
   const addedUrlsRef = useRef(addedUrls)
   
-  useEffect(() => {
-    existingUrlsRef.current = existingUrls
-  }, [existingUrls])
-  
-  useEffect(() => {
-    addedUrlsRef.current = addedUrls
-  }, [addedUrls])
+  // 每次渲染时同步更新 ref（不在 effect 中，避免触发循环）
+  existingUrlsRef.current = existingUrls
+  addedUrlsRef.current = addedUrls
 
   useEffect(() => {
     if (!isOpen) {
       setRawText("")
       setParsed([])
-      setAddedUrls(new Set())
+      // ✅ 关键修复：只有当前 addedUrls 不为空时才重置
+      setAddedUrls(prev => prev.size > 0 ? new Set() : prev)
       setStatusMessage("")
     }
   }, [isOpen])
