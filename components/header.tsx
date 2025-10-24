@@ -48,11 +48,19 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
     }
   }, [])
 
-  // Show loading state while auth is initializing
-  if (loading) {
-    return (
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+  const handleAuth = (userData: any) => {
+    // Auth is now handled by the context
+    setShowAuthModal(false)
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
+  return (
+    <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
+      <div className="container mx-auto px-4 py-4">
+        {loading ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
@@ -69,24 +77,8 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
               <div className="h-8 w-24 bg-slate-700 rounded animate-pulse"></div>
             </div>
           </div>
-        </div>
-      </header>
-    )
-  }
-
-  const handleAuth = (userData: any) => {
-    // Auth is now handled by the context
-    setShowAuthModal(false)
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-  }
-
-  return (
-    <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+        ) : (
+          <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
@@ -235,7 +227,8 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Auth Modal */}
