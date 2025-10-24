@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { sessionManager } from '@/lib/session-manager'
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   
   // ✅ 关键修复：添加 isMountedRef 来防止组件卸载后设置状态
-  const isMountedRef = React.useRef(true)
+  const isMountedRef = useRef(true)
 
   useEffect(() => {
     // Initialize session manager
