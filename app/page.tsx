@@ -621,6 +621,12 @@ export default function SiteHub() {
       .replace(uiPlaceholders.total, nonFeaturedCount.toString())
   }, [mounted, language, selectedCategory, filteredSites.length, nonFeaturedCount])
 
+  // ✅ 先定义 showToast，供后续函数使用
+  const showToast = useCallback((message: string, type = "success") => {
+    setToast({ message, type })
+    setTimeout(() => setToast(null), 3000)
+  }, [])
+
   const handleGuestTimeExpired = useCallback(() => {
     setIsGuestTimeExpired(true)
     showToast(toastText.timeExpired, "info")
@@ -950,11 +956,6 @@ export default function SiteHub() {
       showToast(toastText.removed)
     }
   }, [user.type, user.id, dbAdapter, favorites, sites, isHydrated, showToast, toastText])
-
-  const showToast = useCallback((message: string, type = "success") => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
-  }, [])
 
   // ✅ 关键修复：所有模态框回调函数都用 useCallback 包装
   const handleCloseAddModal = useCallback(() => setShowAddModal(false), [])
