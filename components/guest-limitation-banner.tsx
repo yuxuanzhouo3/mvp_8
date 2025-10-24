@@ -41,11 +41,6 @@ export function GuestLimitationBanner({ user, onSignUpClick, onDismiss }: GuestL
     return () => clearInterval(interval)
   }, [user.type])
 
-  // Don't return null after hooks - use CSS to hide instead
-  if (user.type !== "guest" || isDismissed) {
-    return <div className="hidden" />
-  }
-
   const minutes = Math.floor(timeRemaining / 60)
   const seconds = timeRemaining % 60
   const isExpired = timeRemaining === 0
@@ -55,9 +50,10 @@ export function GuestLimitationBanner({ user, onSignUpClick, onDismiss }: GuestL
     onDismiss?.()
   }
 
+  // Always return the same structure, use CSS to hide when not guest or dismissed
   return (
     <div
-      className={`mb-6 p-4 rounded-xl border ${
+      className={`mb-6 p-4 rounded-xl border ${user.type !== "guest" || isDismissed ? "hidden" : ""} ${
         isExpired
           ? "bg-red-600/20 border-red-500/30"
           : timeRemaining < 120
