@@ -93,8 +93,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Auth state change:", event, session?.user?.email)
         
         try {
-          setSession(session)
-          setSupabaseUser(session?.user ?? null)
+          // ✅ 修复回路：只在值真正变化时才更新
+          setSession(prev => {
+            if (prev?.user?.id === session?.user?.id) return prev
+            return session
+          })
+          
+          setSupabaseUser(prev => {
+            if (prev?.id === session?.user?.id) return prev
+            return session?.user ?? null
+          })
           
           if (event === 'SIGNED_IN' && session?.user) {
             const customUser: CustomUser = {
@@ -106,10 +114,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: session.user.id,
               provider: session.user.app_metadata?.provider
             }
-            setUser(customUser)
+            // ✅ 只在用户ID变化时才更新
+            setUser(prev => {
+              if (prev.id === customUser.id) return prev
+              return customUser
+            })
             localStorage.setItem("sitehub-user", JSON.stringify(customUser))
           } else if (event === 'SIGNED_OUT') {
-            setUser({ type: "guest", customCount: 0, pro: false })
+            setUser(prev => {
+              if (prev.type === "guest") return prev
+              return { type: "guest", customCount: 0, pro: false }
+            })
             localStorage.removeItem("sitehub-user")
           } else if (event === 'TOKEN_REFRESHED' && session?.user) {
             // Handle token refresh
@@ -122,7 +137,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: session.user.id,
               provider: session.user.app_metadata?.provider
             }
-            setUser(customUser)
+            // ✅ 只在用户ID变化时才更新
+            setUser(prev => {
+              if (prev.id === customUser.id) return prev
+              return customUser
+            })
             localStorage.setItem("sitehub-user", JSON.stringify(customUser))
           }
         } catch (error) {

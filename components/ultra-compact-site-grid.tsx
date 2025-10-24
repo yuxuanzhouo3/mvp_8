@@ -114,9 +114,13 @@ export function UltraCompactSiteGrid({ sites, onRemove, onReorder, onToggleFavor
   // 防止hydration mismatch：确保sites数组安全
   const safeSites = Array.isArray(sites) ? sites : []
   
+  // 始终渲染相同数量的组件结构，保持 Hook 调用一致性
+  // 即使 sites 为空，也渲染一个最小结构来保持组件树的一致性
+  const isEmpty = safeSites.length === 0
+  
   return (
     <SortableContext items={safeSites.map((site) => site.id)} strategy={rectSortingStrategy}>
-      <div className="grid grid-cols-3 xs:grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 2xl:grid-cols-18 gap-2 sm:gap-2">
+      <div className={`grid grid-cols-3 xs:grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-15 2xl:grid-cols-18 gap-2 sm:gap-2 ${isEmpty ? 'min-h-[100px]' : ''}`}>
         {safeSites.map((site) => (
           <UltraCompactSiteCard
             key={site.id}
