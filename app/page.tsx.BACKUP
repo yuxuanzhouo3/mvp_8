@@ -1,0 +1,4 @@
+// 在 app/page.tsx 最顶部添加：
+export const dynamic = 'force-dynamic'
+export const ssr = false  // 完全禁用 SSR
+
