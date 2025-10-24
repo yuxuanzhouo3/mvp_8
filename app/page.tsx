@@ -11,7 +11,7 @@
 // Force client-side rendering to avoid SSR hydration mismatch
 export const dynamic = 'force-dynamic'
 
-import React, { useState, useEffect, useMemo, useRef } from "react"
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Header } from "@/components/header"
 import { FeaturedProducts } from "@/components/featured-products"
 import { SearchAndFilters } from "@/components/search-and-filters"
@@ -311,8 +311,9 @@ export default function SiteHub() {
     if (!isHydrated) {
       return new Set<string>()
     }
-    return new Set(sites.map((site) => normalizeUrlForComparison(site.url)))
-  }, [sites, isHydrated])
+    const urls = sites.map((site) => normalizeUrlForComparison(site.url))
+    return new Set(urls)
+  }, [sites.length, isHydrated])  // ✅ 关键修复：只依赖数组长度，不依赖整个数组
 
   const customCountRef = useRef(0)
 
@@ -732,7 +733,7 @@ export default function SiteHub() {
     showToast(toastText.reordered)
   }
 
-  const addCustomSite = async (newSite: any): Promise<boolean> => {
+  const addCustomSite = useCallback(async (newSite: any): Promise<boolean> => {
     console.log('🔍 [AddSite] 开始添加网站:', newSite)
     const normalizedUrl = normalizeUrlForComparison(newSite.url)
     if (existingUrls.has(normalizedUrl)) {
@@ -839,7 +840,7 @@ export default function SiteHub() {
       showToast("Failed to add site. Please try again.", "error")
       return false
     }
-  }
+  }, [existingUrls, customCountRef, user, isGuestTimeExpired, dbAdapter, showToast, setShowUpgradeModal, setSites, setFavorites, isHydrated])
 
   const toggleFavorite = async (siteId: string) => {
     const isFavorited = favorites.includes(siteId)
