@@ -840,7 +840,7 @@ export default function SiteHub() {
       showToast("Failed to add site. Please try again.", "error")
       return false
     }
-  }, [existingUrls, customCountRef, user, isGuestTimeExpired, dbAdapter, showToast, setShowUpgradeModal, setSites, setFavorites, isHydrated])
+  }, [existingUrls, user, isGuestTimeExpired, dbAdapter, isHydrated])
 
   const toggleFavorite = async (siteId: string) => {
     const isFavorited = favorites.includes(siteId)
