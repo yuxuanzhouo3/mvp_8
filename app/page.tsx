@@ -621,12 +621,12 @@ export default function SiteHub() {
       .replace(uiPlaceholders.total, nonFeaturedCount.toString())
   }, [mounted, language, selectedCategory, filteredSites.length, nonFeaturedCount])
 
-  const handleGuestTimeExpired = () => {
+  const handleGuestTimeExpired = useCallback(() => {
     setIsGuestTimeExpired(true)
     showToast(toastText.timeExpired, "info")
-  }
+  }, [showToast, toastText])
 
-  const handleUpgradeClick = () => {
+  const handleUpgradeClick = useCallback(() => {
     console.log('🔍 [Upgrade] 点击升级按钮，地区检测:', { isChina, regionCategory, timestamp: new Date().toISOString() })
     
     // If user is already logged in (authenticated), go to payment page
@@ -647,9 +647,9 @@ export default function SiteHub() {
       console.log('🔍 [Upgrade] 海外用户，显示升级模态框')
       setShowUpgradeModal(true)
     }
-  }
+  }, [isChina, regionCategory, user.type, isHydrated])
 
-  const handleAuth = (provider: string) => {
+  const handleAuth = useCallback((provider: string) => {
     // Close the upgrade modal first
     setShowUpgradeModal(false)
     
@@ -674,18 +674,18 @@ export default function SiteHub() {
         setAuthMode("signup")
       }
     }
-  }
+  }, [isChina])
 
-  const handleOpenParseModal = () => {
+  const handleOpenParseModal = useCallback(() => {
     try {
       console.log('🔍 [ParseModal] 打开智能解析模态框')
       setShowParseModal(true)
     } catch (error) {
       console.error('🚨 [Parse Modal Error]', error)
     }
-  }
+  }, [])
 
-  const shuffleSites = () => {
+  const shuffleSites = useCallback(() => {
     console.log('🔍 [Shuffle] 开始随机排序网站')
 
     const featuredSites = sites.filter((site) => site.featured)
@@ -712,9 +712,9 @@ export default function SiteHub() {
     }
 
     showToast(toastText.shuffled)
-  }
+  }, [sites, isHydrated, showToast, toastText])
 
-  const handleReorder = (newSites: Site[]) => {
+  const handleReorder = useCallback((newSites: Site[]) => {
     if (user.type === "guest" && isGuestTimeExpired) {
       setShowUpgradeModal(true)
       return
@@ -731,7 +731,7 @@ export default function SiteHub() {
       }
     }
     showToast(toastText.reordered)
-  }
+  }, [user.type, isGuestTimeExpired, sites, isHydrated, showToast, toastText])
 
   const addCustomSite = useCallback(async (newSite: any): Promise<boolean> => {
     console.log('🔍 [AddSite] 开始添加网站:', newSite)
@@ -842,7 +842,7 @@ export default function SiteHub() {
     }
   }, [existingUrls, user, isGuestTimeExpired, dbAdapter, isHydrated])
 
-  const toggleFavorite = async (siteId: string) => {
+  const toggleFavorite = useCallback(async (siteId: string) => {
     const isFavorited = favorites.includes(siteId)
     const site = sites.find((s) => s.id === siteId)
     const defaultSiteName = language === "zh" ? "网站" : "Site"
@@ -907,9 +907,9 @@ export default function SiteHub() {
         hasDbAdapter: !!dbAdapter
       })
     }
-  }
+  }, [favorites, sites, language, user.type, user.id, dbAdapter, isChina, isHydrated, showToast, toastText])
 
-  const removeSite = async (siteId: string) => {
+  const removeSite = useCallback(async (siteId: string) => {
     if (user.type === "authenticated" && user.id && dbAdapter) {
       // Authenticated users: delete from database
       await dbAdapter.removeCustomSite(siteId)
@@ -949,12 +949,12 @@ export default function SiteHub() {
       }
       showToast(toastText.removed)
     }
-  }
+  }, [user.type, user.id, dbAdapter, favorites, sites, isHydrated, showToast, toastText])
 
-  const showToast = (message: string, type = "success") => {
+  const showToast = useCallback((message: string, type = "success") => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 3000)
-  }
+  }, [])
 
   // ✅ 关键修复：所有模态框回调函数都用 useCallback 包装
   const handleCloseAddModal = useCallback(() => setShowAddModal(false), [])
