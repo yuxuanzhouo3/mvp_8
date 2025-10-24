@@ -57,11 +57,6 @@ export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerPr
     return () => clearInterval(interval)
   }, [user.type, isExpired, onTimeExpired])
 
-  // Don't return null after hooks - use CSS to hide instead
-  if (user.type !== "guest") {
-    return <div className="hidden" />
-  }
-
   const minutes = Math.floor(timeRemaining / 60)
   const seconds = timeRemaining % 60
 
@@ -78,8 +73,9 @@ export function GuestTimer({ user, onTimeExpired, onUpgradeClick }: GuestTimerPr
     return text.warningLow || null
   }
 
+  // Always return the same structure, use CSS to hide when not guest
   return (
-    <div className="flex items-center gap-3">
+    <div className={`flex items-center gap-3 ${user.type !== "guest" ? "hidden" : ""}`}>
       <Badge className={`${getTimerColor()} text-white animate-pulse`}>
         <Clock className="w-3 h-3 mr-1" />
         {isExpired ? text.expired : `${minutes}:${seconds.toString().padStart(2, "0")}`}
