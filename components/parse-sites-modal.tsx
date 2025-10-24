@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,6 +39,18 @@ export function ParseSitesModal({
 
   const canAddMore = isProUser || remainingSlots === null || remainingSlots > 0
 
+  // ✅ 修复无限循环：使用 useRef 稳定化依赖
+  const existingUrlsRef = useRef(existingUrls)
+  const addedUrlsRef = useRef(addedUrls)
+  
+  useEffect(() => {
+    existingUrlsRef.current = existingUrls
+  }, [existingUrls])
+  
+  useEffect(() => {
+    addedUrlsRef.current = addedUrls
+  }, [addedUrls])
+
   useEffect(() => {
     if (!isOpen) {
       setRawText("")
@@ -59,11 +71,11 @@ export function ParseSitesModal({
       const results = parseTextToSites(rawText)
       const enriched: EnrichedParsedSite[] = results.map((site) => {
         const normalized = normalizeUrlForComparison(site.url)
-        const isDuplicate = existingUrls.has(normalized)
+        const isDuplicate = existingUrlsRef.current.has(normalized)
         return {
           ...site,
           isDuplicate,
-          isAdded: addedUrls.has(normalized),
+          isAdded: addedUrlsRef.current.has(normalized),
         }
       })
 
@@ -72,7 +84,7 @@ export function ParseSitesModal({
     }, 350)
 
     return () => clearTimeout(handler)
-  }, [rawText, existingUrls, addedUrls])
+  }, [rawText])  // ✅ 只依赖 rawText
 
   const actionableSites = useMemo(
     () => parsed.filter((site) => !site.isDuplicate && !site.isAdded),
