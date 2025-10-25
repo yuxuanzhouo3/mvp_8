@@ -33,11 +33,11 @@ try {
 const USD_TO_CNY_RATE = 7.2
 const PRICING = {
   pro: {
-    monthly: 0.50, // USD
+    monthly: 19.99, // USD
     yearly: 168,
   },
   team: {
-    monthly: 1.00,
+    monthly: 299.99,
     yearly: 2520,
   },
 }

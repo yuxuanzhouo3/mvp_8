@@ -42,6 +42,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        // ✅ 检查国内用户 JWT Token 会话
+        const jwtToken = localStorage.getItem('user_token')
+        const userInfoStr = localStorage.getItem('user_info')
+        
+        if (jwtToken && userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr)
+            console.log("✅ [Session Restore]: Found JWT session, restoring user:", userInfo.email)
+            
+            // 创建国内用户对象
+            const customUser: CustomUser = {
+              type: "authenticated",
+              name: userInfo.name || userInfo.email?.split('@')[0] || 'User',
+              email: userInfo.email || '',
+              customCount: 0,
+              pro: userInfo.pro || false,
+              id: userInfo.id,
+              provider: 'email'
+            }
+            setUser(customUser)
+            localStorage.setItem("sitehub-user", JSON.stringify(customUser))
+            setLoading(false)
+            return
+          } catch (error) {
+            console.error("Failed to parse JWT user info:", error)
+          }
+        } else {
+          console.log("ℹ️ [Session Restore]: No JWT session found")
+        }
+        
+        // Supabase session check
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
@@ -169,6 +200,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     sessionManager.clearSession()
+    
+    // ✅ 清除 JWT Token 相关数据
+    localStorage.removeItem('user_token')
+    localStorage.removeItem('user_info')
+    console.log('✅ [Logout]: JWT token cleared')
+    
     await supabase.auth.signOut()
   }
 

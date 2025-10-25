@@ -49,13 +49,38 @@ function getClientIP(request: NextRequest): string {
   if (realIP) return realIP
   if (forwarded) return forwarded.split(',')[0].trim()
 
-  // 开发环境返回测试 IP
-  return '8.8.8.8' // Google DNS IP for testing
+  // 开发环境：如果检测不到 IP，返回 null 让 API 处理错误
+  return ''
 }
 
 export async function GET(request: NextRequest) {
   try {
     const clientIP = getClientIP(request)
+
+    // 如果没有获取到 IP，直接返回默认配置
+    if (!clientIP) {
+      console.log('⚠️ [Geo] No IP detected, using default configuration')
+      const defaultLocation: GeoLocation = {
+        country: 'United States',
+        countryCode: 'US',
+        region: '',
+        regionName: '',
+        city: '',
+        timezone: 'America/New_York',
+        currency: 'USD',
+        language: 'en-US',
+        paymentMethods: ['stripe', 'paypal'],
+        ip: 'unknown',
+        regionCategory: 'usa',
+        languageCode: 'en',
+        isEurope: false
+      }
+      return NextResponse.json({
+        success: false,
+        error: 'No IP detected',
+        data: defaultLocation
+      })
+    }
 
     // 调用 ip-api.com 获取地理位置信息
     const response = await fetch(`http://ip-api.com/json/${clientIP}?fields=status,message,country,countryCode,region,regionName,city,timezone,query`, {

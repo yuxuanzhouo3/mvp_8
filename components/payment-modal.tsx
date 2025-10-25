@@ -41,7 +41,7 @@ const plans: Plan[] = [
   {
     id: "pro-monthly",
     name: "Pro",
-    price: 0.50,
+    price: 19.99,
     currency: "USD",
     interval: "month",
     features: [
@@ -69,7 +69,7 @@ const plans: Plan[] = [
   {
     id: "team-monthly",
     name: "Team",
-    price: 1.00,
+    price: 299.99,
     currency: "USD",
     interval: "month",
     features: [
