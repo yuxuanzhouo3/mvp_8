@@ -10,23 +10,34 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        console.log('🔍 [Callback] Starting auth callback processing...')
+        
         const { data, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('Auth callback error:', error)
+          console.error('❌ [Callback] Auth callback error:', error)
           router.push('/?error=auth_failed')
           return
         }
 
+        console.log('✅ [Callback] Session retrieved:', {
+          hasSession: !!data.session,
+          userId: data.session?.user?.id,
+          email: data.session?.user?.email
+        })
+
         if (data.session) {
           // Successful authentication
-          router.push('/?success=auth_success')
+          console.log('✅ [Callback] Authentication successful, redirecting to home...')
+          // 使用 replace 而不是 push，避免返回按钮回到 callback 页面
+          router.replace('/')
         } else {
           // No session found
+          console.log('⚠️ [Callback] No session found')
           router.push('/?error=no_session')
         }
       } catch (error) {
-        console.error('Auth callback error:', error)
+        console.error('❌ [Callback] Auth callback error:', error)
         router.push('/?error=auth_failed')
       }
     }

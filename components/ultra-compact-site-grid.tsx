@@ -110,7 +110,7 @@ function UltraCompactSiteCard({ site, onRemove, favorites, onToggleFavorite, isD
   )
 }
 
-export function UltraCompactSiteGrid({ sites, onRemove, onReorder, onToggleFavorite, favorites = [], isDragDisabled = false }) {
+export function UltraCompactSiteGrid({ sites, onRemove, onReorder, onToggleFavorite, favorites = [] as string[], isDragDisabled = false }) {
   // 防止hydration mismatch：确保sites数组安全
   const safeSites = Array.isArray(sites) ? sites : []
   

@@ -566,7 +566,7 @@ export default function SiteHub() {
     return null
   }
   // Filter sites based on search and category
-  const filteredSites = useMemo(() => {
+  const filteredSites = useMemo<Site[]>(() => {
     // 防止hydration mismatch：只在客户端渲染完成后处理sites
     if (!isHydrated) {
       return []
@@ -1134,11 +1134,11 @@ export default function SiteHub() {
         </div>
 
         <UltraCompactSiteGrid
-          sites={isHydrated ? filteredSites : []}
+          sites={filteredSites}
           onRemove={removeSite}
           onReorder={handleReorder}
           onToggleFavorite={toggleFavorite}
-          favorites={isHydrated ? favorites : []}
+          favorites={favorites}
           isDragDisabled={isDragDisabled}
         />
             </>
