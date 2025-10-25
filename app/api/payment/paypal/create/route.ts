@@ -25,14 +25,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 定价 - 月付测试价格，年付正式价格
+    // 定价 - 月付正式价格，年付正式价格
     const pricing = {
       pro: {
-        monthly: '0.50',   // $0.50 (Stripe 最低限制)
+        monthly: '19.99',   // $19.99 (正式价格)
         yearly: '168.00',  // $168.00 (正式价格)
       },
       team: {
-        monthly: '1.00',   // $1.00 (测试价格)
+        monthly: '299.99',   // $299.99 (正式价格)
         yearly: '2520.00', // $2520.00 (正式价格)
       },
     }

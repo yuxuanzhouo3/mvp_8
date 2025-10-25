@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useGeo } from "@/contexts/geo-context"
 import { authTranslationsZh } from "@/lib/i18n/auth-zh"
 import { authTranslationsEn } from "@/lib/i18n/auth-en"
+import { signupWithEmailCN, loginWithEmailCN } from "@/lib/auth-client-cn"
 // import { PhoneAuthModal } from "@/components/phone-auth-modal"
 
 interface AuthModalProps {
@@ -19,12 +20,18 @@ interface AuthModalProps {
   onOpenChange: (open: boolean) => void
   onAuth: (userData: any) => void
   authMode?: "login" | "signup"
+  region?: "China" | "Overseas"  // 新增：地区 prop
 }
 
-export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", region }: AuthModalProps) {
   const { signIn } = useAuth()
-  const { isEurope, languageCode } = useGeo()
-  const t = languageCode === 'zh' ? authTranslationsZh : authTranslationsEn
+  const { isEurope, languageCode, isChina } = useGeo()
+  
+  // 确定显示的地区（优先使用传入的 region prop，否则根据 isChina 判断）
+  const displayRegion = region || (isChina ? "China" : "Overseas")
+  
+  // 选择翻译文本
+  const t = displayRegion === "China" ? authTranslationsZh : authTranslationsEn
 
   const [mode, setMode] = useState(authMode)
   const [email, setEmail] = useState("")
@@ -65,65 +72,75 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
     setError("")
 
     try {
-      if (mode === "signup") {
-        // Sign up
-        const { data, error } = await auth.signUp(email, password)
-        if (error) {
-          setError(error.message)
-          return
-        }
-        
-        if (data.user) {
-          // Check if email confirmation is required
-          if (!data.user.email_confirmed_at) {
-            setSuccess("Account created successfully! Please check your email to confirm your account.")
-            return
-          }
-          
-          const userData = {
-            type: "authenticated" as const,
-            name: data.user.user_metadata?.full_name || email.split("@")[0],
-            email: data.user.email || email,
-            customCount: 0,
-            pro: false,
-            id: data.user.id
-          }
-          signIn(userData)
-          onAuth(userData)
-          onOpenChange(false)
+      // 根据用户地区选择认证服务
+      const isChinaRegion = isChina
+      
+      let result
+      
+      if (isChinaRegion) {
+        // 🇨🇳 国内用户：使用 CloudBase 认证
+        if (mode === "signup") {
+          result = await signupWithEmailCN(email, password)
+          console.log('✅ 国内注册成功:', result)
         } else {
-          setSuccess("Account created! Please check your email to confirm your account.")
+          result = await loginWithEmailCN(email, password)
+          console.log('✅ 国内登录成功:', result)
         }
       } else {
-        // Sign in
-        const { data, error } = await auth.signIn(email, password)
-        if (error) {
-          setError(error.message)
-          return
-        }
-        
-        if (data.user) {
-          const userData = {
-            type: "authenticated" as const,
-            name: data.user.user_metadata?.full_name || email.split("@")[0],
-            email: data.user.email || email,
-            customCount: 0,
-            pro: false,
-            id: data.user.id
-          }
-          signIn(userData)
-          onAuth(userData)
-          onOpenChange(false)
+        // 🌍 海外用户：使用 Supabase 认证
+        if (mode === "signup") {
+          const { data, error } = await auth.signUp(email, password)
+          if (error) throw error
+          result = { success: true, data, message: '注册成功' }
+          console.log('✅ 海外注册成功:', result)
+        } else {
+          const { data, error } = await auth.signIn(email, password)
+          if (error) throw error
+          result = { success: true, data, message: '登录成功' }
+          console.log('✅ 海外登录成功:', result)
         }
       }
       
-      // Reset form
-      setEmail("")
-      setPassword("")
-      setError("")
-    } catch (err) {
-      setError("Authentication failed. Please try again.")
-    } finally {
+      // ✅ 检查认证结果
+      if (result.success) {
+        console.log('✅ 认证成功，准备关闭模态框并刷新页面')
+        
+        // ✅ 保存 JWT Token 和用户信息到 localStorage
+        if (typeof window !== 'undefined') {
+          if ('token' in result && result.token) {
+            localStorage.setItem('user_token', result.token)
+            console.log('✅ [Token Saved]: JWT token saved to localStorage')
+          }
+          
+          if ('user' in result && result.user) {
+            localStorage.setItem('user_info', JSON.stringify(result.user))
+            console.log('✅ [User Info Saved]: User info saved to localStorage')
+          }
+        }
+        
+        // Reset form
+        setEmail("")
+        setPassword("")
+        setError("")
+        
+        // 关闭模态框
+        onOpenChange(false)
+        
+        // 刷新页面以更新用户状态
+        if (typeof window !== 'undefined') {
+          window.location.reload()
+        }
+      } else {
+        // 认证失败：显示错误信息
+        const errorMessage = result.message || '认证失败，请重试'
+        console.error('❌ 认证失败:', errorMessage)
+        setError(errorMessage)
+        setLoading(false)
+      }
+    } catch (error: any) {
+      console.error('❌ 认证失败:', error)
+      const errorMessage = error?.message || 'Authentication failed. Please try again.'
+      setError(errorMessage)
       setLoading(false)
     }
   }
@@ -140,8 +157,13 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
           setLoading(false)
           return
         }
-        // OAuth redirects to callback, keep loading state
-        // Don't close modal or reset loading - user will be redirected
+        // ✅ 修复：手动重定向到 Google OAuth 页面
+        if (data?.url) {
+          window.location.href = data.url
+        } else {
+          setError("Failed to initiate Google OAuth")
+          setLoading(false)
+        }
       }
       else {
         setError(`${provider} authentication is temporarily disabled. Please use Google or email login.`)
@@ -187,7 +209,8 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
               </Button>
             </div>
           </>
-        ) : (
+        ) : displayRegion === "China" ? (
+          // === 🇨🇳 国内 UI：只显示邮箱表单 ===
           <>
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
@@ -199,57 +222,8 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
             </DialogHeader>
 
             <div className="space-y-4">
-          {/* Social Login Buttons */}
-          <div className="grid gap-3">
-            <Button
-              variant="outline"
-              className="bg-white text-black hover:bg-gray-100 relative"
-              onClick={() => handleSocialAuth("google")}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
-                </>
-              ) : (
-                <>
-                  <Chrome className="w-4 h-4 mr-2" />
-                  <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
-                </>
-              )}
-            </Button>
-            {/* Phone Auth - Temporarily Disabled
-            <Button
-              variant="outline"
-              className="bg-green-600 text-white hover:bg-green-700"
-              onClick={() => setShowPhoneAuth(true)}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Phone className="w-4 h-4 mr-2" />
-              )}
-              Continue with Phone
-            </Button>
-            */}
-          </div>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-600" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-800 px-2 text-slate-400">
-                {mode === "login" ? t.login.orContinueWith : t.signup.orContinueWith}
-              </span>
-            </div>
-          </div>
-
-          {/* Email Form */}
-          <div className="space-y-4">
+              {/* Email Form - 国内只显示邮箱表单，不显示 Google 登录 */}
+              <div className="space-y-4">
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
                 {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
@@ -397,6 +371,203 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login" }: Au
             </Button>
           )}
         </div>
+          </>
+        ) : (
+          // === 🌍 海外 UI：优先显示 Google 登录 ===
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">
+                {mode === "login" ? t.login.title : t.signup.title}
+              </DialogTitle>
+              <DialogDescription className="text-slate-400">
+                {mode === "login" ? t.login.subtitle : t.signup.subtitle}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Social Login Buttons - 海外优先显示 Google */}
+              <div className="grid gap-3">
+                <Button
+                  variant="outline"
+                  className="bg-white text-black hover:bg-gray-100 relative"
+                  onClick={() => handleSocialAuth("google")}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Chrome className="w-4 h-4 mr-2" />
+                      <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-800 px-2 text-slate-400">
+                    {mode === "login" ? t.login.orContinueWith : t.signup.orContinueWith}
+                  </span>
+                </div>
+              </div>
+
+              {/* Email Form - 海外次要显示 */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="email-overseas" className="text-sm font-medium">
+                    {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
+                  </Label>
+                  <Input
+                    id="email-overseas"
+                    type="email"
+                    placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password-overseas" className="text-sm font-medium">
+                    {mode === "login" ? t.login.passwordLabel : t.signup.passwordLabel}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password-overseas"
+                      type={showPassword ? "text" : "password"}
+                      placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
+                      disabled={loading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-600"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4 text-slate-400" />
+                      ) : (
+                        <Eye className="w-4 h-4 text-slate-400" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {success && (
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-green-400 text-sm">{success}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                onClick={handleEmailAuth}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                {mode === "login"
+                  ? (loading ? t.login.submitting : t.login.submitButton)
+                  : (loading ? t.signup.submitting : t.signup.submitButton)
+                }
+              </Button>
+
+              {/* Mode Toggle */}
+              <div className="text-center text-sm space-y-2">
+                <button
+                  onClick={toggleMode}
+                  className="text-blue-400 hover:underline block"
+                  disabled={loading}
+                >
+                  {mode === "login"
+                    ? `${t.login.noAccount} ${t.login.signUpLink}`
+                    : `${t.signup.hasAccount} ${t.signup.loginLink}`
+                  }
+                </button>
+
+                {/* Forgot Password Link - Only show in login mode */}
+                {mode === "login" && (
+                  <button
+                    onClick={() => window.open('/auth/forgot-password', '_blank')}
+                    className="text-slate-400 hover:text-slate-300 text-xs block"
+                    disabled={loading}
+                  >
+                    {t.login.forgotPassword}
+                  </button>
+                )}
+              </div>
+
+              {/* Benefits - Collapsible */}
+              {showBenefits ? (
+                <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 relative">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-sm">What you get:</h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowBenefits(false)}
+                      className="h-6 w-6 p-0 hover:bg-slate-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <div className="space-y-1 text-xs text-slate-300">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">✓</Badge>
+                      <span>Unlimited custom sites & favorites</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">✓</Badge>
+                      <span>Sync across all your devices</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">✓</Badge>
+                      <span>Organize 300+ sites in one place</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">✓</Badge>
+                      <span>Never lose your data again</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowBenefits(true)}
+                  className="text-xs text-slate-400 hover:text-slate-300"
+                >
+                  Show benefits
+                </Button>
+              )}
+            </div>
           </>
         )}
       </DialogContent>

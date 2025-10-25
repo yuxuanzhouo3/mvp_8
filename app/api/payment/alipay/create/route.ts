@@ -22,11 +22,11 @@ const alipayConfig = {
 // 定价配置（与 Stripe/PayPal 保持一致）
 const pricingConfig = {
   pro: {
-    monthly: 0.50, // 测试价格 $0.50/月
+    monthly: 19.99, // 正式价格 $19.99/月
     yearly: 168,   // 正式价格 $168/年
   },
   team: {
-    monthly: 1.00, // 测试价格 $1.00/月
+    monthly: 299.99, // 正式价格 $299.99/月
     yearly: 2520,  // 正式价格 $2520/年
   },
 }

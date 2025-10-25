@@ -100,7 +100,7 @@ export default function PaymentPage() {
     // 海外价格（美元）
     pro: {
       name: t.plans.pro.name,
-      monthlyPrice: '0.50', // $0.50/月
+      monthlyPrice: '19.99', // $19.99/月
       yearlyPrice: '168',   // $168/年
       currency: '$',
       currencyCode: 'USD',
@@ -112,7 +112,7 @@ export default function PaymentPage() {
     },
     team: {
       name: languageCode === 'zh' ? 'Team 会员' : 'Team',
-      monthlyPrice: '1.00',  // $1.00/月
+      monthlyPrice: '299.99',  // $299.99/月
       yearlyPrice: '2520',   // $2520/年
       currency: '$',
       currencyCode: 'USD',

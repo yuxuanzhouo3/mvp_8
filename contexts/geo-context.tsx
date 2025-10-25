@@ -79,14 +79,31 @@ export function GeoProvider({ children }: GeoProviderProps) {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/geo/detect')
-      const result = await response.json()
+      // ✅ 添加超时控制，防止外部 API 过慢导致页面卡住
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
 
-      if (result.success) {
-        setLocation(result.data)
-      } else {
-        setError(result.error || 'Failed to detect location')
-        setLocation(result.data || defaultLocation) // 使用返回的默认值
+      try {
+        const response = await fetch('/api/geo/detect', {
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        const result = await response.json()
+
+        if (result.success) {
+          setLocation(result.data)
+        } else {
+          setError(result.error || 'Failed to detect location')
+          setLocation(result.data || defaultLocation) // 使用返回的默认值
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        if (fetchError.name === 'AbortError') {
+          console.warn('⚠️ [Geo] API 请求超时，使用默认配置')
+          setLocation(defaultLocation)
+        } else {
+          throw fetchError
+        }
       }
     } catch (err) {
       console.error('Geo detection error:', err)
