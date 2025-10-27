@@ -5,6 +5,7 @@ import { Check, Globe, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useGeo } from '@/contexts/geo-context'
+import { useLanguage } from '@/contexts/language-context'
 import { Badge } from '@/components/ui/badge'
 import { paymentTranslationsZh } from '@/lib/i18n/payment-zh'
 import { paymentTranslationsEn } from '@/lib/i18n/payment-en'
@@ -16,9 +17,10 @@ export default function PaymentPage() {
   const [loadingPayPal, setLoadingPayPal] = useState(false)
   const [loadingAlipay, setLoadingAlipay] = useState(false)
   const [userEmail, setUserEmail] = useState('')
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe' | 'paypal' | 'alipay'>('stripe')
-  const { location, loading: geoLoading, isChina, isEurope, languageCode } = useGeo()
-  const t = languageCode === 'zh' ? paymentTranslationsZh : paymentTranslationsEn
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe' | 'paypal' | 'alipay' | 'wechat'>('stripe')
+  const { location, loading: geoLoading, isChina, isEurope } = useGeo()
+  const { language } = useLanguage()
+  const t = language === 'zh' ? paymentTranslationsZh : paymentTranslationsEn
 
   // Europe blocking - GDPR compliance
   if (isEurope) {
@@ -65,13 +67,13 @@ export default function PaymentPage() {
       buttonVariant: 'default' as const
     },
     team: {
-      name: languageCode === 'zh' ? 'Team 会员' : 'Team',
+      name: language === 'zh' ? 'Team 会员' : 'Team',
       monthlyPrice: (1.00 * USD_TO_CNY_RATE).toFixed(2), // ¥7.20/月
       yearlyPrice: (2520 * USD_TO_CNY_RATE).toFixed(2),  // ¥18144/年
       currency: '¥',
       currencyCode: 'CNY',
-      description: languageCode === 'zh' ? '适合团队和组织' : 'For teams and organizations',
-      features: languageCode === 'zh' ? [
+      description: language === 'zh' ? '适合团队和组织' : 'For teams and organizations',
+      features: language === 'zh' ? [
         '包含 Pro 的所有功能',
         '无限团队成员',
         '团队协作工具',
@@ -111,13 +113,13 @@ export default function PaymentPage() {
       buttonVariant: 'default' as const
     },
     team: {
-      name: languageCode === 'zh' ? 'Team 会员' : 'Team',
+      name: language === 'zh' ? 'Team 会员' : 'Team',
       monthlyPrice: '299.99',  // $299.99/月
       yearlyPrice: '2520',   // $2520/年
       currency: '$',
       currencyCode: 'USD',
-      description: languageCode === 'zh' ? '适合团队和组织' : 'For teams and organizations',
-      features: languageCode === 'zh' ? [
+      description: language === 'zh' ? '适合团队和组织' : 'For teams and organizations',
+      features: language === 'zh' ? [
         '包含 Pro 的所有功能',
         '无限团队成员',
         '团队协作工具',
@@ -367,7 +369,7 @@ export default function PaymentPage() {
               <Card className={`${planCardClass('pro')} relative`}>
                 {pricingPlans.pro.isPopular && (
                   <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs">
-                    {languageCode === 'zh' ? '最受欢迎' : 'Most Popular'}
+                    {language === 'zh' ? '最受欢迎' : 'Most Popular'}
                   </Badge>
                 )}
                 <CardHeader className="text-center pt-6 pb-3">
@@ -377,7 +379,7 @@ export default function PaymentPage() {
                   </CardDescription>
                   <div className="pt-2">
                     <span className="text-3xl font-bold text-blue-600">
-                      ${billingCycle === 'monthly' ? pricingPlans.pro.monthlyPrice : (pricingPlans.pro.yearlyPrice / 12).toFixed(2)}
+                      ${billingCycle === 'monthly' ? pricingPlans.pro.monthlyPrice : (Number(pricingPlans.pro.yearlyPrice) / 12).toFixed(2)}
                     </span>
                     <span className="text-slate-500 text-sm">{t.planSelector.perMonth}</span>
                     {billingCycle === 'yearly' && (
@@ -419,7 +421,7 @@ export default function PaymentPage() {
                   </CardDescription>
                   <div className="pt-2">
                     <span className="text-3xl font-bold text-slate-900">
-                      ${billingCycle === 'monthly' ? pricingPlans.team.monthlyPrice : (pricingPlans.team.yearlyPrice / 12).toFixed(2)}
+                      ${billingCycle === 'monthly' ? pricingPlans.team.monthlyPrice : (Number(pricingPlans.team.yearlyPrice) / 12).toFixed(2)}
                     </span>
                     <span className="text-slate-500 text-sm">{t.planSelector.perMonth}</span>
                     {billingCycle === 'yearly' && (
@@ -458,7 +460,7 @@ export default function PaymentPage() {
           <Card className="shadow-xl border border-purple-400 bg-slate-800 lg:sticky lg:top-4">
             <CardHeader className="text-center py-4">
               <CardTitle className="text-lg text-white">
-                {languageCode === 'zh' ? `完成 ${pricingPlans[selectedPlan].name} 购买` : `Complete Your ${pricingPlans[selectedPlan].name} Plan`}
+                {language === 'zh' ? `完成 ${pricingPlans[selectedPlan].name} 购买` : `Complete Your ${pricingPlans[selectedPlan].name} Plan`}
               </CardTitle>
             </CardHeader>
 
@@ -510,7 +512,7 @@ export default function PaymentPage() {
                             </div>
                             <span className="text-white text-sm font-medium">微信支付 (WeChat Pay)</span>
                           </div>
-                          <Badge className="bg-green-500 text-xs">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
+                          <Badge className="bg-green-500 text-xs">{language === 'zh' ? '推荐' : 'Recommended'}</Badge>
                         </div>
                       </button>
 
@@ -556,7 +558,7 @@ export default function PaymentPage() {
                             </div>
                             <span className="text-white text-sm font-medium">Credit Card (Stripe)</span>
                           </div>
-                          <Badge className="bg-green-500 text-xs">{languageCode === 'zh' ? '推荐' : 'Recommended'}</Badge>
+                          <Badge className="bg-green-500 text-xs">{language === 'zh' ? '推荐' : 'Recommended'}</Badge>
                         </div>
                       </button>
 
@@ -619,7 +621,7 @@ export default function PaymentPage() {
               </Button>
 
               <p className="text-xs text-slate-400 text-center mt-1">
-                {languageCode === 'zh'
+                {language === 'zh'
                   ? `继续即表示您同意我们的服务条款和隐私政策。安全支付由 ${isChina ? '微信支付、支付宝' : 'Stripe、PayPal 或支付宝'} 处理。`
                   : `By continuing, you agree to our Terms of Service and Privacy Policy. Secure payment processed by ${isChina ? 'WeChat Pay or Alipay' : 'Stripe, PayPal, or Alipay'}.`}
               </p>
@@ -630,7 +632,7 @@ export default function PaymentPage() {
         {/* FAQ */}
         <div className="text-center text-sm text-slate-400">
           <p>
-            {languageCode === 'zh' ? '需要帮助？联系我们：' : 'Need help? Contact us at'}{' '}
+            {language === 'zh' ? '需要帮助？联系我们：' : 'Need help? Contact us at'}{' '}
             <a href="mailto:mornscience@gmail.com" className="text-purple-400 hover:text-purple-300 hover:underline">
               mornscience@gmail.com
             </a>
