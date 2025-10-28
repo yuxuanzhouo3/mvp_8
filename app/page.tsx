@@ -669,44 +669,27 @@ export default function SiteHub() {
       return
     }
 
-    // 根据地区决定是否显示登录功能
-    if (isChina) {
-      // 国内用户显示待开发消息
-      console.log('🔍 [Upgrade] 国内用户，显示待开发消息')
-      alert('注册功能即将上线，敬请期待！')
-    } else {
-      // 海外用户显示升级模态框
-      console.log('🔍 [Upgrade] 海外用户，显示升级模态框')
-      setShowUpgradeModal(true)
-    }
+    // 显示升级模态框（国内外用户统一处理）
+    console.log('🔍 [Upgrade] 显示升级模态框')
+    setShowUpgradeModal(true)
   }, [isChina, regionCategory, user.type, isHydrated])
 
   const handleAuth = useCallback((provider: string) => {
     // Close the upgrade modal first
     setShowUpgradeModal(false)
-    
-    // 根据地区决定是否显示登录功能
-    if (isChina) {
-      // 国内用户显示待开发消息
-      if (provider === "login") {
-        alert('登录功能即将上线，敬请期待！')
-      } else {
-        alert('注册功能即将上线，敬请期待！')
-      }
+
+    // 统一处理登录/注册逻辑（国内外用户都支持）
+    if (provider === "login") {
+      setShowAuthModal(true)
+      setAuthMode("login")
+    } else if (provider === "email") {
+      setShowAuthModal(true)
+      setAuthMode("signup")
     } else {
-      // 海外用户正常显示登录模态框
-      if (provider === "login") {
-        setShowAuthModal(true)
-        setAuthMode("login")
-      } else if (provider === "email") {
-        setShowAuthModal(true)
-        setAuthMode("signup")
-      } else {
-        setShowAuthModal(true)
-        setAuthMode("signup")
-      }
+      setShowAuthModal(true)
+      setAuthMode("signup")
     }
-  }, [isChina])
+  }, [])
 
   const handleOpenParseModal = useCallback(() => {
     try {

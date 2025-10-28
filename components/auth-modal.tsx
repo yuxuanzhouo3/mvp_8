@@ -118,14 +118,15 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
           }
         }
         
-        // Reset form
+        // Reset form and loading state
         setEmail("")
         setPassword("")
         setError("")
-        
+        setLoading(false)  // 重置 loading 状态
+
         // 关闭模态框
         onOpenChange(false)
-        
+
         // 刷新页面以更新用户状态
         if (typeof window !== 'undefined') {
           window.location.reload()
