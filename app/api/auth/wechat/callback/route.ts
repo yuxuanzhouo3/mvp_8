@@ -170,13 +170,13 @@ export async function POST(req: NextRequest) {
     const callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/wechat/callback`
     const state = Math.random().toString(36).substr(2)
 
-    // 构造微信授权URL
-    const authUrl = 
-      `https://open.weixin.qq.com/connect/oauth2/authorize?` +
+    // 构造微信授权URL（网站应用 - 扫码登录）
+    const authUrl =
+      `https://open.weixin.qq.com/connect/qrconnect?` +
       `appid=${appid}&` +
       `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
       `response_type=code&` +
-      `scope=snsapi_userinfo&` +
+      `scope=snsapi_login&` +
       `state=${state}#wechat_redirect`
 
     return NextResponse.json({
