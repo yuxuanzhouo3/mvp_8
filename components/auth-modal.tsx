@@ -183,10 +183,36 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
     setShowBenefits(true) // Reset benefits when switching modes
   }
 
-  const handleWeChatLogin = () => {
+  const handleWeChatLogin = async () => {
     setLoading(true)
-    // 跳转到微信授权页面
-    window.location.href = '/api/auth/wechat/callback'
+    setError("")
+
+    try {
+      // 调用后端API获取微信授权URL
+      const response = await fetch('/api/auth/wechat/callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          redirectUrl: window.location.href
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.authUrl) {
+        // 跳转到微信授权页面
+        window.location.href = data.authUrl
+      } else {
+        setError('微信登录配置错误，请稍后重试')
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('微信登录错误:', error)
+      setError('微信登录失败，请稍后重试')
+      setLoading(false)
+    }
   }
 
   return (
