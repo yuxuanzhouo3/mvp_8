@@ -1179,6 +1179,7 @@ export default function SiteHub() {
         onClose={handleCloseUpgradeModal}
         onAuth={handleAuth}
         isTimeExpired={isGuestTimeExpired}
+        region={isChina ? "China" : "Overseas"}
       />
 
       <AuthModal

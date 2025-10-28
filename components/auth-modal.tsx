@@ -38,6 +38,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [wechatLoading, setWechatLoading] = useState(false)  // 微信登录单独的loading状态
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [showBenefits, setShowBenefits] = useState(true)
@@ -185,7 +186,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
   }
 
   const handleWeChatLogin = async () => {
-    setLoading(true)
+    setWechatLoading(true)
     setError("")
 
     try {
@@ -207,12 +208,12 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
         window.location.href = data.authUrl
       } else {
         setError('微信登录配置错误，请稍后重试')
-        setLoading(false)
+        setWechatLoading(false)
       }
     } catch (error) {
       console.error('微信登录错误:', error)
       setError('微信登录失败，请稍后重试')
-      setLoading(false)
+      setWechatLoading(false)
     }
   }
 
@@ -260,9 +261,9 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
                 variant="default"
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-medium h-12"
                 onClick={handleWeChatLogin}
-                disabled={loading}
+                disabled={wechatLoading}
               >
-                {loading ? (
+                {wechatLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     <span>正在跳转...</span>
@@ -397,7 +398,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
           {showBenefits ? (
             <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 relative">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">What you get:</h4>
+                <h4 className="font-medium text-sm">您将获得:</h4>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -410,19 +411,19 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               <div className="space-y-1 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Unlimited custom sites & favorites</span>
+                  <span>无限制的自定义网站和收藏</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Sync across all your devices</span>
+                  <span>跨设备同步您的数据</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Organize 300+ sites in one place</span>
+                  <span>统一管理300+网站</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">✓</Badge>
-                  <span>Never lose your data again</span>
+                  <span>永不丢失您的数据</span>
                 </div>
               </div>
             </div>

@@ -13,9 +13,10 @@ interface UpgradeModalProps {
   onClose: () => void
   onAuth: (provider: string) => void
   isTimeExpired: boolean
+  region?: "China" | "Overseas"  // 新增：地区参数
 }
 
-export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired }: UpgradeModalProps) {
+export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = "Overseas" }: UpgradeModalProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   
