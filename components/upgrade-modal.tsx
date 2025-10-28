@@ -89,12 +89,13 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
                 className="bg-white text-black hover:bg-gray-100"
                 onClick={() => {
                   if (isMountedRef.current) {
-                    onAuth("google")
+                    // 国内用户打开登录模态框,海外用户使用Google登录
+                    onAuth(region === "China" ? "login" : "google")
                   }
                 }}
               >
                 <Chrome className="w-4 h-4 mr-2" />
-                Continue with Google
+                {region === "China" ? "立即登录" : "Continue with Google"}
               </Button>
             </div>
 
@@ -103,29 +104,31 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
                 <span className="w-full border-t border-slate-600" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-slate-800 px-2 text-slate-400">Or with email</span>
+                <span className="bg-slate-800 px-2 text-slate-400">
+                  {region === "China" ? "或使用邮箱" : "Or with email"}
+                </span>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="your@email.com" 
-                  className="bg-slate-700 border-slate-600" 
+                <Label htmlFor="email">{region === "China" ? "邮箱" : "Email"}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={region === "China" ? "your@email.com" : "your@email.com"}
+                  className="bg-slate-700 border-slate-600"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
-                  placeholder="••••••••" 
-                  className="bg-slate-700 border-slate-600" 
+                <Label htmlFor="password">{region === "China" ? "密码" : "Password"}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  className="bg-slate-700 border-slate-600"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -134,17 +137,17 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
 
             <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleEmailSignup}>
               <Mail className="w-4 h-4 mr-2" />
-              Create Free Account
+              {region === "China" ? "创建免费账户" : "Create Free Account"}
             </Button>
 
             <div className="text-center text-xs text-slate-400">
-              Already have an account?{" "}
+              {region === "China" ? "已有账号？" : "Already have an account?"}{" "}
               <button className="text-blue-400 hover:underline" onClick={() => {
                 if (isMountedRef.current) {
                   onAuth("login")
                 }
               }}>
-                Sign in
+                {region === "China" ? "立即登录" : "Sign in"}
               </button>
             </div>
           </div>
