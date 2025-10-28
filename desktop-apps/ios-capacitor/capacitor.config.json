@@ -3,7 +3,7 @@
   "appName": "SiteHub",
   "webDir": "dist",
   "server": {
-    "url": "https://mornhub.help",
+    "url": "https://www.mornhub.help",
     "cleartext": false
   },
   "ios": {

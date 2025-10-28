@@ -17,7 +17,7 @@ import androidx.browser.customtabs.CustomTabsIntent;
  */
 public class MainActivity extends Activity {
 
-    private static final String SITE_URL = "https://mornhub.help";
+    private static final String SITE_URL = "https://www.mornhub.help";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
