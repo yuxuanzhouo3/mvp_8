@@ -100,10 +100,13 @@ export default async function handler(
           region: 'china'
         }
 
+        // 动态设置 Token 有效期：普通用户 7 天，高级会员 30 天
+        const expiresIn = newUser.pro ? '30d' : '7d'
+
         const token = jwt.sign(
           tokenPayload,
           process.env.JWT_SECRET || 'fallback-secret-key-for-development-only',
-          { expiresIn: '7d' } // Token 有效期 7 天
+          { expiresIn: expiresIn }
         )
 
         console.log(`✅ [JWT Token Generated]: For new user ${email}`)
@@ -187,10 +190,13 @@ export default async function handler(
           region: 'china'
         }
 
+        // 动态设置 Token 有效期：普通用户 7 天，高级会员 30 天
+        const expiresIn = user.pro ? '30d' : '7d'
+
         const token = jwt.sign(
           tokenPayload,
           process.env.JWT_SECRET || 'fallback-secret-key-for-development-only',
-          { expiresIn: '7d' } // Token 有效期 7 天
+          { expiresIn: expiresIn }
         )
 
         console.log(`✅ [JWT Token Generated]: For user ${email}`)

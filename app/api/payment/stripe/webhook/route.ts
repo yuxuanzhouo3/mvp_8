@@ -82,6 +82,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
+    // 更新用户的 pro 状态（Supabase auth.users metadata）
+    try {
+      // 查找用户
+      const { data: userData, error: userError } = await supabase.auth.admin.listUsers()
+      const user = userData?.users.find(u => u.email === userEmail)
+
+      if (user) {
+        // 更新用户的 metadata，设置 pro 为 true
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          {
+            user_metadata: {
+              ...user.user_metadata,
+              pro: true,
+              upgraded_at: now.toISOString()
+            }
+          }
+        )
+
+        if (updateError) {
+          console.error('Failed to update user pro status:', updateError)
+        } else {
+          console.log('✅ User pro status updated:', userEmail)
+        }
+      } else {
+        console.warn('⚠️ User not found in auth.users:', userEmail)
+      }
+    } catch (error) {
+      console.error('Error updating user pro status:', error)
+      // 不返回错误，因为订阅已经创建成功
+    }
+
     // 记录支付交易（用于利润统计）
     const paymentFee = Math.round(amountInCents * 0.029 + 30) // Stripe 2.9% + $0.30
     const netAmount = amountInCents - paymentFee

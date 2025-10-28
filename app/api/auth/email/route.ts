@@ -184,7 +184,7 @@ async function supabaseEmailAuth(email: string, password: string, mode: 'login' 
           id: data.user.id,
           email: data.user.email || email,
           name: data.user.user_metadata?.full_name || email.split('@')[0],
-          pro: false,
+          pro: data.user.user_metadata?.pro || false,
           region: data.user.user_metadata?.region || 'overseas'
         }
       }
