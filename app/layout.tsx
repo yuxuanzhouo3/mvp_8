@@ -7,6 +7,7 @@ import { SettingsProvider } from "@/contexts/settings-context"
 import { GeoProvider } from "@/contexts/geo-context"
 import { LanguageProvider } from "@/contexts/language-context"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { LinkInterceptor } from "@/components/link-interceptor"
 
 // Force dynamic rendering to prevent hydration issues
 export const dynamic = 'force-dynamic'
@@ -65,6 +66,7 @@ export default function RootLayout({
           <SettingsProvider>
             <GeoProvider>
               <LanguageProvider>
+                <LinkInterceptor />
                 {children}
               </LanguageProvider>
             </GeoProvider>
