@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db as cloudbaseDB } from '@/lib/database/cloudbase-client'
+import * as jwt from 'jsonwebtoken'
 
 /**
  * 微信网页授权回调
@@ -81,35 +82,66 @@ export async function GET(req: NextRequest) {
         city: userInfo.city,
         country: userInfo.country,
         sex: userInfo.sex,
+        name: userInfo.nickname, // 显示名称使用微信昵称
+        pro: false,
+        region: 'china',
+        loginType: 'wechat', // 标记为微信登录
         updated_at: new Date(),
       }
 
+      let userId: string
+
       if (existingUser.data && existingUser.data.length > 0) {
         // 更新现有用户
+        userId = existingUser.data[0]._id
         await cloudbaseDB
           .collection('web_users')
-          .doc(existingUser.data[0]._id)
+          .doc(userId)
           .update(userData)
-        
-        console.log('✅ 更新微信用户成功')
+
+        console.log('✅ 更新微信用户成功:', userId)
       } else {
         // 创建新用户
-        await cloudbaseDB
+        const result = await cloudbaseDB
           .collection('web_users')
           .add({
             ...userData,
             created_at: new Date(),
           })
-        
-        console.log('✅ 创建微信用户成功')
+
+        userId = result.id
+        console.log('✅ 创建微信用户成功:', userId)
       }
 
+      // 生成 JWT Token
+      const tokenPayload = {
+        userId: userId,
+        openid: openid,
+        nickname: userInfo.nickname,
+        region: 'china',
+        loginType: 'wechat'
+      }
+
+      const token = jwt.sign(
+        tokenPayload,
+        process.env.JWT_SECRET || 'fallback-secret-key-for-development-only',
+        { expiresIn: '7d' } // 7天有效期
+      )
+
+      console.log('✅ [JWT Token Generated]: For WeChat user', userInfo.nickname)
+
       // 重定向回首页，并传递登录信息
-      // 注意：这里简化处理，实际应该创建session或JWT
       const redirectUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL!)
       redirectUrl.searchParams.set('wechat_login', 'success')
-      redirectUrl.searchParams.set('openid', openid)
-      redirectUrl.searchParams.set('nickname', encodeURIComponent(userInfo.nickname))
+      redirectUrl.searchParams.set('token', token)
+      redirectUrl.searchParams.set('user', encodeURIComponent(JSON.stringify({
+        id: userId,
+        name: userInfo.nickname,
+        avatar: userInfo.headimgurl,
+        pro: false,
+        region: 'china',
+        loginType: 'wechat'
+      })))
 
       return NextResponse.redirect(redirectUrl.toString())
     } catch (error) {

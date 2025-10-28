@@ -205,6 +205,32 @@ export default function SiteHub() {
   const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina } = useGeo()
   
+  // 处理微信登录回调
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const wechatLogin = params.get('wechat_login')
+    const token = params.get('token')
+    const userStr = params.get('user')
+
+    if (wechatLogin === 'success' && token && userStr) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(userStr))
+
+        // 保存到 localStorage
+        localStorage.setItem('user_token', token)
+        localStorage.setItem('user_info', JSON.stringify(userData))
+
+        console.log('✅ [微信登录成功]:', userData)
+
+        // 清除URL参数并刷新页面
+        window.history.replaceState({}, '', window.location.pathname)
+        window.location.reload()
+      } catch (error) {
+        console.error('❌ [微信登录] 处理失败:', error)
+      }
+    }
+  }, [])
+
   // 检查Supabase配置
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -217,7 +243,7 @@ export default function SiteHub() {
       url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'undefined',
       key: supabaseKey ? supabaseKey.substring(0, 20) + '...' : 'undefined'
     })
-    
+
     // 测试Supabase连接
     if (supabaseUrl && supabaseKey && !supabaseUrl.includes('placeholder') && supabaseKey !== 'placeholder_key') {
       console.log('🔍 [Supabase] 配置有效，测试连接...')

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Chrome, Mail, Eye, EyeOff, Loader2, X } from "lucide-react"
+import { Chrome, Mail, Eye, EyeOff, Loader2, X, MessageCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { auth } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth-context"
@@ -183,6 +183,12 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
     setShowBenefits(true) // Reset benefits when switching modes
   }
 
+  const handleWeChatLogin = () => {
+    setLoading(true)
+    // 跳转到微信授权页面
+    window.location.href = '/api/auth/wechat/callback'
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange} key={`auth-modal-${mode}`}>
       <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
@@ -210,7 +216,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
             </div>
           </>
         ) : displayRegion === "China" ? (
-          // === 🇨🇳 国内 UI：只显示邮箱表单 ===
+          // === 🇨🇳 国内 UI：优先显示微信登录，然后是邮箱表单 ===
           <>
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
@@ -222,7 +228,40 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
             </DialogHeader>
 
             <div className="space-y-4">
-              {/* Email Form - 国内只显示邮箱表单，不显示 Google 登录 */}
+              {/* WeChat Login Button - 国内优先显示 */}
+              <Button
+                variant="default"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium h-12"
+                onClick={handleWeChatLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <span>正在跳转...</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    <span>微信登录</span>
+                    <Badge variant="secondary" className="ml-2 text-xs">推荐</Badge>
+                  </>
+                )}
+              </Button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-800 px-2 text-slate-400">
+                    或使用邮箱登录
+                  </span>
+                </div>
+              </div>
+
+              {/* Email Form - 国内次要显示邮箱表单 */}
               <div className="space-y-4">
             <div>
               <Label htmlFor="email" className="text-sm font-medium">
