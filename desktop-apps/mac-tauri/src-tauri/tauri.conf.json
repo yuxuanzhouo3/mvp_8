@@ -2,16 +2,11 @@
   "productName": "MornHub",
   "version": "1.0.0",
   "identifier": "com.mornhub.desktop",
-  "build": {
-    "beforeBuildCommand": "",
-    "beforeDevCommand": "",
-    "devUrl": "https://mornhub.help",
-    "frontendDist": false
-  },
   "app": {
     "windows": [
       {
         "title": "MornHub",
+        "url": "https://mornhub.help",
         "width": 1200,
         "height": 800
       }
