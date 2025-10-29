@@ -13,6 +13,7 @@ on:
           - android
           - mac
           - windows
+          - ios
   push:
     branches:
       - main
@@ -120,14 +121,20 @@ jobs:
         working-directory: desktop-apps/ios-capacitor/ios/App
         run: pod install
 
-      # 如果配置了证书，则导入证书并构建
+      # 证书导入和构建步骤（如果没有配置证书会失败，但不影响其他平台）
       - name: 导入Apple证书
-        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        continue-on-error: true
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "⚠️  未配置 APPLE_CERTIFICATE，跳过证书导入"
+            echo "请参考 desktop-apps/ios-capacitor/IOS_BUILD_GUIDE.md 配置证书"
+            exit 1
+          fi
+
           # 创建临时 keychain
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
@@ -140,19 +147,32 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
 
       - name: 导入 Provisioning Profile
-        if: ${{ secrets.APPLE_PROVISIONING_PROFILE != '' }}
+        continue-on-error: true
         env:
           APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
         run: |
+          if [ -z "$APPLE_PROVISIONING_PROFILE" ]; then
+            echo "⚠️  未配置 APPLE_PROVISIONING_PROFILE，跳过 Profile 导入"
+            exit 1
+          fi
+
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           echo -n "$APPLE_PROVISIONING_PROFILE" | base64 --decode -o $PP_PATH
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
 
       - name: 构建 iOS 应用
-        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        continue-on-error: true
         working-directory: desktop-apps/ios-capacitor/ios/App
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
         run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "⚠️  未配置证书，跳过 iOS 构建"
+            echo "iOS 构建需要 Apple 开发者证书，请参考 IOS_BUILD_GUIDE.md"
+            exit 1
+          fi
+
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -sdk iphoneos \
@@ -161,29 +181,28 @@ jobs:
             archive
 
       - name: 导出 IPA
-        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        continue-on-error: true
         working-directory: desktop-apps/ios-capacitor/ios/App
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
         run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "⚠️  跳过 IPA 导出"
+            exit 1
+          fi
+
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/MornHub.xcarchive \
             -exportPath $RUNNER_TEMP/export \
             -exportOptionsPlist ExportOptions.plist
 
       - name: 上传 IPA
-        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: SiteHub-iOS
           path: ${{ runner.temp }}/export/*.ipa
           retention-days: 30
-
-      # 如果没有配置证书，则跳过构建并提示
-      - name: 提示：需要配置证书
-        if: ${{ secrets.APPLE_CERTIFICATE == '' }}
-        run: |
-          echo "⚠️  iOS 构建需要 Apple 开发者证书"
-          echo "请参考 desktop-apps/ios-capacitor/IOS_BUILD_GUIDE.md 配置证书"
-          echo "配置完成后，iOS 将自动构建"
 
   # ===== Windows 构建 =====
   build-windows:
