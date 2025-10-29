@@ -880,6 +880,74 @@ jobs:
 
 【4.1 Android 常见错误】
 
+错误0：APK 构建成功但无法安装，提示需要签名
+----------------------------------------
+现象：下载的 APK 文件无法在 Android 设备上安装
+完整错误：应用未安装 / 无法验证应用
+根本原因：Release APK 没有签名，Android 系统拒绝安装未签名的应用
+
+解决方案：配置应用签名
+步骤1：生成签名密钥库
+    keytool -genkey -v -keystore mornhub-release.keystore \
+      -alias mornhub \
+      -keyalg RSA -keysize 2048 -validity 10000 \
+      -storepass "密钥库密码" \
+      -keypass "密钥密码" \
+      -dname "CN=AppName, OU=Development, O=Company, L=City, ST=State, C=CN" \
+      -storetype pkcs12
+
+步骤2：配置 Gradle 签名
+    在 app/build.gradle 中添加：
+    android {
+        signingConfigs {
+            release {
+                storeFile file(System.getenv("KEYSTORE_FILE") ?: "release.keystore")
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: "默认密码"
+                keyAlias System.getenv("KEY_ALIAS") ?: "默认别名"
+                keyPassword System.getenv("KEY_PASSWORD") ?: "默认密码"
+            }
+        }
+        buildTypes {
+            release {
+                signingConfig signingConfigs.release
+                minifyEnabled true
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            }
+        }
+    }
+
+步骤3：配置 GitHub Actions
+    - name: 解码并设置签名密钥
+      working-directory: desktop-apps/android-twa
+      env:
+        KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE }}
+      run: |
+        if [ -n "$KEYSTORE_BASE64" ]; then
+          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+        fi
+
+    - name: 构建 Android APK
+      env:
+        KEYSTORE_FILE: release.keystore
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      run: ./gradlew assembleRelease --no-daemon
+
+步骤4：配置 GitHub Secrets
+    1. 转换密钥库为 Base64：base64 -i release.keystore | pbcopy
+    2. 在 GitHub 仓库 Settings → Secrets → Actions 中添加：
+       - ANDROID_KEYSTORE: 密钥库文件的 Base64 编码
+       - ANDROID_KEYSTORE_PASSWORD: 密钥库密码
+       - ANDROID_KEY_ALIAS: 密钥别名
+       - ANDROID_KEY_PASSWORD: 密钥密码
+
+安全注意事项：
+    ✅ 密钥库文件必须添加到 .gitignore，不要提交到 Git
+    ✅ 密钥库文件只存在于本地和 GitHub Secrets
+    ✅ 定期备份密钥库文件（丢失后无法重新生成相同的签名）
+    ✅ 生产环境使用强密码
+
 错误1：gradlew: Permission denied
 ----------------------------------------
 原因：gradlew 文件没有执行权限
@@ -1007,6 +1075,82 @@ jobs:
 
 
 【4.4 CI/CD 通用错误】
+
+错误0：Unrecognized named-value: 'secrets'（GitHub Actions 严重错误）
+----------------------------------------
+现象：Workflow 文件验证失败，无法运行
+完整错误信息：
+    Invalid workflow file: .github/workflows/xxx.yml
+    Line XX, Col XX: Unrecognized named-value: 'secrets'.
+    Located at position 1 within expression: secrets.XXX != ''
+
+根本原因：GitHub Actions 不允许在 if 条件表达式中直接使用 secrets 上下文
+
+错误示例：
+    ❌ 错误写法：
+    - name: 某个步骤
+      if: ${{ secrets.APPLE_CERTIFICATE != '' }}  # 错误！
+      run: echo "执行某些操作"
+
+为什么会出错：
+    - secrets 只能在 env 环境变量中使用
+    - 不能在 if 条件、表达式、或其他上下文中使用
+    - 这是 GitHub Actions 的安全限制
+
+正确解决方案：
+
+方案1：使用 continue-on-error + 在 shell 中检查环境变量
+    ✅ 正确写法：
+    - name: 某个步骤
+      continue-on-error: true  # 允许失败
+      env:
+        MY_SECRET: ${{ secrets.APPLE_CERTIFICATE }}  # secrets 只能在 env 中使用
+      run: |
+        if [ -z "$MY_SECRET" ]; then
+          echo "⚠️  未配置密钥，跳过此步骤"
+          exit 1
+        fi
+        # 执行实际操作
+        echo "使用密钥执行操作"
+
+方案2：将步骤拆分到独立的 job，使用 job 级别的 if
+    ✅ 可以在 job 级别使用有限的条件：
+    job-name:
+      if: github.event_name == 'push'  # 可以使用 github 上下文
+      # 但仍然不能使用 secrets
+
+实际案例（iOS 构建）：
+    错误代码：
+    - name: 导入 Apple 证书
+      if: ${{ secrets.APPLE_CERTIFICATE != '' }}  # ❌ 错误！
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+
+    正确代码：
+    - name: 导入 Apple 证书
+      continue-on-error: true  # ✅ 正确
+      env:
+        APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      run: |
+        if [ -z "$APPLE_CERTIFICATE" ]; then
+          echo "⚠️  未配置 APPLE_CERTIFICATE，跳过证书导入"
+          exit 1
+        fi
+        # 实际的证书导入逻辑
+        echo "$APPLE_CERTIFICATE" | base64 -d > cert.p12
+
+关键点总结：
+    1. ❌ if 条件中不能用 secrets
+    2. ✅ env 中可以用 secrets
+    3. ✅ 在 shell 脚本中检查环境变量（if [ -z "$VAR" ]）
+    4. ✅ 使用 continue-on-error: true 让步骤失败不影响整体
+    5. ✅ 提供友好的错误提示
+
+这个错误会导致：
+    - Workflow 文件验证失败
+    - 所有构建都无法运行
+    - 显示红色错误标记
+    - 必须修复才能继续
 
 错误1：fatal: pathspec 'xxx' did not match any files
 ----------------------------------------
