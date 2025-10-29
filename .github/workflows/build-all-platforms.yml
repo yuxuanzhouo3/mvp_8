@@ -53,6 +53,11 @@ jobs:
   build-mac:
     name: 🍎 构建 Mac DMG
     runs-on: macos-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-apple-darwin    # Intel 芯片
+          - aarch64-apple-darwin   # Apple Silicon (M1/M2/M3)
 
     steps:
       - name: Checkout 代码
@@ -63,19 +68,20 @@ jobs:
         with:
           toolchain: stable
           profile: minimal
+          target: ${{ matrix.target }}
 
       - name: 安装 Tauri CLI
         run: cargo install tauri-cli
 
-      - name: 构建 Mac 应用
+      - name: 构建 Mac 应用 (${{ matrix.target }})
         working-directory: desktop-apps/mac-tauri
-        run: cargo tauri build
+        run: cargo tauri build --target ${{ matrix.target }}
 
-      - name: 上传 DMG
+      - name: 上传 DMG (${{ matrix.target }})
         uses: actions/upload-artifact@v4
         with:
-          name: SiteHub-Mac
-          path: desktop-apps/mac-tauri/src-tauri/target/release/bundle/dmg/*.dmg
+          name: SiteHub-Mac-${{ matrix.target }}
+          path: desktop-apps/mac-tauri/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
           retention-days: 30
 
   # ===== iOS 构建 =====
@@ -240,7 +246,8 @@ jobs:
           echo "## 📦 已生成的安装包:" >> build-report.md
           echo "" >> build-report.md
           echo "- ✅ Android APK" >> build-report.md
-          echo "- ✅ Mac DMG" >> build-report.md
+          echo "- ✅ Mac DMG (Intel x64)" >> build-report.md
+          echo "- ✅ Mac DMG (Apple Silicon ARM64)" >> build-report.md
           echo "- ✅ Windows MSI" >> build-report.md
           echo "- ✅ iOS IPA (需要配置证书)" >> build-report.md
           echo "" >> build-report.md
