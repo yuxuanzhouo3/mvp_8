@@ -1,21 +1,19 @@
 {
   "productName": "MornHub",
   "version": "1.0.0",
-  "identifier": "com.mornhub.app",
+  "identifier": "com.mornhub.desktop",
   "build": {
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
     "devUrl": "https://mornhub.help",
-    "frontendDist": "../public"
+    "frontendDist": false
   },
   "app": {
     "windows": [
       {
         "title": "MornHub",
         "width": 1200,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600
+        "height": 800
       }
     ],
     "security": {
@@ -31,7 +29,6 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "copyright": "© 2025 MornHub"
+    ]
   }
 }
