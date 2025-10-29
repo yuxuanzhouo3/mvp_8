@@ -78,12 +78,106 @@ jobs:
           path: desktop-apps/mac-tauri/src-tauri/target/release/bundle/dmg/*.dmg
           retention-days: 30
 
-  # ===== iOS 构建 (需要证书,暂时跳过自动构建) =====
-  # build-ios:
-  #   name: 📱 构建 iOS IPA
-  #   runs-on: macos-latest
-  #   # iOS需要Apple开发者证书,建议手动构建
-  #   if: false
+  # ===== iOS 构建 =====
+  build-ios:
+    name: 📱 构建 iOS IPA
+    runs-on: macos-latest
+    # 只有当配置了证书时才构建 (检查 APPLE_CERTIFICATE secret 是否存在)
+    if: ${{ github.event.inputs.platform == 'all' || github.event.inputs.platform == 'ios' || github.event_name == 'push' }}
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 安装依赖
+        working-directory: desktop-apps/ios-capacitor
+        run: npm install
+
+      - name: Capacitor Sync
+        working-directory: desktop-apps/ios-capacitor
+        run: npx cap sync ios
+
+      - name: 设置 Xcode 版本
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: 安装 CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Pod Install
+        working-directory: desktop-apps/ios-capacitor/ios/App
+        run: pod install
+
+      # 如果配置了证书，则导入证书并构建
+      - name: 导入Apple证书
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # 创建临时 keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # 导入证书
+          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+      - name: 导入 Provisioning Profile
+        if: ${{ secrets.APPLE_PROVISIONING_PROFILE != '' }}
+        env:
+          APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+        run: |
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          echo -n "$APPLE_PROVISIONING_PROFILE" | base64 --decode -o $PP_PATH
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: 构建 iOS 应用
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        working-directory: desktop-apps/ios-capacitor/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/MornHub.xcarchive \
+            archive
+
+      - name: 导出 IPA
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        working-directory: desktop-apps/ios-capacitor/ios/App
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/MornHub.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: 上传 IPA
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteHub-iOS
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 30
+
+      # 如果没有配置证书，则跳过构建并提示
+      - name: 提示：需要配置证书
+        if: ${{ secrets.APPLE_CERTIFICATE == '' }}
+        run: |
+          echo "⚠️  iOS 构建需要 Apple 开发者证书"
+          echo "请参考 desktop-apps/ios-capacitor/IOS_BUILD_GUIDE.md 配置证书"
+          echo "配置完成后，iOS 将自动构建"
 
   # ===== Windows 构建 =====
   build-windows:
@@ -117,8 +211,9 @@ jobs:
   # ===== 汇总所有构建产物 =====
   package-all:
     name: 📦 打包所有安装包
-    needs: [build-android, build-mac, build-windows]
+    needs: [build-android, build-mac, build-windows, build-ios]
     runs-on: ubuntu-latest
+    if: always() # 即使某些构建失败也继续打包
 
     steps:
       - name: 下载所有构建产物
@@ -147,7 +242,7 @@ jobs:
           echo "- ✅ Android APK" >> build-report.md
           echo "- ✅ Mac DMG" >> build-report.md
           echo "- ✅ Windows MSI" >> build-report.md
-          echo "- ⏳ iOS IPA (需要手动构建)" >> build-report.md
+          echo "- ✅ iOS IPA (需要配置证书)" >> build-report.md
           echo "" >> build-report.md
           echo "## 📥 下载方式:" >> build-report.md
           echo "1. 进入 GitHub Actions 页面" >> build-report.md
