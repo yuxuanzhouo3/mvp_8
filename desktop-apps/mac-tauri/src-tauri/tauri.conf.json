@@ -1,52 +1,58 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
   "build": {
     "beforeBuildCommand": "",
     "beforeDevCommand": "",
-    "devUrl": "https://www.mornhub.help",
-    "frontendDist": "../dist"
+    "devUrl": "https://mornhub.help",
+    "frontendDist": "../public"
   },
-  "productName": "SiteHub",
-  "version": "1.0.0",
-  "identifier": "com.sitehub.app",
-  "plugins": {},
   "app": {
+    "name": "MornHub",
+    "version": "1.0.0",
+    "identifier": "com.mornhub.app",
+    "security": {
+      "csp": null
+    },
     "windows": [
       {
-        "title": "SiteHub - Your Personal Web Dashboard",
+        "title": "MornHub",
         "width": 1200,
         "height": 800,
-        "resizable": true,
-        "fullscreen": false,
-        "center": true,
-        "decorations": true,
-        "alwaysOnTop": false,
-        "skipTaskbar": false,
         "minWidth": 800,
         "minHeight": 600,
-        "url": "https://www.mornhub.help"
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": false,
+        "skipTaskbar": false,
+        "url": "https://mornhub.help"
       }
     ],
-    "security": {
-      "csp": null,
-      "dangerousRemoteDomainIpcAccess": [
-        {
-          "domain": "www.mornhub.help",
-          "windows": ["main"],
-          "enableTauriAPI": false
-        }
-      ]
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": ["dmg", "app"],
-    "icon": [
-      "icons/icon.icns"
-    ],
-    "macOS": {
-      "frameworks": [],
-      "minimumSystemVersion": "10.13"
+    "bundle": {
+      "active": true,
+      "category": "Productivity",
+      "copyright": "© 2025 MornHub",
+      "icon": [
+        "icons/icon.icns",
+        "icons/icon.ico",
+        "icons/32x32.png"
+      ],
+      "longDescription": "全球智能网站导航平台",
+      "shortDescription": "智能导航",
+      "targets": ["dmg", "msi", "appimage", "deb"],
+      "macOS": {
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "updater": {
+      "active": false
     }
   }
 }

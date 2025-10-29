@@ -1,7 +1,18 @@
 name: 🚀 四端自动构建
 
 on:
-  workflow_dispatch: # 手动触发
+  workflow_dispatch: # 手动触发，可选择平台
+    inputs:
+      platform:
+        description: '选择要构建的平台'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - android
+          - mac
+          - windows
   push:
     branches:
       - main
