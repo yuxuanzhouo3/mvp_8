@@ -37,8 +37,26 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: 解码并设置签名密钥
+        working-directory: desktop-apps/android-twa
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "✅ 使用发布签名密钥"
+            echo "$KEYSTORE_BASE64" | base64 -d > mornhub-release.keystore
+            ls -lh mornhub-release.keystore
+          else
+            echo "⚠️  未配置签名密钥，将使用调试签名"
+          fi
+
       - name: 构建 Android APK
         working-directory: desktop-apps/android-twa
+        env:
+          KEYSTORE_FILE: mornhub-release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon

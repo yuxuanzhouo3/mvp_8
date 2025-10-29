@@ -16,8 +16,19 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            // 从环境变量读取（CI构建时使用）
+            storeFile file(System.getenv("KEYSTORE_FILE") ?: "mornhub-release.keystore")
+            storePassword System.getenv("KEYSTORE_PASSWORD") ?: "mornhub2024"
+            keyAlias System.getenv("KEY_ALIAS") ?: "mornhub"
+            keyPassword System.getenv("KEY_PASSWORD") ?: "mornhub2024"
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
