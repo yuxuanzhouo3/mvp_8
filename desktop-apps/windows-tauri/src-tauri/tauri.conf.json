@@ -21,8 +21,7 @@
       }
     ],
     "security": {
-      "csp": null,
-      "capabilities": ["shell-open"]
+      "csp": null
     }
   },
   "bundle": {
