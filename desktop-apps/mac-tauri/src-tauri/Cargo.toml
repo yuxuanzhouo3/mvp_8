@@ -1,28 +1,25 @@
 [package]
-name = "sitehub"
-version = "1.0.0"
-description = "SiteHub - Your Personal Web Dashboard"
-authors = ["SiteHub Team"]
-license = "MIT"
+name = "app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+license = ""
 repository = ""
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.77.2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.0.0", features = [] }
+tauri-build = { version = "2.5.1" }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "2.0.0", features = ["shell-open-api"] }
-
-[features]
-default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
-
-[profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = "z"
-strip = true
+log = "0.4"
+tauri = { version = "2.9.1" }
+tauri-plugin-log = "2"

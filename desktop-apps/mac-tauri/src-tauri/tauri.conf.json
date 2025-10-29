@@ -1,18 +1,28 @@
 {
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "MornHub",
   "version": "1.0.0",
   "identifier": "com.mornhub.desktop",
+  "build": {
+    "frontendDist": "../public",
+    "devUrl": "https://mornhub.help",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
   "app": {
     "windows": [
       {
         "title": "MornHub",
         "url": "https://mornhub.help",
         "width": 1200,
-        "height": 800
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": ["shell-open"]
     }
   },
   "bundle": {
