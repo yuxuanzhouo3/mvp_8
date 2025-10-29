@@ -1,0 +1,1232 @@
+================================================================================
+           四端应用 GitHub Actions 自动构建经验总结与完整实施方案
+================================================================================
+
+作者：Claude Code
+日期：2025-10-29
+项目：MornHub 多平台应用构建系统
+目标读者：需要实现类似四端构建的 AI 助手或开发者
+
+================================================================================
+                               目录
+================================================================================
+
+第一部分：问题分析与核心教训
+第二部分：正确的问题解决思路
+第三部分：完整实施方案（可直接执行）
+第四部分：常见错误与排查方法
+第五部分：关键检查清单
+
+================================================================================
+                    第一部分：问题分析与核心教训
+================================================================================
+
+【1.1 我们遇到的主要问题】
+
+问题1：Android Gradle 构建失败
+├─ 现象：chmod: cannot access 'gradlew': No such file or directory
+├─ 根本原因：缺少完整的 Gradle Wrapper 基础设施
+└─ 错误根源：假设项目已经有 gradlew，实际上是空项目
+
+问题2：Android 仓库配置冲突
+├─ 现象：Build was configured to prefer settings repositories over project repositories
+├─ 根本原因：Gradle 7+ 使用 FAIL_ON_PROJECT_REPOS 模式，不允许在 build.gradle 中定义仓库
+└─ 错误根源：使用了过时的 Gradle 配置模式
+
+问题3：Android 缺少应用图标
+├─ 现象：AndroidManifest.xml 引用 @mipmap/ic_launcher 但文件不存在
+├─ 根本原因：TWA 项目缺少完整的 mipmap 资源目录
+└─ 错误根源：没有生成所有 Android 密度的图标文件
+
+问题4：Tauri 配置结构不正确（反复失败）
+├─ 现象：多次尝试修改 tauri.conf.json 都失败
+│  ├─ 尝试1：identifier 位置错误
+│  ├─ 尝试2：frontendDist: false 不支持
+│  ├─ 尝试3：删除 build 对象后 feature 不存在
+│  └─ 尝试4：tauri-plugin-log 版本格式错误
+├─ 根本原因：**不断猜测配置，而不是使用官方生成工具**
+└─ 错误根源：试图手动编写复杂的配置文件，而不是从官方模板开始
+
+问题5：Tauri 强制要求 frontendDist 有效（终局问题）
+├─ 现象：所有绕过 frontendDist 验证的尝试都失败
+│  ├─ 尝试 frontendDist: false → 不支持
+│  ├─ 尝试删除 build 对象 → 配置无效
+│  └─ 尝试指向不存在的目录 → 构建时验证失败
+├─ 根本原因：**Tauri v2.9.1 硬性要求 frontendDist 必须包含有效的 index.html**
+└─ 错误根源：试图绕过框架的基本要求，而不是满足它
+
+问题6：删除依赖但忘记删除代码
+├─ 现象：Cargo.toml 删除了 tauri-plugin-log，但 src/lib.rs 还在使用
+├─ 根本原因：修改不完整，只改了依赖声明，没改使用代码
+└─ 错误根源：没有全局搜索依赖的所有使用位置
+
+问题7：Tauri capabilities 配置错误
+├─ 现象：capability with identifier shell-open not found
+├─ 根本原因：Tauri v2 的 capabilities 系统不是简单的字符串数组
+└─ 错误根源：使用了不存在的内置 capability 名称
+
+
+【1.2 核心教训总结】
+
+🔴 教训1：不要猜测复杂系统的配置
+✅ 正确做法：使用官方 CLI 工具生成标准模板
+    - Tauri: npx tauri init --ci
+    - Android: 使用 Android Studio 创建项目
+    - iOS: npx cap add ios
+
+🔴 教训2：当多次尝试都失败时，要"推倒重建"
+✅ 正确做法：
+    1. 停止修补式修复
+    2. 删除所有手动配置的文件
+    3. 使用官方工具重新生成
+    4. 只做最小化的必要修改
+
+🔴 教训3：不要试图绕过框架的核心要求
+✅ 正确做法：
+    - 理解框架的设计哲学
+    - 满足框架的要求，而不是绕过它
+    - 例如：Tauri 要 index.html → 就创建一个最小的 index.html
+
+🔴 教训4：修改依赖时要全局搜索使用位置
+✅ 正确做法：
+    1. 删除依赖前，先搜索所有使用该依赖的代码
+    2. 使用 grep 或 IDE 全局搜索
+    3. 确保代码和依赖声明同步修改
+
+🔴 教训5：错误信息要"直达根源"
+✅ 正确做法：
+    - "chmod: cannot access 'gradlew'" → 不是权限问题，是文件缺失
+    - "frontendDist validation failed" → 不是路径问题，是必须要 index.html
+    - 不要被表面错误信息误导，要理解根本原因
+
+
+【1.3 问题解决的关键转折点】
+
+❌ 前期（反复失败）：
+    - 手动编写配置文件
+    - 不断修补错误
+    - 试图绕过框架限制
+    - 每次只解决表面问题
+
+✅ 转折点（用户提出"推倒重建"）：
+    "我们必须停止猜测，重新生成一个全新的、干净的 Tauri 项目模板"
+    → 使用 npx tauri init --ci 重新生成
+    → 立即得到正确的基础配置
+
+✅ 终局方案（回归 Web 原理）：
+    - 问题：Tauri 必须要 index.html
+    - 方案：创建最小化的 index.html，用 <meta refresh> 重定向
+    - 效果：满足框架要求，又实现了加载远程网站的目标
+    - 关键：**不绕过要求，而是巧妙地满足要求**
+
+
+================================================================================
+                    第二部分：正确的问题解决思路
+================================================================================
+
+【2.1 面对新框架/工具时的标准流程】
+
+步骤1：使用官方 CLI 生成标准项目
+    ├─ 不要手动创建配置文件
+    ├─ 不要从网上复制粘贴旧版本配置
+    └─ 使用最新版本的 CLI 工具
+
+步骤2：先让"Hello World"跑起来
+    ├─ 不要急于实现复杂功能
+    ├─ 先验证基础配置是否正确
+    └─ 本地构建成功后再配置 CI/CD
+
+步骤3：做最小化修改
+    ├─ 每次只改一个配置项
+    ├─ 立即测试验证
+    └─ 记录每次修改的目的和效果
+
+步骤4：遇到错误时的正确响应
+    ├─ 不要立即"修补"
+    ├─ 先理解错误的根本原因
+    ├─ 搜索官方文档和 GitHub Issues
+    └─ 如果多次失败，考虑重新生成项目
+
+
+【2.2 CI/CD 构建失败的标准排查流程】
+
+第一步：分离问题（本地 vs CI）
+    问：这个问题在本地能复现吗？
+    ├─ 能复现 → 是配置问题，与 CI 无关
+    └─ 不能复现 → 是 CI 环境问题
+
+第二步：查看完整的错误日志
+    ├─ 不要只看最后一行错误
+    ├─ 向上滚动，找到第一个 ERROR 或 FAILED
+    └─ 理解完整的错误上下文
+
+第三步：识别错误类型
+    ├─ 文件缺失类：missing file, No such file → 检查文件是否存在
+    ├─ 依赖问题类：cannot find package → 检查依赖声明和实际安装
+    ├─ 配置错误类：invalid configuration → 检查配置文件格式
+    ├─ 权限问题类：Permission denied → 检查文件权限和 chmod
+    └─ 环境问题类：command not found → 检查 CI 环境是否安装工具
+
+第四步：验证假设
+    ├─ 提出具体的假设（例如："可能是 gradlew 缺失"）
+    ├─ 设计验证方法（例如：在 CI 中运行 ls -la）
+    ├─ 执行验证
+    └─ 根据结果调整假设
+
+第五步：实施修复
+    ├─ 选择最简单的修复方案
+    ├─ 提交修复并观察
+    └─ 如果失败，回到第三步
+
+
+【2.3 "推倒重建"的决策标准】
+
+何时应该推倒重建？
+
+✅ 满足以下任意条件时：
+    1. 同一个问题修复了 3 次以上仍然失败
+    2. 不理解当前配置的来源和含义
+    3. 错误信息指向"配置结构本身"有问题
+    4. 使用的是网上复制的旧配置
+    5. 官方文档的配置与你的完全不同
+
+❌ 不应该推倒重建的情况：
+    1. 只是简单的语法错误（拼写、标点）
+    2. 错误信息很明确，知道如何修复
+    3. 只是某个依赖版本不兼容
+
+如何"推倒重建"？
+
+步骤1：备份当前的业务逻辑代码
+    ├─ 提取自己编写的业务代码
+    └─ 记录自己做过的配置修改
+
+步骤2：删除所有配置文件和构建文件
+    ├─ 例如：删除整个 src-tauri 目录
+    └─ 保留业务代码（如 HTML、JS）
+
+步骤3：使用官方 CLI 重新生成
+    ├─ 使用最新版本的 CLI
+    └─ 使用 --ci 或类似参数生成 CI 友好的配置
+
+步骤4：对比新旧配置
+    ├─ 找出差异
+    └─ 理解哪些是必须的，哪些是可选的
+
+步骤5：只做必要的修改
+    ├─ 修改应用名称、ID 等基本信息
+    └─ 添加必要的业务逻辑
+
+
+================================================================================
+                  第三部分：完整实施方案（可直接执行）
+================================================================================
+
+本方案适用于：在 GitHub Actions 中构建 Android/iOS/Mac/Windows 四端应用，
+每个应用都加载远程网站 URL。
+
+【3.1 项目结构设计】
+
+desktop-apps/
+├── android-twa/              # Android TWA 项目
+│   ├── app/
+│   │   ├── build.gradle      # 应用级构建配置
+│   │   └── src/main/
+│   │       ├── AndroidManifest.xml
+│   │       └── res/mipmap-*/  # 所有密度的图标
+│   ├── build.gradle          # 项目级构建配置（不要加 repositories）
+│   ├── settings.gradle       # 集中管理仓库
+│   └── gradle/wrapper/       # 完整的 Gradle Wrapper
+├── ios-capacitor/            # iOS Capacitor 项目
+│   ├── capacitor.config.json
+│   ├── dist/
+│   │   └── index.html        # 重定向 HTML
+│   ├── ios/                  # Xcode 项目（npx cap add ios 生成）
+│   └── IOS_BUILD_GUIDE.md    # 证书配置指南
+├── mac-tauri/                # Mac Tauri 项目
+│   ├── dist/
+│   │   └── index.html        # 重定向 HTML
+│   └── src-tauri/            # npx tauri init --ci 生成
+│       ├── Cargo.toml        # 精简依赖
+│       ├── tauri.conf.json   # 官方生成，最小修改
+│       └── src/lib.rs        # 精简代码
+└── windows-tauri/            # Windows Tauri 项目（配置同 Mac）
+
+
+【3.2 Android TWA 完整配置步骤】
+
+步骤1：创建标准的 Gradle Wrapper
+----------------------------------------
+cd desktop-apps/android-twa
+
+# 下载并安装 Gradle Wrapper（必须完整）
+gradle wrapper --gradle-version 8.1.1
+
+# 验证文件是否存在
+ls -la gradle/wrapper/
+# 应该有：
+#   - gradle-wrapper.jar
+#   - gradle-wrapper.properties
+
+ls -la
+# 应该有：
+#   - gradlew
+#   - gradlew.bat
+
+步骤2：配置 settings.gradle（仓库集中管理）
+----------------------------------------
+文件：settings.gradle
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "SiteHub"
+include ':app'
+
+步骤3：配置 build.gradle（项目级，不要加仓库）
+----------------------------------------
+文件：build.gradle
+
+plugins {
+    id 'com.android.application' version '8.1.1' apply false
+}
+
+步骤4：生成所有密度的图标
+----------------------------------------
+使用 Python 脚本生成：
+
+import os
+from PIL import Image, ImageDraw
+
+densities = {
+    'mdpi': 48,
+    'hdpi': 72,
+    'xhdpi': 96,
+    'xxhdpi': 144,
+    'xxxhdpi': 192
+}
+
+for density, size in densities.items():
+    # 创建目录
+    dir_path = f'app/src/main/res/mipmap-{density}'
+    os.makedirs(dir_path, exist_ok=True)
+
+    # 创建图标
+    img = Image.new('RGBA', (size, size), '#0f172a')
+    draw = ImageDraw.Draw(img)
+    # 添加简单的视觉元素（圆形）
+    margin = size // 4
+    draw.ellipse([margin, margin, size-margin, size-margin],
+                 fill='#38bdf8')
+
+    # 保存两种格式
+    img.save(f'{dir_path}/ic_launcher.png')
+
+    # Round 图标（圆形）
+    mask = Image.new('L', (size, size), 0)
+    draw_mask = ImageDraw.Draw(mask)
+    draw_mask.ellipse([0, 0, size, size], fill=255)
+
+    img_round = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    img_round.paste(img, (0, 0))
+    img_round.putalpha(mask)
+    img_round.save(f'{dir_path}/ic_launcher_round.png')
+
+步骤5：配置 AndroidManifest.xml
+----------------------------------------
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
+
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="mornhub.help" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+
+
+【3.3 Mac/Windows Tauri 完整配置步骤】
+
+步骤1：使用官方 CLI 初始化（关键！）
+----------------------------------------
+cd desktop-apps/mac-tauri
+
+# 安装 Tauri CLI
+npm install -D @tauri-apps/cli
+
+# 使用 CI 模式初始化（非交互式）
+npx tauri init --ci
+
+# 这会生成标准的 src-tauri 目录，包含：
+#   - Cargo.toml（正确的版本和依赖）
+#   - tauri.conf.json（正确的结构）
+#   - src/lib.rs（标准代码）
+
+步骤2：创建最小化的 index.html（满足 frontendDist 要求）
+----------------------------------------
+mkdir -p dist
+
+文件：dist/index.html
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Loading MornHub...</title>
+  <meta http-equiv="refresh" content="0; url=https://mornhub.help" />
+  <style>
+    body {
+      background-color: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: white;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <p>Redirecting to MornHub...</p>
+</body>
+</html>
+
+关键理解：
+    - Tauri v2 必须要有 index.html，无法绕过
+    - 我们不绕过，而是创建一个重定向 HTML
+    - 用户体验：应用启动 → 加载 index.html → 立即重定向到远程网站
+
+步骤3：配置 tauri.conf.json（最小修改）
+----------------------------------------
+文件：src-tauri/tauri.conf.json
+
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "MornHub",
+  "version": "1.0.0",
+  "identifier": "com.mornhub.desktop",
+  "build": {
+    "frontendDist": "../dist",  // 指向包含 index.html 的目录
+    "devUrl": "https://mornhub.help",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [{
+      "title": "MornHub",
+      "url": "https://mornhub.help",  // 这个配置不生效，会被 frontendDist 覆盖
+      "width": 1200,
+      "height": 800,
+      "resizable": true,
+      "fullscreen": false
+    }],
+    "security": {
+      "csp": null  // 不要添加 capabilities，除非你知道具体需要什么
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
+
+关键点：
+    ✅ frontendDist 必须指向包含 index.html 的目录
+    ✅ 不要使用 frontendDist: false（不支持）
+    ✅ 不要添加不存在的 capabilities
+    ✅ 保持配置简单，只改必要的部分
+
+步骤4：精简 Cargo.toml（移除非必需依赖）
+----------------------------------------
+文件：src-tauri/Cargo.toml
+
+[package]
+name = "app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.5.1" }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "2.9.1" }
+
+# 不要添加 tauri-plugin-log 等插件，除非真的需要
+
+步骤5：精简 src/lib.rs（移除插件代码）
+----------------------------------------
+文件：src-tauri/src/lib.rs
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+  tauri::Builder::default()
+    .run(tauri::generate_context!())
+    .expect("error while running tauri application");
+}
+
+关键点：
+    ✅ 移除所有 .setup() 闭包
+    ✅ 移除所有 plugin 调用
+    ✅ 保持最简单的配置
+
+步骤6：Windows 配置（完全复制 Mac）
+----------------------------------------
+# Windows 配置与 Mac 完全相同
+cp -r desktop-apps/mac-tauri/dist desktop-apps/windows-tauri/
+cp -r desktop-apps/mac-tauri/src-tauri desktop-apps/windows-tauri/
+
+
+【3.4 iOS Capacitor 完整配置步骤】
+
+步骤1：初始化 Capacitor 项目
+----------------------------------------
+cd desktop-apps/ios-capacitor
+
+# 安装依赖
+npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+# 创建 dist/index.html（同 Tauri）
+mkdir -p dist
+# 复制 Mac 项目的 index.html
+
+步骤2：配置 capacitor.config.json
+----------------------------------------
+{
+  "appId": "com.sitehub.app",
+  "appName": "SiteHub",
+  "webDir": "dist",
+  "server": {
+    "url": "https://mornhub.help",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "backgroundColor": "#0f172a"
+  }
+}
+
+步骤3：添加 iOS 平台
+----------------------------------------
+npx cap add ios
+
+# 这会生成：
+#   - ios/App/App.xcodeproj
+#   - ios/App/App.xcworkspace
+#   - ios/App/Podfile
+
+步骤4：安装 CocoaPods 依赖（本地）
+----------------------------------------
+cd ios/App
+pod install
+
+步骤5：创建 ExportOptions.plist
+----------------------------------------
+文件：ios/App/ExportOptions.plist
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store</string>
+    <key>teamID</key>
+    <string>YOUR_TEAM_ID</string>  <!-- 替换为实际的 Team ID -->
+    <key>uploadBitcode</key>
+    <false/>
+    <key>compileBitcode</key>
+    <false/>
+    <key>uploadSymbols</key>
+    <true/>
+    <key>signingStyle</key>
+    <string>manual</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.sitehub.app</key>
+        <string>YOUR_PROVISIONING_PROFILE_NAME</string>  <!-- 替换为实际的 Profile 名称 -->
+    </dict>
+</dict>
+</plist>
+
+步骤6：配置 GitHub Secrets（需要 Apple 开发者账号）
+----------------------------------------
+参考 IOS_BUILD_GUIDE.md 详细步骤
+
+
+【3.5 GitHub Actions Workflow 配置】
+
+文件：.github/workflows/build-all-platforms.yml
+
+name: 🚀 四端自动构建
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: '选择要构建的平台'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - android
+          - mac
+          - windows
+          - ios
+  push:
+    branches:
+      - main
+    paths:
+      - 'desktop-apps/**'
+      - '.github/workflows/build-all-platforms.yml'
+
+jobs:
+  # ===== Android 构建 =====
+  build-android:
+    name: 📱 构建 Android APK
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.platform == 'all' ||
+      github.event.inputs.platform == 'android'
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 构建 Android APK
+        working-directory: desktop-apps/android-twa
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteHub-Android
+          path: desktop-apps/android-twa/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+  # ===== Mac 构建 =====
+  build-mac:
+    name: 🍎 构建 Mac DMG
+    runs-on: macos-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.platform == 'all' ||
+      github.event.inputs.platform == 'mac'
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: 安装 Tauri CLI
+        run: cargo install tauri-cli
+
+      - name: 构建 Mac 应用
+        working-directory: desktop-apps/mac-tauri
+        run: cargo tauri build
+
+      - name: 上传 DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteHub-Mac
+          path: desktop-apps/mac-tauri/src-tauri/target/release/bundle/dmg/*.dmg
+          retention-days: 30
+
+  # ===== Windows 构建 =====
+  build-windows:
+    name: 🪟 构建 Windows MSI
+    runs-on: windows-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.platform == 'all' ||
+      github.event.inputs.platform == 'windows'
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: 安装 Tauri CLI
+        run: cargo install tauri-cli
+
+      - name: 构建 Windows 应用
+        working-directory: desktop-apps/windows-tauri
+        run: cargo tauri build
+
+      - name: 上传 MSI
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteHub-Windows
+          path: desktop-apps/windows-tauri/src-tauri/target/release/bundle/msi/*.msi
+          retention-days: 30
+
+  # ===== iOS 构建 =====
+  build-ios:
+    name: 📱 构建 iOS IPA
+    runs-on: macos-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event.inputs.platform == 'all' ||
+      github.event.inputs.platform == 'ios'
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 安装依赖
+        working-directory: desktop-apps/ios-capacitor
+        run: npm install
+
+      - name: Capacitor Sync
+        working-directory: desktop-apps/ios-capacitor
+        run: npx cap sync ios
+
+      - name: 设置 Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: 安装 CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Pod Install
+        working-directory: desktop-apps/ios-capacitor/ios/App
+        run: pod install
+
+      # 证书导入（如果配置了 secrets）
+      - name: 导入 Apple 证书
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          echo -n "$APPLE_CERTIFICATE" | base64 --decode -o $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+      - name: 导入 Provisioning Profile
+        if: ${{ secrets.APPLE_PROVISIONING_PROFILE != '' }}
+        env:
+          APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+        run: |
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          echo -n "$APPLE_PROVISIONING_PROFILE" | base64 --decode -o $PP_PATH
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: 构建 iOS 应用
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        working-directory: desktop-apps/ios-capacitor/ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/MornHub.xcarchive \
+            archive
+
+      - name: 导出 IPA
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        working-directory: desktop-apps/ios-capacitor/ios/App
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/MornHub.xcarchive \
+            -exportPath $RUNNER_TEMP/export \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: 上传 IPA
+        if: ${{ secrets.APPLE_CERTIFICATE != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteHub-iOS
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 30
+
+      - name: 提示：需要配置证书
+        if: ${{ secrets.APPLE_CERTIFICATE == '' }}
+        run: |
+          echo "⚠️  iOS 构建需要 Apple 开发者证书"
+          echo "请参考 desktop-apps/ios-capacitor/IOS_BUILD_GUIDE.md 配置证书"
+
+  # ===== 打包所有产物 =====
+  package-all:
+    name: 📦 打包所有安装包
+    needs: [build-android, build-mac, build-windows, build-ios]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: release-packages
+
+      - name: 列出所有文件
+        run: |
+          cd release-packages
+          ls -R
+
+      - name: 上传完整发布包
+        uses: actions/upload-artifact@v4
+        with:
+          name: SiteHub-AllPlatforms-Release
+          path: release-packages/
+          retention-days: 30
+
+
+【3.6 执行顺序和验证】
+
+阶段1：本地验证
+----------------------------------------
+1. 先在本地完成 Android 构建
+   cd desktop-apps/android-twa
+   ./gradlew assembleRelease
+
+2. 先在本地完成 Mac 构建
+   cd desktop-apps/mac-tauri
+   cargo tauri build
+
+3. 确保本地都能成功，再推送到 GitHub
+
+阶段2：逐个平台测试
+----------------------------------------
+1. 先只提交 Android 配置，验证 CI 构建
+2. Android 成功后，再提交 Mac/Windows 配置
+3. Mac/Windows 成功后，最后提交 iOS 配置
+
+阶段3：完整集成测试
+----------------------------------------
+1. 推送所有代码到 main 分支
+2. 观察 GitHub Actions 构建
+3. 下载所有 Artifacts 验证
+
+
+================================================================================
+                    第四部分：常见错误与排查方法
+================================================================================
+
+【4.1 Android 常见错误】
+
+错误1：gradlew: Permission denied
+----------------------------------------
+原因：gradlew 文件没有执行权限
+解决：在 GitHub Actions 中添加 chmod +x gradlew
+验证：ls -la gradlew 应该显示 -rwxr-xr-x
+
+错误2：Could not find com.android.tools.build:gradle
+----------------------------------------
+原因：Gradle 找不到 Android 插件
+根源：仓库配置问题
+解决：检查 settings.gradle 是否正确配置了 google() 仓库
+
+错误3：Execution failed for task ':app:processReleaseResources'
+----------------------------------------
+原因：资源文件缺失或引用错误
+检查：
+    1. AndroidManifest.xml 引用的所有资源是否存在
+    2. mipmap 目录是否包含所有密度的图标
+    3. strings.xml 是否定义了所有引用的字符串
+
+错误4：FAILURE: Build failed with an exception (仓库冲突)
+----------------------------------------
+完整错误信息：
+    Build was configured to prefer settings repositories over project
+    repositories but repository 'Google' was added by build file 'build.gradle'
+
+原因：Gradle 7+ 使用 FAIL_ON_PROJECT_REPOS 模式
+解决：
+    1. 删除所有 build.gradle 中的 repositories 块
+    2. 只在 settings.gradle 中定义仓库
+
+
+【4.2 Tauri 常见错误】
+
+错误0：Mac 应用无法打开，提示"这台Mac不支持此应用程序"
+----------------------------------------
+现象：下载的 DMG 安装后无法打开
+完整错误：你无法打开应用程序"MornHub"，因为这台Mac不支持此应用程序。
+根本原因：CPU 架构不匹配
+    - macos-latest 运行器默认是 ARM64 (Apple Silicon)
+    - 构建产物无法在 Intel Mac 上运行
+解决：
+    方案1：使用 matrix strategy 同时构建两种架构
+        strategy:
+          matrix:
+            target:
+              - x86_64-apple-darwin    # Intel
+              - aarch64-apple-darwin   # Apple Silicon
+
+    方案2：明确指定运行器
+        runs-on: macos-13  # Intel 运行器
+        或
+        runs-on: macos-14  # Apple Silicon 运行器
+
+推荐：使用方案1，同时构建两种架构，让所有用户都能使用
+
+用户下载指南：
+    - Intel Mac (2020年前) → 下载 x86_64-apple-darwin 版本
+    - Apple Silicon Mac (M1/M2/M3) → 下载 aarch64-apple-darwin 版本
+    - 查看芯片类型：苹果菜单 → 关于本机 → 芯片
+
+错误1：error: failed to resolve: could not find 'tauri_plugin_log'
+----------------------------------------
+原因：Cargo.toml 删除了依赖，但代码还在使用
+解决：
+    1. 全局搜索 tauri_plugin_log
+    2. 删除 src/lib.rs 中所有使用该插件的代码
+    3. 或者重新添加依赖到 Cargo.toml
+
+错误2：proc macro panicked: capability with identifier shell-open not found
+----------------------------------------
+原因：Tauri v2 不支持这个 capability 名称
+解决：删除 tauri.conf.json 中的 capabilities 数组
+正确做法：
+    {
+      "security": {
+        "csp": null
+      }
+    }
+
+错误3：frontendDist validation failed
+----------------------------------------
+原因：Tauri 必须要有有效的 index.html
+错误做法：
+    ❌ "frontendDist": false
+    ❌ "frontendDist": "非existent/path"
+    ❌ 删除 build 对象
+正确做法：
+    ✅ 创建 dist/index.html
+    ✅ "frontendDist": "../dist"
+
+错误4：tauri-plugin-log version "2" is not valid SemVer
+----------------------------------------
+原因：版本号格式错误
+错误：version = "2"
+正确：version = "2.0.0"
+更好：删除这个依赖（如果不需要日志功能）
+
+
+【4.3 iOS 常见错误】
+
+错误1：xcode-select: error: tool 'xcodebuild' requires Xcode
+----------------------------------------
+原因：CI 环境没有完整的 Xcode
+解决：在 GitHub Actions 中添加
+    - name: 设置 Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+错误2：Code signing is required for product type 'Application'
+----------------------------------------
+原因：没有配置证书
+解决：按照 IOS_BUILD_GUIDE.md 配置 GitHub Secrets
+或者：如果暂时不需要 iOS，让构建跳过并提示
+
+错误3：Provisioning profile doesn't match
+----------------------------------------
+原因：Bundle ID、Team ID、Profile 名称不匹配
+检查：
+    1. capacitor.config.json 中的 appId
+    2. ExportOptions.plist 中的 Bundle ID
+    3. Provisioning Profile 的 App ID
+    确保三者完全一致
+
+
+【4.4 CI/CD 通用错误】
+
+错误1：fatal: pathspec 'xxx' did not match any files
+----------------------------------------
+原因：试图 git add 一个不存在的路径
+解决：
+    1. 检查当前目录 pwd
+    2. 检查文件是否存在 ls -la
+    3. 使用正确的相对路径或绝对路径
+
+错误2：Process completed with exit code 1
+----------------------------------------
+原因：这是通用的失败退出码
+关键：不要只看这一行，向上滚动找真正的错误
+方法：
+    1. 在 GitHub Actions 日志中展开失败的步骤
+    2. 找到第一个 "ERROR" 或 "FAILED"
+    3. 阅读完整的错误上下文
+
+错误3：Artifacts 上传失败或找不到文件
+----------------------------------------
+原因：构建产物路径不正确
+解决：
+    1. 在构建后添加 ls -R 列出所有文件
+    2. 找到实际的产物路径
+    3. 修改 upload-artifact 的 path 参数
+
+错误4：Job 被跳过 (skipped)
+----------------------------------------
+原因：if 条件不满足
+检查：
+    1. workflow_dispatch inputs 是否正确
+    2. github.event_name 是否匹配
+    3. 依赖的 job 是否失败（使用 needs）
+
+
+================================================================================
+                      第五部分：关键检查清单
+================================================================================
+
+【5.1 开始前检查清单】
+
+□ 已安装所有必需的工具
+  □ Android: JDK 17, Gradle
+  □ Mac/Windows: Rust, Cargo
+  □ iOS: Xcode, CocoaPods
+  □ 通用: Node.js, Git
+
+□ 已注册必要的账号
+  □ GitHub 账号
+  □ （可选）Apple Developer 账号（iOS）
+
+□ 已阅读官方文档
+  □ Tauri: https://tauri.app/v2/guides/
+  □ Capacitor: https://capacitorjs.com/docs/
+  □ GitHub Actions: https://docs.github.com/actions
+
+
+【5.2 配置完成后检查清单】
+
+Android 项目：
+□ gradle/wrapper/ 目录存在且包含 jar 和 properties
+□ gradlew 和 gradlew.bat 文件存在
+□ settings.gradle 配置了 repositories
+□ build.gradle 没有 repositories 块
+□ app/src/main/res/ 包含所有密度的 mipmap 目录
+□ AndroidManifest.xml 引用的所有资源都存在
+
+Mac/Windows Tauri 项目：
+□ 使用 npx tauri init --ci 生成的标准配置
+□ dist/index.html 文件存在
+□ tauri.conf.json 中 frontendDist 指向 ../dist
+□ Cargo.toml 依赖版本正确（tauri 2.9.1, tauri-build 2.5.1）
+□ src/lib.rs 没有引用未声明的依赖
+□ tauri.conf.json 没有不存在的 capabilities
+
+iOS Capacitor 项目：
+□ npx cap add ios 已执行
+□ dist/index.html 文件存在
+□ ios/App/ExportOptions.plist 已创建
+□ （如需构建）GitHub Secrets 已配置
+
+GitHub Actions：
+□ .github/workflows/*.yml 语法正确
+□ 所有 working-directory 路径正确
+□ artifact 的 path 指向正确的输出路径
+□ （如需 iOS）secrets.APPLE_CERTIFICATE 等已配置
+
+
+【5.3 构建失败时检查清单】
+
+□ 第一步：确认错误类型
+  □ 文件缺失？
+  □ 依赖问题？
+  □ 配置错误？
+  □ 环境问题？
+
+□ 第二步：本地复现
+  □ 能否在本地复现？
+  □ 本地成功但 CI 失败？
+
+□ 第三步：查看完整日志
+  □ 找到第一个 ERROR
+  □ 阅读 5-10 行上下文
+  □ 理解错误的根本原因
+
+□ 第四步：验证假设
+  □ 提出明确的假设
+  □ 设计验证方法
+  □ 执行并观察结果
+
+□ 第五步：决策
+  □ 简单错误 → 直接修复
+  □ 复杂错误 → 搜索文档和 Issues
+  □ 反复失败 → 考虑推倒重建
+
+
+【5.4 推倒重建决策清单】
+
+满足以下条件时，应该推倒重建：
+
+□ 同一问题修复 3 次以上仍失败
+□ 不理解当前配置的来源
+□ 错误指向配置结构本身
+□ 使用了网上复制的旧配置
+□ 官方文档与当前配置完全不同
+
+推倒重建步骤：
+
+□ 1. 备份业务代码
+□ 2. 删除所有配置文件
+□ 3. 使用官方 CLI 重新生成
+□ 4. 对比新旧配置，理解差异
+□ 5. 只做最小化必要修改
+
+
+【5.5 提交前最终检查】
+
+□ 所有文件已 git add
+□ commit message 清晰描述变更
+□ 没有提交敏感信息（证书、密码）
+□ 本地构建测试通过
+□ 准备观察 GitHub Actions 构建结果
+
+
+================================================================================
+                            总结与核心原则
+================================================================================
+
+【核心原则1：使用官方工具，不要手动猜测】
+    ✅ 使用 CLI 生成标准项目
+    ✅ 最小化修改
+    ❌ 手动编写复杂配置
+    ❌ 复制粘贴旧配置
+
+【核心原则2：理解框架要求，不要试图绕过】
+    ✅ 满足框架的基本要求
+    ✅ 用巧妙的方法实现目标（如 meta refresh）
+    ❌ 试图绕过验证
+    ❌ 使用 hack 方法
+
+【核心原则3：失败 3 次，考虑推倒重建】
+    ✅ 及时止损
+    ✅ 从官方模板重新开始
+    ❌ 无限修补
+    ❌ 盲目坚持错误方向
+
+【核心原则4：修改依赖时，全局搜索使用位置】
+    ✅ 删除依赖前先搜索
+    ✅ 同时修改声明和使用
+    ❌ 只改 Cargo.toml 不改代码
+    ❌ 假设没有其他地方使用
+
+【核心原则5：错误要理解根源，不被表面误导】
+    ✅ "chmod error" → 文件缺失
+    ✅ "frontendDist validation" → 必须有 index.html
+    ❌ 只看最后一行错误
+    ❌ 修改表面问题而不解决根源
+
+
+================================================================================
+                          给 AI 助手的建议
+================================================================================
+
+如果你是一个 AI 助手，正在帮助用户实现类似的多平台构建，请遵循：
+
+1. 优先使用官方 CLI 工具
+   - 不要试图手动创建配置文件
+   - 使用 --ci 或类似参数生成 CI 友好的配置
+
+2. 当用户遇到反复失败时，主动建议"推倒重建"
+   - 不要陷入无限修补的循环
+   - 果断建议使用官方工具重新生成
+
+3. 修改依赖时，主动搜索使用位置
+   - 使用 Grep 工具搜索依赖名称
+   - 确保声明和使用同步修改
+
+4. 解释错误的根本原因，不只是修复
+   - 帮助用户理解"为什么"
+   - 提炼规律，避免重复犯错
+
+5. 提供完整的验证步骤
+   - 不要只给代码，还要给验证方法
+   - 帮助用户建立正确的开发流程
+
+
+================================================================================
+                            文档结束
+================================================================================
+
+这份文档总结了我们在实现四端构建过程中的所有失败、教训和最终成功的经验。
+
+关键要点：
+    1. 使用官方工具，不要猜测
+    2. 理解要求，不要绕过
+    3. 及时推倒重建，不要无限修补
+    4. 理解根源，不被表面误导
+
+按照本文档的"第三部分：完整实施方案"执行，应该可以一次性成功配置四端构建。
+
+如有疑问或遇到新问题，请参考"第四部分：常见错误与排查方法"。
+
+祝构建成功！🎉
