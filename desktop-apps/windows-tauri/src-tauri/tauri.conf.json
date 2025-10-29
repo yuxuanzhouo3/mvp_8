@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "identifier": "com.mornhub.desktop",
   "build": {
-    "frontendDist": "../public",
+    "frontendDist": "../dist",
     "devUrl": "https://mornhub.help",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
