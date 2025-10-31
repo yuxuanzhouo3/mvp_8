@@ -986,28 +986,71 @@ jobs:
 ----------------------------------------
 现象：下载的 DMG 安装后无法打开
 完整错误：你无法打开应用程序"MornHub"，因为这台Mac不支持此应用程序。
-根本原因：CPU 架构不匹配
+根本原因：CPU 架构不匹配或单架构构建的兼容性问题
+
+【问题详情】
     - macos-latest 运行器默认是 ARM64 (Apple Silicon)
-    - 构建产物无法在 Intel Mac 上运行
-解决：
-    方案1：使用 matrix strategy 同时构建两种架构
-        strategy:
-          matrix:
-            target:
-              - x86_64-apple-darwin    # Intel
-              - aarch64-apple-darwin   # Apple Silicon
+    - 单独构建的 aarch64 版本可能在某些 Apple Silicon Mac 上无法打开
+    - 单独构建的 x86_64 版本无法在 Apple Silicon Mac 上运行
 
-    方案2：明确指定运行器
-        runs-on: macos-13  # Intel 运行器
-        或
-        runs-on: macos-14  # Apple Silicon 运行器
+【解决方案对比】
 
-推荐：使用方案1，同时构建两种架构，让所有用户都能使用
+方案1：构建 Universal Binary（推荐）⭐
+----------------------------------------
+优势：
+    ✅ 一个安装包同时支持 Intel 和 Apple Silicon
+    ✅ 用户无需选择，自动适配
+    ✅ 兼容性最好，避免单架构构建的潜在问题
+    ✅ 符合 Apple 官方最佳实践
 
-用户下载指南：
+配置示例：
+    - name: 添加 Rust 目标 (Intel + Apple Silicon)
+      run: |
+        rustup target add x86_64-apple-darwin
+        rustup target add aarch64-apple-darwin
+
+    - name: 构建 Mac Universal Binary
+      run: cargo tauri build --target universal-apple-darwin
+
+    - name: 上传 DMG (Universal)
+      uses: actions/upload-artifact@v4
+      with:
+        name: SiteHub-Mac-Universal
+        path: target/universal-apple-darwin/release/bundle/dmg/*.dmg
+
+方案2：使用 matrix strategy 分别构建两种架构
+----------------------------------------
+缺点：
+    ⚠️  需要用户手动选择正确的版本
+    ⚠️  单架构构建可能存在兼容性问题
+    ⚠️  维护两个构建产物
+
+配置示例：
+    strategy:
+      matrix:
+        target:
+          - x86_64-apple-darwin    # Intel
+          - aarch64-apple-darwin   # Apple Silicon
+
+用户下载指南（方案2）：
     - Intel Mac (2020年前) → 下载 x86_64-apple-darwin 版本
     - Apple Silicon Mac (M1/M2/M3) → 下载 aarch64-apple-darwin 版本
     - 查看芯片类型：苹果菜单 → 关于本机 → 芯片
+
+【实际遇到的问题】
+在测试中发现：
+    ✅ Intel Mac + x86_64 单独构建 = 正常工作
+    ❌ Apple Silicon Mac + aarch64 单独构建 = 无法打开
+
+原因推测：
+    - 单架构构建可能缺少某些系统兼容性处理
+    - Universal Binary 由 Apple 工具链正确处理架构融合
+    - Tauri 对 Universal Binary 的支持更成熟
+
+【最佳实践推荐】
+✅ 优先使用 universal-apple-darwin 目标
+✅ 提供单一安装包，用户体验最好
+✅ 避免用户因选错版本而无法使用
 
 错误1：error: failed to resolve: could not find 'tauri_plugin_log'
 ----------------------------------------

@@ -70,13 +70,8 @@ jobs:
 
   # ===== Mac 构建 =====
   build-mac:
-    name: 🍎 构建 Mac DMG
+    name: 🍎 构建 Mac DMG (Universal)
     runs-on: macos-latest
-    strategy:
-      matrix:
-        target:
-          - x86_64-apple-darwin    # Intel 芯片
-          - aarch64-apple-darwin   # Apple Silicon (M1/M2/M3)
 
     steps:
       - name: Checkout 代码
@@ -87,20 +82,24 @@ jobs:
         with:
           toolchain: stable
           profile: minimal
-          target: ${{ matrix.target }}
+
+      - name: 添加 Rust 目标 (Intel + Apple Silicon)
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
 
       - name: 安装 Tauri CLI
         run: cargo install tauri-cli
 
-      - name: 构建 Mac 应用 (${{ matrix.target }})
+      - name: 构建 Mac Universal Binary
         working-directory: desktop-apps/mac-tauri
-        run: cargo tauri build --target ${{ matrix.target }}
+        run: cargo tauri build --target universal-apple-darwin
 
-      - name: 上传 DMG (${{ matrix.target }})
+      - name: 上传 DMG (Universal)
         uses: actions/upload-artifact@v4
         with:
-          name: SiteHub-Mac-${{ matrix.target }}
-          path: desktop-apps/mac-tauri/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          name: SiteHub-Mac-Universal
+          path: desktop-apps/mac-tauri/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
           retention-days: 30
 
   # ===== iOS 构建 =====
