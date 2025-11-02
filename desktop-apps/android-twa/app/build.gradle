@@ -19,16 +19,26 @@ android {
     signingConfigs {
         release {
             // 从环境变量读取（CI构建时使用）
-            storeFile file(System.getenv("KEYSTORE_FILE") ?: "mornhub-release.keystore")
-            storePassword System.getenv("KEYSTORE_PASSWORD") ?: "mornhub2024"
-            keyAlias System.getenv("KEY_ALIAS") ?: "mornhub"
-            keyPassword System.getenv("KEY_PASSWORD") ?: "mornhub2024"
+            def keystoreFilePath = System.getenv("KEYSTORE_FILE") ?: "mornhub-release.keystore"
+            def keystoreFile = file(keystoreFilePath)
+
+            // 只有当 keystore 文件存在时才配置签名
+            if (keystoreFile.exists()) {
+                storeFile keystoreFile
+                storePassword System.getenv("KEYSTORE_PASSWORD") ?: "mornhub2024"
+                keyAlias System.getenv("KEY_ALIAS") ?: "mornhub"
+                keyPassword System.getenv("KEY_PASSWORD") ?: "mornhub2024"
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            // 只有当 keystore 存在时才使用 release 签名配置
+            def keystoreFilePath = System.getenv("KEYSTORE_FILE") ?: "mornhub-release.keystore"
+            if (file(keystoreFilePath).exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
