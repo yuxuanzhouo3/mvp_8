@@ -144,7 +144,6 @@ jobs:
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           if [ -z "$APPLE_CERTIFICATE" ]; then
             echo "⚠️  未配置 APPLE_CERTIFICATE，跳过证书导入"
@@ -152,7 +151,8 @@ jobs:
             exit 1
           fi
 
-          # 创建临时 keychain
+          # 创建临时 keychain（使用随机密码）
+          KEYCHAIN_PASSWORD=$(uuidgen)
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
