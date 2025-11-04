@@ -13,11 +13,12 @@
     "windows": [
       {
         "title": "MornHub",
-        "url": "https://mornhub.help",
         "width": 1200,
         "height": 800,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "minWidth": 800,
+        "minHeight": 600
       }
     ],
     "security": {

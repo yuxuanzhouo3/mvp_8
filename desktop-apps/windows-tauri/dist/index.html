@@ -2,25 +2,198 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Loading MornHub...</title>
-  <meta
-    http-equiv="refresh"
-    content="0; url=https://mornhub.help"
-  />
+  <title>MornHub</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       background-color: #0f172a;
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column;
       height: 100vh;
-      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    /* 导航栏 */
+    .nav-bar {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #475569;
+      -webkit-app-region: drag; /* 允许拖动窗口 */
+    }
+
+    .nav-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
       color: white;
-      font-family: sans-serif;
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.2s;
+      -webkit-app-region: no-drag; /* 按钮可点击 */
+    }
+
+    .nav-button:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .nav-button:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    .nav-button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .url-bar {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      -webkit-app-region: no-drag;
+    }
+
+    /* WebView 容器 */
+    #webview-container {
+      flex: 1;
+      position: relative;
+      background: white;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <p>Redirecting to MornHub...</p>
+  <!-- 导航栏 -->
+  <div class="nav-bar">
+    <button class="nav-button" id="back-btn" title="后退" disabled>←</button>
+    <button class="nav-button" id="forward-btn" title="前进" disabled>→</button>
+    <button class="nav-button" id="refresh-btn" title="刷新">⟳</button>
+    <button class="nav-button" id="home-btn" title="返回首页">⌂</button>
+    <input type="text" class="url-bar" id="url-bar" readonly value="https://www.mornhub.help" />
+  </div>
+
+  <!-- WebView 容器 -->
+  <div id="webview-container">
+    <iframe id="webview" src="https://www.mornhub.help"></iframe>
+  </div>
+
+  <script>
+    const iframe = document.getElementById('webview');
+    const backBtn = document.getElementById('back-btn');
+    const forwardBtn = document.getElementById('forward-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const homeBtn = document.getElementById('home-btn');
+    const urlBar = document.getElementById('url-bar');
+
+    const HOME_URL = 'https://www.mornhub.help';
+    let history = [HOME_URL];
+    let currentIndex = 0;
+
+    // 更新按钮状态
+    function updateButtons() {
+      backBtn.disabled = currentIndex <= 0;
+      forwardBtn.disabled = currentIndex >= history.length - 1;
+    }
+
+    // 后退
+    backBtn.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        iframe.src = history[currentIndex];
+        urlBar.value = history[currentIndex];
+        updateButtons();
+      }
+    });
+
+    // 前进
+    forwardBtn.addEventListener('click', () => {
+      if (currentIndex < history.length - 1) {
+        currentIndex++;
+        iframe.src = history[currentIndex];
+        urlBar.value = history[currentIndex];
+        updateButtons();
+      }
+    });
+
+    // 刷新
+    refreshBtn.addEventListener('click', () => {
+      iframe.src = iframe.src;
+    });
+
+    // 返回首页
+    homeBtn.addEventListener('click', () => {
+      iframe.src = HOME_URL;
+      urlBar.value = HOME_URL;
+      // 添加到历史
+      if (history[currentIndex] !== HOME_URL) {
+        history = history.slice(0, currentIndex + 1);
+        history.push(HOME_URL);
+        currentIndex = history.length - 1;
+        updateButtons();
+      }
+    });
+
+    // 监听 iframe 加载（注意：跨域限制，可能无法获取真实 URL）
+    iframe.addEventListener('load', () => {
+      try {
+        const currentUrl = iframe.contentWindow.location.href;
+        if (currentUrl && currentUrl !== 'about:blank') {
+          urlBar.value = currentUrl;
+          // 如果是新导航（不是前进/后退），添加到历史
+          if (history[currentIndex] !== currentUrl) {
+            history = history.slice(0, currentIndex + 1);
+            history.push(currentUrl);
+            currentIndex = history.length - 1;
+            updateButtons();
+          }
+        }
+      } catch (e) {
+        // 跨域限制，无法访问 iframe 的 URL
+        console.log('Cannot access iframe URL due to CORS');
+      }
+    });
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+      // Cmd/Ctrl + [: 后退
+      if ((e.metaKey || e.ctrlKey) && e.key === '[') {
+        e.preventDefault();
+        backBtn.click();
+      }
+      // Cmd/Ctrl + ]: 前进
+      if ((e.metaKey || e.ctrlKey) && e.key === ']') {
+        e.preventDefault();
+        forwardBtn.click();
+      }
+      // Cmd/Ctrl + R: 刷新
+      if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
+        e.preventDefault();
+        refreshBtn.click();
+      }
+    });
+  </script>
 </body>
 </html>
