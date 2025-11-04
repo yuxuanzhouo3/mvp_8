@@ -35,6 +35,7 @@ import canonicalData from "@/lib/sitehub-data/canonical.en.json"
 import { zhProducts, zhSites } from "@/lib/sitehub-data/zh-localization"
 import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
 import { createDatabaseAdapter, type IDatabaseAdapter } from "@/lib/database/adapter"
+import { getFavorites, addToFavorites, removeFromFavorites, type CreateFavoriteData } from "@/lib/favorites"
 
 interface Site {
   id: string
@@ -386,13 +387,26 @@ export default function SiteHub() {
     async function loadFavorites() {
       // 只有在hydration完成且不是loading状态时才加载
       if (authLoading || geoLoading) return
-      
-      if (user.type === "authenticated" && user.id && dbAdapter) {
-        // Authenticated users: load from database adapter (CloudBase or Supabase)
+
+      if (user.type === "authenticated" && user.id) {
+        // Authenticated users:
+        // - 国内用户：使用 API（通过 lib/favorites.ts）
+        // - 海外用户：使用 adapter（CloudBase或Supabase客户端SDK）
         try {
-          const favoriteSiteIds = await dbAdapter.getFavorites()
-          setFavorites(favoriteSiteIds)
-          console.log('✅ [DB] 加载收藏成功:', favoriteSiteIds.length, '个')
+          if (isChina) {
+            // 🇨🇳 国内用户：调用服务端API
+            console.log('🇨🇳 [中国用户] 使用API加载收藏...')
+            const favoritesData = await getFavorites(user.id)
+            const favoriteSiteIds = favoritesData.map(f => f.site_id)
+            setFavorites(favoriteSiteIds)
+            console.log('✅ [API] 加载收藏成功:', favoriteSiteIds.length, '个')
+          } else if (dbAdapter) {
+            // 🌍 海外用户：使用adapter
+            console.log('🌍 [海外用户] 使用Adapter加载收藏...')
+            const favoriteSiteIds = await dbAdapter.getFavorites()
+            setFavorites(favoriteSiteIds)
+            console.log('✅ [DB] 加载收藏成功:', favoriteSiteIds.length, '个')
+          }
         } catch (error) {
           console.error('❌ [DB] 加载收藏失败:', error)
         }
@@ -412,7 +426,7 @@ export default function SiteHub() {
     }
 
     loadFavorites()
-  }, [authLoading, geoLoading, user.type, user.id, dbAdapter])
+  }, [authLoading, geoLoading, user.type, user.id, dbAdapter, isChina, isHydrated])
 
   // Load custom sites from database (for authenticated users) or localStorage (for guests)
   useEffect(() => {
@@ -807,7 +821,19 @@ export default function SiteHub() {
         setSites((prev) => [...prev, siteWithId])
 
         // 添加到收藏
-        await dbAdapter.addFavorite(siteWithId.id)
+        if (isChina) {
+          // 🇨🇳 国内用户：使用API
+          await addToFavorites(user.id!, {
+            site_id: siteWithId.id,
+            site_name: siteWithId.name,
+            site_url: siteWithId.url,
+            site_icon: siteWithId.logo,
+            site_category: siteWithId.category
+          })
+        } else {
+          // 🌍 海外用户：使用adapter
+          await dbAdapter.addFavorite(siteWithId.id)
+        }
         setFavorites((prev) => [...prev, siteWithId.id])
         showToast(`${newSite.name} added to favorites! ⭐`)
         customCountRef.current += 1
@@ -891,7 +917,7 @@ export default function SiteHub() {
     }
 
     // 4. 异步同步到云端（如果已登录，不阻塞UI）
-    if (user.type === "authenticated" && user.id && dbAdapter) {
+    if (user.type === "authenticated" && user.id) {
       try {
         console.log('🔍 [Favorite] 开始云端同步:', {
           siteId,
@@ -900,15 +926,35 @@ export default function SiteHub() {
           isChina,
           hasDbAdapter: !!dbAdapter
         })
-        
-        if (isFavorited) {
-          // Remove favorite from database
-          const success = await dbAdapter.removeFavorite(siteId)
-          console.log('🔍 [Favorite] 删除收藏结果:', success)
-        } else {
-          // Add favorite to database
-          const success = await dbAdapter.addFavorite(siteId)
-          console.log('🔍 [Favorite] 添加收藏结果:', success)
+
+        if (isChina) {
+          // 🇨🇳 国内用户：使用API
+          if (isFavorited) {
+            await removeFromFavorites(user.id, siteId)
+            console.log('✅ [API] 删除收藏成功')
+          } else {
+            // 找到网站信息
+            const site = sites.find(s => s.id === siteId)
+            if (site) {
+              await addToFavorites(user.id, {
+                site_id: siteId,
+                site_name: site.name,
+                site_url: site.url,
+                site_icon: site.logo,
+                site_category: site.category
+              })
+              console.log('✅ [API] 添加收藏成功')
+            }
+          }
+        } else if (dbAdapter) {
+          // 🌍 海外用户：使用adapter
+          if (isFavorited) {
+            const success = await dbAdapter.removeFavorite(siteId)
+            console.log('🔍 [Adapter] 删除收藏结果:', success)
+          } else {
+            const success = await dbAdapter.addFavorite(siteId)
+            console.log('🔍 [Adapter] 添加收藏结果:', success)
+          }
         }
         console.log('✅ [DB] 收藏云端同步成功')
       } catch (error) {
@@ -925,13 +971,21 @@ export default function SiteHub() {
   }, [favorites, sites, language, user.type, user.id, dbAdapter, isChina, isHydrated, showToast, toastText])
 
   const removeSite = useCallback(async (siteId: string) => {
-    if (user.type === "authenticated" && user.id && dbAdapter) {
+    if (user.type === "authenticated" && user.id) {
       // Authenticated users: delete from database
-      await dbAdapter.removeCustomSite(siteId)
+      if (dbAdapter) {
+        await dbAdapter.removeCustomSite(siteId)
+      }
 
       // Also remove from favorites if it was favorited
       if (favorites.includes(siteId)) {
-        await dbAdapter.removeFavorite(siteId)
+        if (isChina) {
+          // 🇨🇳 国内用户：使用API
+          await removeFromFavorites(user.id, siteId)
+        } else if (dbAdapter) {
+          // 🌍 海外用户：使用adapter
+          await dbAdapter.removeFavorite(siteId)
+        }
         setFavorites(favorites.filter((id) => id !== siteId))
       }
 
