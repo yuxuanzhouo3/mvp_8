@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.sitehub.app",
+    "sha256_cert_fingerprints": [
+      "DF:02:52:B0:D8:17:1B:81:06:9F:26:1B:97:F3:7E:51:A3:7F:C7:02:0A:DF:E9:9C:E2:CA:2D:44:65:3B:51:F4"
+    ]
+  }
+}]
