@@ -31,7 +31,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="mornhub.help" />
+                    android:host="www.mornhub.help" />
             </intent-filter>
 
         </activity>
