@@ -94,8 +94,9 @@ export default async function handler(
         console.log(`✅ [User Created Successfully]: ID=${result.id}, Email=${email}`)
 
         // 生成 JWT Token（注册成功后自动登录）
+        // 注意：CloudBase add() 返回的 result.id 就是文档的 _id
         const tokenPayload = {
-          userId: result.id,
+          userId: result.id, // CloudBase add() 返回的 id 就是 _id
           email: email,
           region: 'china'
         }
@@ -115,7 +116,8 @@ export default async function handler(
           success: true,
           message: '注册成功',
           user: {
-            id: result.id,
+            id: result.id, // 返回给前端的用户ID
+            userId: result.id, // 确保userId字段也存在
             email,
             name: newUser.name,
             pro: false,
@@ -205,7 +207,8 @@ export default async function handler(
           success: true,
           message: '登录成功',
           user: {
-            id: user._id,
+            id: user._id, // 返回给前端的用户ID
+            userId: user._id, // 确保userId字段也存在（与JWT token中的userId一致）
             email: user.email,
             name: user.name,
             pro: user.pro || false,
