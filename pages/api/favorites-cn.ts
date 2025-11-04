@@ -24,11 +24,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const token = authHeader.substring(7)
     const decoded = verifyToken(token)
 
+    console.log('🔍 [Favorites-CN] Token decoded:', decoded)
+
     if (!decoded?.userId) {
+      console.error('❌ [Favorites-CN] Token无效或缺少userId')
       return res.status(401).json({ success: false, message: 'Token无效' })
     }
 
     const userId = decoded.userId
+    console.log('✅ [Favorites-CN] Using userId from token:', userId)
 
     // 初始化 CloudBase（使用已有依赖）
     const app = cloudbase.init({
@@ -42,7 +46,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // GET: 获取收藏列表
     if (req.method === 'GET') {
+      console.log('📖 [Favorites-CN GET] Querying favorites for userId:', userId)
       const result = await collection.where({ user_id: userId }).get()
+      console.log(`✅ [Favorites-CN GET] Found ${result.data?.length || 0} favorites`)
+      console.log('📊 [Favorites-CN GET] Data:', JSON.stringify(result.data, null, 2))
       return res.status(200).json({
         success: true,
         favorites: result.data.map((f: any) => f.site_id)
@@ -56,11 +63,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ success: false, message: '缺少siteId' })
       }
 
-      await collection.add({
+      console.log('➕ [Favorites-CN POST] Adding favorite:', { userId, siteId })
+      const addResult = await collection.add({
         user_id: userId,
         site_id: siteId,
         created_at: new Date()
       })
+      console.log('✅ [Favorites-CN POST] Favorite added successfully:', addResult)
 
       return res.status(200).json({ success: true })
     }
