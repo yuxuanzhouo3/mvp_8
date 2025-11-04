@@ -1,37 +1,24 @@
 package com.sitehub.app;
 
-import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.browser.customtabs.CustomTabsIntent;
+import com.google.androidbrowserhelper.trusted.TwaLauncherActivity;
 
 /**
  * SiteHub Android App - TWA (Trusted Web Activity)
  *
- * 功能：加载 https://mornhub.help 作为全屏应用
+ * 功能：加载 https://www.mornhub.help 作为全屏应用
  * 特点：
  * - 无地址栏，全屏体验
- * - 使用Chrome Custom Tabs（TWA模式）
+ * - 使用 TWA（Trusted Web Activity）
+ * - 通过 Digital Asset Links 验证
  * - 自动适配中文字体
- * - 支持离线Service Worker
+ * - 支持离线 Service Worker
  */
-public class MainActivity extends Activity {
-
-    private static final String SITE_URL = "https://www.mornhub.help";
+public class MainActivity extends TwaLauncherActivity {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // 创建Chrome Custom Tabs（全屏，无地址栏）
-        CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-        builder.setShowTitle(false);
-        builder.setUrlBarHidingEnabled(true);
-
-        CustomTabsIntent customTabsIntent = builder.build();
-        customTabsIntent.launchUrl(this, Uri.parse(SITE_URL));
-
-        // 启动后立即结束Activity，只保留Custom Tab
-        finish();
+    protected Uri getLaunchingUrl() {
+        return Uri.parse("https://www.mornhub.help");
     }
 }
