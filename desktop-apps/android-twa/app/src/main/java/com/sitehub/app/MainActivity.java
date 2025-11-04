@@ -1,8 +1,7 @@
 package com.sitehub.app;
 
 import android.net.Uri;
-import android.os.Bundle;
-import com.google.androidbrowserhelper.trusted.TwaLauncherActivity;
+import com.google.androidbrowserhelper.trusted.LauncherActivity;
 
 /**
  * SiteHub Android App - TWA (Trusted Web Activity)
@@ -15,7 +14,7 @@ import com.google.androidbrowserhelper.trusted.TwaLauncherActivity;
  * - 自动适配中文字体
  * - 支持离线 Service Worker
  */
-public class MainActivity extends TwaLauncherActivity {
+public class MainActivity extends LauncherActivity {
 
     @Override
     protected Uri getLaunchingUrl() {
