@@ -39,11 +39,20 @@ export interface CreateWebsiteData {
 
 export async function addCustomWebsite(userId: string, website: CreateWebsiteData): Promise<CustomWebsite> {
   const region = getUserRegion()
+  console.log('🔍 [addCustomWebsite] 用户地区:', region, '用户ID:', userId)
 
   if (region === 'china') {
     // 🇨🇳 国内用户：调用CloudBase API
     const token = localStorage.getItem('user_token')
+    console.log('🔍 [addCustomWebsite] Token存在:', !!token)
     if (!token) throw new Error('未登录')
+
+    console.log('🔍 [addCustomWebsite] 发送数据:', {
+      name: website.name,
+      url: website.url,
+      logo: website.icon || '',
+      category: website.category || 'custom'
+    })
 
     const res = await fetch('/api/custom-sites-cn', {
       method: 'POST',
@@ -60,7 +69,10 @@ export async function addCustomWebsite(userId: string, website: CreateWebsiteDat
       })
     })
 
+    console.log('🔍 [addCustomWebsite] API响应状态:', res.status)
     const result = await res.json()
+    console.log('🔍 [addCustomWebsite] API响应数据:', result)
+
     if (!result.success) {
       throw new Error(result.message || '添加自定义网站失败')
     }

@@ -203,9 +203,28 @@ const localizeSite = (site: Site, language: SupportedLanguage): Site => {
 const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
   list.map((site) => localizeSite(site, language))
 
+// 辅助函数：获取用户地区（优先使用localStorage中的用户信息）
+function getUserRegionFromStorage(): 'china' | 'overseas' | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const userInfo = localStorage.getItem('user_info')
+    if (userInfo) {
+      const user = JSON.parse(userInfo)
+      return user.region === 'china' ? 'china' : 'overseas'
+    }
+  } catch (e) {
+    console.error('获取用户地区失败:', e)
+  }
+  return null
+}
+
 export default function SiteHub() {
   const { user, loading: authLoading } = useAuth()
-  const { regionCategory, loading: geoLoading, isChina } = useGeo()
+  const { regionCategory, loading: geoLoading, isChina: geoIsChina } = useGeo()
+
+  // ✅ 优先使用localStorage中的region，其次使用IP检测
+  const userRegion = getUserRegionFromStorage()
+  const isChina = userRegion === 'china' || (userRegion === null && geoIsChina)
   
   // 处理微信登录回调
   useEffect(() => {
@@ -916,11 +935,16 @@ export default function SiteHub() {
       customCountRef.current += 1
       return true
     } catch (error) {
-      console.error("Add custom site failed:", error)
-      showToast("Failed to add site. Please try again.", "error")
+      console.error("❌ [AddSite] 添加自定义网站失败:", error)
+      if (error instanceof Error) {
+        console.error("❌ [AddSite] 错误详情:", error.message)
+        showToast(`Failed to add site: ${error.message}`, "error")
+      } else {
+        showToast("Failed to add site. Please try again.", "error")
+      }
       return false
     }
-  }, [existingUrls, user, isGuestTimeExpired, dbAdapter, isHydrated])
+  }, [existingUrls, user, isGuestTimeExpired, dbAdapter, isHydrated, isChina, showToast])
 
   const toggleFavorite = useCallback(async (siteId: string) => {
     const isFavorited = favorites.includes(siteId)
