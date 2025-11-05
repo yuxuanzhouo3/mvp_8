@@ -6,7 +6,8 @@
 
 **相关数据库集合：**
 - `web_users` - 用户表
-- `web_favorites` - 收藏表（这是你要查看的）
+- `web_favorites` - 收藏表
+- `web_custom_sites` - 自定义网站表
 - `web_subscriptions` - 订阅表
 
 ---
@@ -34,13 +35,16 @@
 - 点击左侧菜单 **数据库**
 - 选择 **集合管理**
 
-### 5. 查看收藏数据
+### 5. 查看数据
 
-点击 `web_favorites` 集合，你就可以看到所有收藏记录。
+- 点击 `web_favorites` 集合 - 查看收藏记录
+- 点击 `web_custom_sites` 集合 - 查看自定义网站记录
 
 ---
 
-## 📊 收藏表 (web_favorites) 数据结构
+## 📊 数据库表结构
+
+### 收藏表 (web_favorites)
 
 ```javascript
 {
@@ -61,11 +65,42 @@
 }
 ```
 
+### 自定义网站表 (web_custom_sites)
+
+```javascript
+{
+  "_id": "自动生成的文档ID",
+  "user_id": "用户ID（来自web_users的_id）",
+  "name": "网站名称",
+  "url": "网站URL",
+  "logo": "网站Logo URL",
+  "category": "分类（如custom、tools等）",
+  "description": "网站描述",
+  "created_at": "创建时间（Date对象）",
+  "updated_at": "更新时间（Date对象）"
+}
+```
+
+### 示例数据：
+```javascript
+{
+  "_id": "67297abc123456790",
+  "user_id": "67297123abc456def",
+  "name": "我的工具",
+  "url": "https://example.com",
+  "logo": "https://example.com/logo.png",
+  "category": "custom",
+  "description": "一个很棒的工具网站",
+  "created_at": ISODate("2025-11-05T09:00:00.000Z"),
+  "updated_at": ISODate("2025-11-05T09:00:00.000Z")
+}
+```
+
 ---
 
-## 🔍 如何验证收藏功能
+## 🔍 如何验证功能
 
-### 测试步骤：
+### 测试收藏功能：
 
 1. **清空现有数据（可选）**
    - 在 `web_favorites` 集合中，删除测试用户的所有记录
@@ -84,6 +119,27 @@
 4. **再次登录验证**
    - 重新登录同一账号
    - 检查收藏是否显示
+   - 同时在数据库中确认数据依然存在
+
+### 测试自定义网站功能：
+
+1. **清空现有数据（可选）**
+   - 在 `web_custom_sites` 集合中，删除测试用户的所有记录
+   - 或者记录当前的数据条数
+
+2. **在官网操作**
+   - 注册/登录一个测试账号（记住邮箱）
+   - 添加2-3个自定义网站（输入名称、URL）
+   - 退出登录
+
+3. **查看数据库**
+   - 刷新 CloudBase 控制台的 `web_custom_sites` 集合
+   - 应该看到新增的记录
+   - 检查 `user_id`、`name`、`url` 字段是否正确
+
+4. **再次登录验证**
+   - 重新登录同一账号
+   - 检查自定义网站是否显示
    - 同时在数据库中确认数据依然存在
 
 ---
