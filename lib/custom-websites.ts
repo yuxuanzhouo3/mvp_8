@@ -1,5 +1,22 @@
 import { supabase } from './supabase'
 
+// 获取用户地区
+function getUserRegion(): 'china' | 'overseas' {
+  if (typeof window === 'undefined') return 'overseas'
+
+  try {
+    const userInfo = localStorage.getItem('user_info')
+    if (userInfo) {
+      const user = JSON.parse(userInfo)
+      return user.region === 'china' ? 'china' : 'overseas'
+    }
+  } catch (e) {
+    console.error('获取用户地区失败:', e)
+  }
+
+  return 'overseas'
+}
+
 export interface CustomWebsite {
   id: string
   user_id: string
@@ -21,39 +38,117 @@ export interface CreateWebsiteData {
 }
 
 export async function addCustomWebsite(userId: string, website: CreateWebsiteData): Promise<CustomWebsite> {
-  const { data, error } = await supabase
-    .from('custom_websites')
-    .insert({
-      user_id: userId,
-      name: website.name,
-      url: website.url,
-      icon: website.icon,
-      category: website.category || 'custom',
-      sort_order: 0
+  const region = getUserRegion()
+
+  if (region === 'china') {
+    // 🇨🇳 国内用户：调用CloudBase API
+    const token = localStorage.getItem('user_token')
+    if (!token) throw new Error('未登录')
+
+    const res = await fetch('/api/custom-sites-cn', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: website.name,
+        url: website.url,
+        logo: website.icon || '',
+        category: website.category || 'custom',
+        description: ''
+      })
     })
-    .select()
-    .single()
 
-  if (error) {
-    throw new Error(`Failed to add website: ${error.message}`)
+    const result = await res.json()
+    if (!result.success) {
+      throw new Error(result.message || '添加自定义网站失败')
+    }
+
+    // 转换为统一格式
+    return {
+      id: result.site.id,
+      user_id: result.site.user_id,
+      name: result.site.name,
+      url: result.site.url,
+      icon: result.site.logo,
+      category: result.site.category,
+      is_favorite: false,
+      sort_order: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  } else {
+    // 🌍 海外用户：使用Supabase
+    const { data, error } = await supabase
+      .from('custom_websites')
+      .insert({
+        user_id: userId,
+        name: website.name,
+        url: website.url,
+        icon: website.icon,
+        category: website.category || 'custom',
+        sort_order: 0
+      })
+      .select()
+      .single()
+
+    if (error) {
+      throw new Error(`Failed to add website: ${error.message}`)
+    }
+
+    return data
   }
-
-  return data
 }
 
 export async function getCustomWebsites(userId: string): Promise<CustomWebsite[]> {
-  const { data, error } = await supabase
-    .from('custom_websites')
-    .select('*')
-    .eq('user_id', userId)
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: false })
+  const region = getUserRegion()
 
-  if (error) {
-    throw new Error(`Failed to fetch websites: ${error.message}`)
+  if (region === 'china') {
+    // 🇨🇳 国内用户：调用CloudBase API
+    const token = localStorage.getItem('user_token')
+    if (!token) throw new Error('未登录')
+
+    const res = await fetch('/api/custom-sites-cn', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    const result = await res.json()
+    if (!result.success) {
+      throw new Error(result.message || '获取自定义网站失败')
+    }
+
+    // 转换CloudBase格式到统一格式
+    return (result.sites || []).map((site: any) => ({
+      id: site._id,
+      user_id: site.user_id,
+      name: site.name,
+      url: site.url,
+      icon: site.logo,
+      category: site.category || 'custom',
+      is_favorite: false,
+      sort_order: 0,
+      created_at: site.created_at,
+      updated_at: site.updated_at
+    }))
+  } else {
+    // 🌍 海外用户：使用Supabase
+    const { data, error } = await supabase
+      .from('custom_websites')
+      .select('*')
+      .eq('user_id', userId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      throw new Error(`Failed to fetch websites: ${error.message}`)
+    }
+
+    return data || []
   }
-
-  return data || []
 }
 
 export async function updateCustomWebsite(
@@ -82,13 +177,36 @@ export async function updateCustomWebsite(
 }
 
 export async function deleteCustomWebsite(websiteId: string): Promise<void> {
-  const { error } = await supabase
-    .from('custom_websites')
-    .delete()
-    .eq('id', websiteId)
+  const region = getUserRegion()
 
-  if (error) {
-    throw new Error(`Failed to delete website: ${error.message}`)
+  if (region === 'china') {
+    // 🇨🇳 国内用户：调用CloudBase API
+    const token = localStorage.getItem('user_token')
+    if (!token) throw new Error('未登录')
+
+    const res = await fetch('/api/custom-sites-cn', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ siteId: websiteId })
+    })
+
+    const result = await res.json()
+    if (!result.success) {
+      throw new Error(result.message || '删除自定义网站失败')
+    }
+  } else {
+    // 🌍 海外用户：使用Supabase
+    const { error } = await supabase
+      .from('custom_websites')
+      .delete()
+      .eq('id', websiteId)
+
+    if (error) {
+      throw new Error(`Failed to delete website: ${error.message}`)
+    }
   }
 }
 

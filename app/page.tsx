@@ -36,6 +36,7 @@ import { zhProducts, zhSites } from "@/lib/sitehub-data/zh-localization"
 import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
 import { createDatabaseAdapter, type IDatabaseAdapter } from "@/lib/database/adapter"
 import { getFavorites, addToFavorites, removeFromFavorites, type CreateFavoriteData } from "@/lib/favorites"
+import { getCustomWebsites, addCustomWebsite, deleteCustomWebsite, type CreateWebsiteData } from "@/lib/custom-websites"
 
 interface Site {
   id: string
@@ -434,17 +435,31 @@ export default function SiteHub() {
       // 只有在hydration完成且不是loading状态时才加载
       if (authLoading || geoLoading) return
       
-      if (user.type === "authenticated" && user.id && dbAdapter) {
-        // Authenticated users: load custom sites from database adapter
+      if (user.type === "authenticated" && user.id) {
+        // Authenticated users: load custom sites
+        // - 国内用户：使用 API（通过 lib/custom-websites.ts）
+        // - 海外用户：使用 adapter（CloudBase或Supabase客户端SDK）
         try {
-          const data = await dbAdapter.getCustomSites()
+          let data: any[] = []
+
+          if (isChina) {
+            // 🇨🇳 国内用户：调用API
+            console.log('🇨🇳 [中国用户] 使用API加载自定义网站...')
+            data = await getCustomWebsites(user.id)
+            console.log('✅ [API] 加载自定义网站成功:', data.length, '个')
+          } else if (dbAdapter) {
+            // 🌍 海外用户：使用adapter
+            console.log('🌍 [海外用户] 使用Adapter加载自定义网站...')
+            data = await dbAdapter.getCustomSites()
+            console.log('✅ [DB] 加载自定义网站成功:', data.length, '个')
+          }
 
           const customSites = data.map((site: any) => ({
             id: site.id || site._id,
             name: site.name,
             nameEn: site.name,
             url: site.url,
-            logo: site.logo || "",
+            logo: site.logo || site.icon || "",
             category: site.category || "tools",
             custom: true,
             featured: false,
@@ -456,8 +471,6 @@ export default function SiteHub() {
           const mergedSites = [...defaultSites, ...customSites]
           const normalizedSites = normalizeSites(mergedSites)
           setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
-
-          console.log('✅ [DB] 加载自定义网站成功:', customSites.length, '个')
 
           // Migrate localStorage custom sites to database if exists
           if (isHydrated && typeof window !== 'undefined') {
@@ -471,12 +484,23 @@ export default function SiteHub() {
               // Check if site already exists
               const exists = data.some((s: any) => s.url === site.url)
               if (!exists) {
-                await dbAdapter.addCustomSite({
-                  name: site.name,
-                  url: site.url,
-                  logo: site.logo,
-                  category: site.category,
-                })
+                if (isChina) {
+                  // 🇨🇳 国内用户：使用API
+                  await addCustomWebsite(user.id, {
+                    name: site.name,
+                    url: site.url,
+                    icon: site.logo,
+                    category: site.category,
+                  })
+                } else if (dbAdapter) {
+                  // 🌍 海外用户：使用adapter
+                  await dbAdapter.addCustomSite({
+                    name: site.name,
+                    url: site.url,
+                    logo: site.logo,
+                    category: site.category,
+                  })
+                }
               }
             }
                 // Clear localStorage after migration
@@ -786,27 +810,42 @@ export default function SiteHub() {
     }
 
     try {
-      if (user.type === "authenticated" && user.id && dbAdapter) {
-        console.log('🔍 [AddSite] 使用数据库适配器添加网站，用户ID:', user.id)
-        
-        // 使用数据库适配器添加网站
-        const success = await dbAdapter.addCustomSite({
-          name: newSite.name,
-          url: newSite.url,
-          logo: newSite.logo,
-          category: "tools",
-        })
+      if (user.type === "authenticated" && user.id) {
+        console.log('🔍 [AddSite] 添加自定义网站，用户ID:', user.id, '地区:', isChina ? '国内' : '海外')
 
-        if (!success) {
-          throw new Error('Failed to add custom site to database')
-        }
+        let addedSite: any
 
-        // 重新加载网站列表以获取新添加的网站
-        const customSites = await dbAdapter.getCustomSites()
-        const addedSite = customSites.find((s: any) => s.url === newSite.url)
+        if (isChina) {
+          // 🇨🇳 国内用户：使用API
+          const result = await addCustomWebsite(user.id, {
+            name: newSite.name,
+            url: newSite.url,
+            icon: newSite.logo,
+            category: "tools"
+          })
+          addedSite = result
+          console.log('✅ [API] 添加自定义网站成功')
+        } else if (dbAdapter) {
+          // 🌍 海外用户：使用adapter
+          const success = await dbAdapter.addCustomSite({
+            name: newSite.name,
+            url: newSite.url,
+            logo: newSite.logo,
+            category: "tools",
+          })
 
-        if (!addedSite) {
-          throw new Error('Added site not found in database')
+          if (!success) {
+            throw new Error('Failed to add custom site to database')
+          }
+
+          // 重新加载网站列表以获取新添加的网站
+          const customSites = await dbAdapter.getCustomSites()
+          addedSite = customSites.find((s: any) => s.url === newSite.url)
+
+          if (!addedSite) {
+            throw new Error('Added site not found in database')
+          }
+          console.log('✅ [Adapter] 添加自定义网站成功')
         }
 
         const siteWithId: Site = {
@@ -830,7 +869,7 @@ export default function SiteHub() {
             site_icon: siteWithId.logo,
             site_category: siteWithId.category
           })
-        } else {
+        } else if (dbAdapter) {
           // 🌍 海外用户：使用adapter
           await dbAdapter.addFavorite(siteWithId.id)
         }
@@ -973,7 +1012,11 @@ export default function SiteHub() {
   const removeSite = useCallback(async (siteId: string) => {
     if (user.type === "authenticated" && user.id) {
       // Authenticated users: delete from database
-      if (dbAdapter) {
+      if (isChina) {
+        // 🇨🇳 国内用户：使用API删除自定义网站
+        await deleteCustomWebsite(siteId)
+      } else if (dbAdapter) {
+        // 🌍 海外用户：使用adapter
         await dbAdapter.removeCustomSite(siteId)
       }
 
