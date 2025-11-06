@@ -81,7 +81,7 @@ export function GeoProvider({ children }: GeoProviderProps) {
 
       // ✅ 添加超时控制，防止外部 API 过慢导致页面卡住
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5秒超时
+      const timeoutId = setTimeout(() => controller.abort(), 2000) // 2秒超时（性能优化）
 
       try {
         const response = await fetch('/api/geo/detect', {

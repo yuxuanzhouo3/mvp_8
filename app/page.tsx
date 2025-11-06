@@ -222,9 +222,11 @@ export default function SiteHub() {
   const { user, loading: authLoading } = useAuth()
   const { regionCategory, loading: geoLoading, isChina: geoIsChina } = useGeo()
 
-  // ✅ 优先使用localStorage中的region，其次使用IP检测
-  const userRegion = getUserRegionFromStorage()
-  const isChina = userRegion === 'china' || (userRegion === null && geoIsChina)
+  // ✅ 性能优化：使用 useMemo 缓存地区检测结果，避免每次渲染都解析 localStorage
+  const isChina = React.useMemo(() => {
+    const userRegion = getUserRegionFromStorage()
+    return userRegion === 'china' || (userRegion === null && geoIsChina)
+  }, [geoIsChina]) // 只在 geoIsChina 改变时重新计算
   
   // 处理微信登录回调
   useEffect(() => {
@@ -402,33 +404,121 @@ export default function SiteHub() {
     initAdapter()
   }, [authLoading, geoLoading, user.type, user.id, isChina])
 
-  // Load favorites from database (for authenticated users) or localStorage (for guests)
+  // ✅ 性能优化：合并收藏和自定义网站的加载，使用 Promise.all 并行请求
   useEffect(() => {
-    async function loadFavorites() {
+    async function loadUserData() {
       // 只有在hydration完成且不是loading状态时才加载
       if (authLoading || geoLoading) return
 
       if (user.type === "authenticated" && user.id) {
-        // Authenticated users:
-        // - 国内用户：使用 API（通过 lib/favorites.ts）
-        // - 海外用户：使用 adapter（CloudBase或Supabase客户端SDK）
+        // Authenticated users: 并行加载收藏和自定义网站
         try {
-          if (isChina) {
-            // 🇨🇳 国内用户：调用服务端API
-            console.log('🇨🇳 [中国用户] 使用API加载收藏...')
-            const favoritesData = await getFavorites(user.id)
-            const favoriteSiteIds = favoritesData.map(f => f.site_id)
-            setFavorites(favoriteSiteIds)
-            console.log('✅ [API] 加载收藏成功:', favoriteSiteIds.length, '个')
-          } else if (dbAdapter) {
-            // 🌍 海外用户：使用adapter
-            console.log('🌍 [海外用户] 使用Adapter加载收藏...')
-            const favoriteSiteIds = await dbAdapter.getFavorites()
-            setFavorites(favoriteSiteIds)
-            console.log('✅ [DB] 加载收藏成功:', favoriteSiteIds.length, '个')
+          const loadPromises: Promise<any>[] = []
+
+          // 准备收藏加载
+          const favoritesPromise = (async () => {
+            if (isChina) {
+              console.log('🇨🇳 [中国用户] 使用API加载收藏...')
+              const favoritesData = await getFavorites(user.id)
+              const favoriteSiteIds = favoritesData.map(f => f.site_id)
+              console.log('✅ [API] 加载收藏成功:', favoriteSiteIds.length, '个')
+              return { type: 'favorites', data: favoriteSiteIds }
+            } else if (dbAdapter) {
+              console.log('🌍 [海外用户] 使用Adapter加载收藏...')
+              const favoriteSiteIds = await dbAdapter.getFavorites()
+              console.log('✅ [DB] 加载收藏成功:', favoriteSiteIds.length, '个')
+              return { type: 'favorites', data: favoriteSiteIds }
+            }
+            return { type: 'favorites', data: [] }
+          })()
+
+          // 准备自定义网站加载
+          const sitesPromise = (async () => {
+            if (isChina) {
+              console.log('🇨🇳 [中国用户] 使用API加载自定义网站...')
+              const data = await getCustomWebsites(user.id)
+              console.log('✅ [API] 加载自定义网站成功:', data.length, '个')
+              return { type: 'sites', data }
+            } else if (dbAdapter) {
+              console.log('🌍 [海外用户] 使用Adapter加载自定义网站...')
+              const data = await dbAdapter.getCustomSites()
+              console.log('✅ [DB] 加载自定义网站成功:', data.length, '个')
+              return { type: 'sites', data }
+            }
+            return { type: 'sites', data: [] }
+          })()
+
+          // ✅ 并行执行两个请求，显著减少加载时间
+          const [favoritesResult, sitesResult] = await Promise.all([
+            favoritesPromise.catch(err => {
+              console.error('❌ [DB] 加载收藏失败:', err)
+              return { type: 'favorites', data: [] }
+            }),
+            sitesPromise.catch(err => {
+              console.error('❌ [DB] 加载自定义网站失败:', err)
+              return { type: 'sites', data: [] }
+            })
+          ])
+
+          // 更新状态
+          setFavorites(favoritesResult.data)
+
+          const customSites = sitesResult.data.map((site: any) => ({
+            id: site.id || site._id,
+            name: site.name,
+            nameEn: site.name,
+            url: site.url,
+            logo: site.logo || site.icon || "",
+            category: site.category || "tools",
+            custom: true,
+            featured: false,
+            isChina: false,
+          }))
+
+          const defaultSites = getDefaultSites()
+          const mergedSites = [...defaultSites, ...customSites]
+          const normalizedSites = normalizeSites(mergedSites)
+          setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
+
+          // ✅ 性能优化：异步迁移 localStorage 数据，不阻塞主渲染
+          if (isHydrated && typeof window !== 'undefined') {
+            const localSites = localStorage.getItem("sitehub-sites")
+            if (localSites) {
+              setTimeout(async () => {
+                try {
+                  const localSitesData = JSON.parse(localSites)
+                  const customLocalSites = localSitesData.filter((s: Site) => s.custom)
+
+                  for (const site of customLocalSites) {
+                    const exists = sitesResult.data.some((s: any) => s.url === site.url)
+                    if (!exists) {
+                      if (isChina) {
+                        await addCustomWebsite(user.id, {
+                          name: site.name,
+                          url: site.url,
+                          icon: site.logo,
+                          category: site.category,
+                        })
+                      } else if (dbAdapter) {
+                        await dbAdapter.addCustomSite({
+                          name: site.name,
+                          url: site.url,
+                          logo: site.logo,
+                          category: site.category,
+                        })
+                      }
+                    }
+                  }
+                  localStorage.removeItem("sitehub-sites")
+                  console.log('✅ [DB] localStorage自定义网站已迁移到数据库')
+                } catch (error) {
+                  console.error('❌ [DB] 迁移localStorage自定义网站失败:', error)
+                }
+              }, 0) // 延迟到下一个事件循环执行，不阻塞主线程
+            }
           }
         } catch (error) {
-          console.error('❌ [DB] 加载收藏失败:', error)
+          console.error('❌ [DB] 加载用户数据失败:', error)
         }
       } else {
         // Guest users: use localStorage
@@ -441,101 +531,7 @@ export default function SiteHub() {
               console.error('❌ [LocalStorage] 解析收藏失败:', error)
             }
           }
-        }
-      }
-    }
 
-    loadFavorites()
-  }, [authLoading, geoLoading, user.type, user.id, dbAdapter, isChina, isHydrated])
-
-  // Load custom sites from database (for authenticated users) or localStorage (for guests)
-  useEffect(() => {
-    async function loadSites() {
-      // 只有在hydration完成且不是loading状态时才加载
-      if (authLoading || geoLoading) return
-      
-      if (user.type === "authenticated" && user.id) {
-        // Authenticated users: load custom sites
-        // - 国内用户：使用 API（通过 lib/custom-websites.ts）
-        // - 海外用户：使用 adapter（CloudBase或Supabase客户端SDK）
-        try {
-          let data: any[] = []
-
-          if (isChina) {
-            // 🇨🇳 国内用户：调用API
-            console.log('🇨🇳 [中国用户] 使用API加载自定义网站...')
-            data = await getCustomWebsites(user.id)
-            console.log('✅ [API] 加载自定义网站成功:', data.length, '个')
-          } else if (dbAdapter) {
-            // 🌍 海外用户：使用adapter
-            console.log('🌍 [海外用户] 使用Adapter加载自定义网站...')
-            data = await dbAdapter.getCustomSites()
-            console.log('✅ [DB] 加载自定义网站成功:', data.length, '个')
-          }
-
-          const customSites = data.map((site: any) => ({
-            id: site.id || site._id,
-            name: site.name,
-            nameEn: site.name,
-            url: site.url,
-            logo: site.logo || site.icon || "",
-            category: site.category || "tools",
-            custom: true,
-            featured: false,
-            isChina: false,
-          }))
-
-          // Merge default sites with custom sites
-          const defaultSites = getDefaultSites()
-          const mergedSites = [...defaultSites, ...customSites]
-          const normalizedSites = normalizeSites(mergedSites)
-          setSites(localizeSites(prioritizeSitesByRegion(normalizedSites, regionCategory), language))
-
-          // Migrate localStorage custom sites to database if exists
-          if (isHydrated && typeof window !== 'undefined') {
-            const localSites = localStorage.getItem("sitehub-sites")
-            if (localSites) {
-              try {
-                const localSitesData = JSON.parse(localSites)
-            const customLocalSites = localSitesData.filter((s: Site) => s.custom)
-
-            for (const site of customLocalSites) {
-              // Check if site already exists
-              const exists = data.some((s: any) => s.url === site.url)
-              if (!exists) {
-                if (isChina) {
-                  // 🇨🇳 国内用户：使用API
-                  await addCustomWebsite(user.id, {
-                    name: site.name,
-                    url: site.url,
-                    icon: site.logo,
-                    category: site.category,
-                  })
-                } else if (dbAdapter) {
-                  // 🌍 海外用户：使用adapter
-                  await dbAdapter.addCustomSite({
-                    name: site.name,
-                    url: site.url,
-                    logo: site.logo,
-                    category: site.category,
-                  })
-                }
-              }
-            }
-                // Clear localStorage after migration
-                localStorage.removeItem("sitehub-sites")
-                console.log('✅ [DB] localStorage自定义网站已迁移到数据库')
-              } catch (error) {
-                console.error('❌ [DB] 迁移localStorage自定义网站失败:', error)
-              }
-            }
-          }
-        } catch (error) {
-          console.error('❌ [DB] 加载自定义网站失败:', error)
-        }
-      } else {
-        // Guest users: use localStorage
-        if (isHydrated && typeof window !== 'undefined') {
           const savedSites = localStorage.getItem("sitehub-sites")
           if (savedSites) {
             try {
@@ -556,7 +552,7 @@ export default function SiteHub() {
       }
     }
 
-    loadSites()
+    loadUserData()
 
     // Load shuffle preference
     if (isHydrated && typeof window !== 'undefined') {
@@ -584,7 +580,7 @@ export default function SiteHub() {
         }
       }
     }
-  }, [authLoading, geoLoading, user.type, user.id, dbAdapter, regionCategory, language])
+  }, [authLoading, geoLoading, user.type, user.id, dbAdapter, isChina, isHydrated, regionCategory, language])
 
   useEffect(() => {
     if (geoLoading) {
