@@ -54,12 +54,24 @@ export function isWebView(): boolean {
 /**
  * 检测WebView的具体类型
  */
-export function getWebViewType(): 'android' | 'ios' | 'electron' | 'wechat' | 'tauri' | 'capacitor' | 'browser' | 'unknown' {
+export function getWebViewType(): 'android' | 'ios' | 'electron' | 'wechat' | 'tauri' | 'capacitor' | 'median' | 'nativeify' | 'browser' | 'unknown' {
   if (typeof window === 'undefined') {
     return 'unknown'
   }
 
   const userAgent = navigator.userAgent || ''
+
+  // 检测 median.co (iOS/Android)
+  // median.co 会注入特定的全局对象或 User-Agent 标识
+  if ((window as any).median || /median/i.test(userAgent) || /gonative/i.test(userAgent)) {
+    return 'median'
+  }
+
+  // 检测 nativeify (Electron-based, Mac/Windows/Linux)
+  // nativeify 基于 Electron，但可能有自定义标识
+  if ((window as any).nativeify || (/Electron/i.test(userAgent) && (window as any).process?.versions?.electron)) {
+    return 'nativeify'
+  }
 
   // 检测 Tauri
   if ((window as any).__TAURI__) {
@@ -106,15 +118,28 @@ export function getPlatform(): 'ios' | 'android' | 'desktop' | 'web' {
   switch (type) {
     case 'ios':
     case 'capacitor':
-      return 'ios'
+    case 'median': // median.co 支持 iOS/Android
+      return getMedianPlatform() // 需要进一步判断median是iOS还是Android
     case 'android':
       return 'android'
     case 'tauri':
     case 'electron':
+    case 'nativeify': // nativeify 是桌面端
       return 'desktop'
     default:
       return 'web'
   }
+}
+
+/**
+ * 判断 median.co 的具体平台
+ */
+function getMedianPlatform(): 'ios' | 'android' {
+  const userAgent = navigator.userAgent || ''
+  if (/(iPhone|iPod|iPad)/i.test(userAgent)) {
+    return 'ios'
+  }
+  return 'android'
 }
 
 /**
@@ -194,12 +219,22 @@ export async function openInWebView(url: string, options: WebViewLinkOptions = {
     return
   }
 
-  console.log(`[openInWebView] 平台: ${platform}, URL: ${url}`)
+  console.log(`[openInWebView] 平台: ${platform}, WebView类型: ${getWebViewType()}, URL: ${url}`)
+
+  const webViewType = getWebViewType()
 
   // 根据平台选择打开方式
   switch (platform) {
     case 'ios':
     case 'android':
+      // 🎯 median.co (iOS/Android) - 在当前WebView打开，不跳出App
+      if (webViewType === 'median') {
+        console.log('[openInWebView] median.co 检测到，在当前WebView打开')
+        // median.co: 直接在当前窗口打开，不会跳出App
+        window.location.href = url
+        return
+      }
+
       // Capacitor InAppBrowser
       if ((window as any).Capacitor?.Plugins?.Browser) {
         try {
@@ -214,19 +249,30 @@ export async function openInWebView(url: string, options: WebViewLinkOptions = {
           console.error('[openInWebView] Capacitor Browser 失败:', error)
         }
       }
+
       // Fallback: 当前窗口打开
+      console.log('[openInWebView] 使用 Fallback: 当前窗口打开')
       window.location.href = url
       break
 
     case 'desktop':
+      // 🎯 nativeify (Mac/Windows/Linux) - 在当前窗口打开，不跳出App
+      if (webViewType === 'nativeify') {
+        console.log('[openInWebView] nativeify 检测到，在当前WebView打开')
+        // nativeify: 直接在当前窗口打开，不会跳到系统浏览器
+        window.location.href = url
+        return
+      }
+
       // Tauri - 稍后在下一个任务中实现
       if ((window as any).__TAURI__) {
-        console.log('[openInWebView] Tauri 环境检测到，使用窗口打开')
+        console.log('[openInWebView] Tauri 环境检测到，在当前窗口打开')
         // 临时方案：在当前窗口打开
         // TODO: 实现 Tauri 多窗口方案
         window.location.href = url
       } else {
         // Electron 或其他桌面环境
+        console.log('[openInWebView] Electron/其他桌面环境，在当前窗口打开')
         window.location.href = url
       }
       break
@@ -234,6 +280,7 @@ export async function openInWebView(url: string, options: WebViewLinkOptions = {
     case 'web':
     default:
       // 浏览器环境：新标签页打开
+      console.log('[openInWebView] 浏览器环境，新标签页打开')
       window.open(url, '_blank', 'noopener,noreferrer')
       break
   }
