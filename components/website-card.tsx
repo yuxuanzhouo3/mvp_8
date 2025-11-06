@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ExternalLink, Star, Shield } from "lucide-react"
+import { openInWebView } from "@/lib/webview-utils"
 
 interface Site {
   id: string
@@ -25,21 +26,16 @@ interface WebsiteCardProps {
 }
 
 export function WebsiteCard({ site, onClick }: WebsiteCardProps) {
-  const handleVisit = (e: React.MouseEvent) => {
+  const handleVisit = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
-    // 检测是否在APP/WebView中
-    const isInApp = window.navigator.userAgent.includes('wv') ||
-                    window.navigator.userAgent.includes('WebView') ||
-                    (window as any).AndroidInterface !== undefined ||
-                    (window as any).webkit?.messageHandlers !== undefined
-
-    if (isInApp) {
-      // 在APP内直接跳转（同一个窗口）
+    // ✅ 使用统一的多端链接处理函数
+    try {
+      await openInWebView(site.url)
+    } catch (error) {
+      console.error('[WebsiteCard] 打开链接失败:', error)
+      // Fallback: 直接跳转
       window.location.href = site.url
-    } else {
-      // 在浏览器中新标签打开
-      window.open(site.url, "_blank")
     }
   }
 

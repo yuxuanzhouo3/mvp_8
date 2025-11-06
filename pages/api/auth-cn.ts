@@ -101,8 +101,8 @@ export default async function handler(
           region: 'china'
         }
 
-        // 动态设置 Token 有效期：普通用户 7 天，高级会员 30 天
-        const expiresIn = newUser.pro ? '30d' : '7d'
+        // ✅ 动态设置 Token 有效期：普通用户 30 天，高级会员 90 天（多端持久化优化）
+        const expiresIn = newUser.pro ? '90d' : '30d'
 
         const token = jwt.sign(
           tokenPayload,
@@ -192,8 +192,8 @@ export default async function handler(
           region: 'china'
         }
 
-        // 动态设置 Token 有效期：普通用户 7 天，高级会员 30 天
-        const expiresIn = user.pro ? '30d' : '7d'
+        // ✅ 动态设置 Token 有效期：普通用户 30 天，高级会员 90 天（多端持久化优化）
+        const expiresIn = user.pro ? '90d' : '30d'
 
         const token = jwt.sign(
           tokenPayload,
@@ -223,10 +223,71 @@ export default async function handler(
           message: error.message || '邮箱或密码错误'
         })
       }
+    } else if (action === 'refresh') {
+      // ✅ Token刷新逻辑
+      try {
+        const { userId } = req.body
+
+        if (!userId) {
+          return res.status(400).json({
+            success: false,
+            message: '缺少 userId 参数'
+          })
+        }
+
+        console.log(`🔄 [Token Refresh]: 开始刷新用户 ${userId} 的Token`)
+
+        // 从CloudBase获取用户信息
+        const cloudbaseDB = cloudbaseApp.database()
+        const userResult = await cloudbaseDB
+          .collection('web_users')
+          .doc(userId)
+          .get()
+
+        if (!userResult.data || userResult.data.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: '用户不存在'
+          })
+        }
+
+        const user = userResult.data[0]
+
+        // 生成新的JWT Token
+        const tokenPayload = {
+          userId: user._id,
+          email: user.email,
+          region: 'china'
+        }
+
+        // ✅ 根据用户会员状态设置有效期
+        const expiresIn = user.pro ? '90d' : '30d'
+
+        const newToken = jwt.sign(
+          tokenPayload,
+          process.env.JWT_SECRET || 'fallback-secret-key-for-development-only',
+          { expiresIn: expiresIn }
+        )
+
+        console.log(`✅ [Token Refreshed]: For user ${user.email}, expires in ${expiresIn}`)
+
+        return res.status(200).json({
+          success: true,
+          message: 'Token刷新成功',
+          token: newToken,
+          expiresIn: expiresIn
+        })
+      } catch (error: any) {
+        console.error('Token刷新错误:', error)
+        return res.status(400).json({
+          success: false,
+          message: error.message || 'Token刷新失败'
+        })
+      }
     } else {
       return res.status(400).json({
         success: false,
-        message: '无效的 action 参数，请使用 signup 或 login'
+        message: '无效的 action 参数，请使用 signup, login 或 refresh'
       })
     }
 

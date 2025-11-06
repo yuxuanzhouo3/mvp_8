@@ -90,16 +90,18 @@ export async function GET(req: NextRequest) {
       }
 
       let userId: string
+      let isPro = false
 
       if (existingUser.data && existingUser.data.length > 0) {
         // 更新现有用户
         userId = existingUser.data[0]._id
+        isPro = existingUser.data[0].pro || false // 保留原有会员状态
         await cloudbaseDB
           .collection('web_users')
           .doc(userId)
           .update(userData)
 
-        console.log('✅ 更新微信用户成功:', userId)
+        console.log('✅ 更新微信用户成功:', userId, isPro ? '(会员)' : '(普通用户)')
       } else {
         // 创建新用户
         const result = await cloudbaseDB
@@ -122,10 +124,13 @@ export async function GET(req: NextRequest) {
         loginType: 'wechat'
       }
 
+      // ✅ 动态设置 Token 有效期：普通用户 30 天，高级会员 90 天（多端持久化优化）
+      const expiresIn = isPro ? '90d' : '30d'
+
       const token = jwt.sign(
         tokenPayload,
         process.env.JWT_SECRET || 'fallback-secret-key-for-development-only',
-        { expiresIn: '7d' } // 7天有效期
+        { expiresIn: expiresIn }
       )
 
       console.log('✅ [JWT Token Generated]: For WeChat user', userInfo.nickname)

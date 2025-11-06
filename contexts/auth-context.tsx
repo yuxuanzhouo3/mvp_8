@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { sessionManager } from '@/lib/session-manager'
+import { AuthTokenManager } from '@/lib/auth-token-manager'
 
 interface CustomUser {
   type: "guest" | "authenticated"
@@ -50,7 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const userInfo = JSON.parse(userInfoStr)
             console.log("✅ [Session Restore]: Found JWT session, restoring user:", userInfo.email)
-            
+
+            // ✅ 检查并刷新Token（多端持久化优化）
+            await AuthTokenManager.checkAndRefreshToken()
+
             // 创建国内用户对象
             const customUser: CustomUser = {
               type: "authenticated",

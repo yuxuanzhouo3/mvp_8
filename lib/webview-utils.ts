@@ -54,12 +54,25 @@ export function isWebView(): boolean {
 /**
  * 检测WebView的具体类型
  */
-export function getWebViewType(): 'android' | 'ios' | 'electron' | 'wechat' | 'browser' | 'unknown' {
+export function getWebViewType(): 'android' | 'ios' | 'electron' | 'wechat' | 'tauri' | 'capacitor' | 'browser' | 'unknown' {
   if (typeof window === 'undefined') {
     return 'unknown'
   }
 
   const userAgent = navigator.userAgent || ''
+
+  // 检测 Tauri
+  if ((window as any).__TAURI__) {
+    return 'tauri'
+  }
+
+  // 检测 Capacitor
+  if ((window as any).Capacitor) {
+    const platform = (window as any).Capacitor.getPlatform()
+    if (platform === 'ios') return 'ios'
+    if (platform === 'android') return 'android'
+    return 'capacitor'
+  }
 
   if (/MicroMessenger/i.test(userAgent)) {
     return 'wechat'
@@ -82,6 +95,26 @@ export function getWebViewType(): 'android' | 'ios' | 'electron' | 'wechat' | 'b
   }
 
   return 'unknown'
+}
+
+/**
+ * 获取运行平台（简化版）
+ */
+export function getPlatform(): 'ios' | 'android' | 'desktop' | 'web' {
+  const type = getWebViewType()
+
+  switch (type) {
+    case 'ios':
+    case 'capacitor':
+      return 'ios'
+    case 'android':
+      return 'android'
+    case 'tauri':
+    case 'electron':
+      return 'desktop'
+    default:
+      return 'web'
+  }
 }
 
 /**
@@ -134,9 +167,10 @@ export interface WebViewLinkOptions {
 }
 
 /**
- * 在WebView环境中处理链接点击
+ * ✅ 统一的链接打开函数（多端支持）
+ * 在 App 内打开链接，而不是跳转到外部浏览器
  */
-export function handleWebViewLink(url: string, options: WebViewLinkOptions = {}): void {
+export async function openInWebView(url: string, options: WebViewLinkOptions = {}): Promise<void> {
   const { forceInternal = false, forceExternal = false, customHandler } = options
 
   // 如果有自定义处理函数，优先使用
@@ -145,30 +179,75 @@ export function handleWebViewLink(url: string, options: WebViewLinkOptions = {})
     return
   }
 
-  const webViewType = getWebViewType()
+  const platform = getPlatform()
   const isInternal = isInternalLink(url)
 
-  // 策略1：内部链接在WebView内打开
+  // 内部链接直接跳转
   if (isInternal || forceInternal) {
     window.location.href = url
     return
   }
 
-  // 策略2：强制外部打开
+  // 强制外部打开
   if (forceExternal) {
-    openInExternalBrowser(url, webViewType)
+    openInExternalBrowser(url, getWebViewType())
     return
   }
 
-  // 策略3：WebView中默认在当前窗口打开（避免跳转外部浏览器）
-  if (isWebView()) {
-    // 在WebView中，用户添加的网站链接应该在新窗口打开
-    // 但由于WebView限制，我们在当前窗口打开
-    window.location.href = url
-  } else {
-    // 浏览器环境，在新标签页打开
-    window.open(url, '_blank', 'noopener,noreferrer')
+  console.log(`[openInWebView] 平台: ${platform}, URL: ${url}`)
+
+  // 根据平台选择打开方式
+  switch (platform) {
+    case 'ios':
+    case 'android':
+      // Capacitor InAppBrowser
+      if ((window as any).Capacitor?.Plugins?.Browser) {
+        try {
+          await (window as any).Capacitor.Plugins.Browser.open({
+            url: url,
+            presentationStyle: 'fullscreen',
+            toolbarColor: '#1e293b'
+          })
+          console.log('[openInWebView] 使用 Capacitor Browser 打开')
+          return
+        } catch (error) {
+          console.error('[openInWebView] Capacitor Browser 失败:', error)
+        }
+      }
+      // Fallback: 当前窗口打开
+      window.location.href = url
+      break
+
+    case 'desktop':
+      // Tauri - 稍后在下一个任务中实现
+      if ((window as any).__TAURI__) {
+        console.log('[openInWebView] Tauri 环境检测到，使用窗口打开')
+        // 临时方案：在当前窗口打开
+        // TODO: 实现 Tauri 多窗口方案
+        window.location.href = url
+      } else {
+        // Electron 或其他桌面环境
+        window.location.href = url
+      }
+      break
+
+    case 'web':
+    default:
+      // 浏览器环境：新标签页打开
+      window.open(url, '_blank', 'noopener,noreferrer')
+      break
   }
+}
+
+/**
+ * 在WebView环境中处理链接点击（旧版，保留向后兼容）
+ */
+export function handleWebViewLink(url: string, options: WebViewLinkOptions = {}): void {
+  openInWebView(url, options).catch(error => {
+    console.error('[handleWebViewLink] 打开链接失败:', error)
+    // Fallback: 使用传统方式
+    window.location.href = url
+  })
 }
 
 /**
