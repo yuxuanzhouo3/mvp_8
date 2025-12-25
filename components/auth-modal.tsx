@@ -39,6 +39,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [wechatLoading, setWechatLoading] = useState(false)  // 微信登录单独的loading状态
+  const [appleLoading, setAppleLoading] = useState(false)  // Apple登录单独的loading状态
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [showBenefits, setShowBenefits] = useState(true)
@@ -148,7 +149,8 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
   }
 
   const handleSocialAuth = async (provider: string) => {
-    setLoading(true)
+    if (provider === "google") setLoading(true)
+    if (provider === "apple") setAppleLoading(true)
     setError("")
 
     try {
@@ -167,14 +169,30 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
           setLoading(false)
         }
       }
+      else if (provider === "apple") {
+        const { data, error } = await auth.signInWithApple()
+        if (error) {
+          setError(error.message)
+          setAppleLoading(false)
+          return
+        }
+        if (data?.url) {
+          window.location.href = data.url
+        } else {
+          setError("Failed to initiate Apple OAuth")
+          setAppleLoading(false)
+        }
+      }
       else {
         setError(`${provider} authentication is temporarily disabled. Please use Google or email login.`)
         setLoading(false)
+        setAppleLoading(false)
         return
       }
     } catch (err) {
       setError(`${provider} authentication failed. Please try again.`)
       setLoading(false)
+      setAppleLoading(false)
     }
   }
 
@@ -455,13 +473,13 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
             </DialogHeader>
 
             <div className="space-y-4">
-              {/* Social Login Buttons - 海外优先显示 Google */}
+              {/* Social Login Buttons - 海外优先显示 Google 和 Apple */}
               <div className="grid gap-3">
                 <Button
                   variant="outline"
                   className="bg-white text-black hover:bg-gray-100 relative"
                   onClick={() => handleSocialAuth("google")}
-                  disabled={loading}
+                  disabled={loading || appleLoading}
                 >
                   {loading ? (
                     <>
@@ -472,6 +490,27 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
                     <>
                       <Chrome className="w-4 h-4 mr-2" />
                       <span>{mode === "login" ? t.login.googleButton : t.signup.googleButton}</span>
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="bg-black text-white hover:bg-gray-900 relative"
+                  onClick={() => handleSocialAuth("apple")}
+                  disabled={loading || appleLoading}
+                >
+                  {appleLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <span>{mode === "login" ? t.login.redirecting : t.signup.redirecting}</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2 fill-current" viewBox="0 0 24 24">
+                        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.08-.46-2.07-.48-3.2 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.1M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25" />
+                      </svg>
+                      <span>{mode === "login" ? t.login.appleButton : t.signup.appleButton}</span>
                     </>
                   )}
                 </Button>

@@ -34,6 +34,17 @@ export const auth = {
     return { data, error }
   },
 
+  // Sign in with Apple
+  signInWithApple: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    })
+    return { data, error }
+  },
+
   // Sign in with Facebook
   signInWithFacebook: async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({

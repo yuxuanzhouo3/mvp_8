@@ -21,6 +21,7 @@ export const authTranslationsEn: AuthTranslations = {
     signUpLink: 'Sign Up',
     orContinueWith: 'Or continue with',
     googleButton: 'Continue with Google',
+    appleButton: 'Continue with Apple',
     redirecting: 'Redirecting to Google...',
   },
 
@@ -43,6 +44,7 @@ export const authTranslationsEn: AuthTranslations = {
     loginLink: 'Sign In',
     orContinueWith: 'Or continue with',
     googleButton: 'Continue with Google',
+    appleButton: 'Continue with Apple',
     redirecting: 'Redirecting to Google...',
   },
 

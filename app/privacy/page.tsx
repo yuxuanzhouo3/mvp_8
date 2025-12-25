@@ -534,7 +534,7 @@ export default function LegalPage() {
                     </p>
                     <ul className="list-disc pl-6 space-y-2 text-gray-700">
                       <li>
-                        Login credentials (WeChat nickname, avatar, OpenID, or
+                        Login credentials (WeChat nickname, avatar, OpenID, Apple ID, or
                         Email)
                       </li>
                       <li>

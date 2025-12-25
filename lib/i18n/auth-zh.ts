@@ -19,6 +19,7 @@ export const authTranslationsZh = {
     signUpLink: '立即注册',
     orContinueWith: '或使用以下方式继续',
     googleButton: '使用 Google 登录',
+    appleButton: '使用 Apple 登录',
     redirecting: '正在跳转到 Google...',
   },
 
@@ -41,6 +42,7 @@ export const authTranslationsZh = {
     loginLink: '立即登录',
     orContinueWith: '或使用以下方式继续',
     googleButton: '使用 Google 注册',
+    appleButton: '使用 Apple 注册',
     redirecting: '正在跳转到 Google...',
   },
 
