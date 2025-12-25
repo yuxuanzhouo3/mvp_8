@@ -20,6 +20,7 @@ import {
   Star
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { WechatPayQR } from "./wechat-pay-qr"
 
 interface PaymentModalProps {
   open: boolean
@@ -142,6 +143,7 @@ export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProp
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [wechatPayData, setWechatPayData] = useState<{ qrCodeUrl: string, outTradeNo: string, amount: number } | null>(null)
 
   const handlePayment = async () => {
     setLoading(true)
@@ -192,8 +194,34 @@ export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProp
         setLoading(false)
       } else if (selectedPaymentMethod === 'wechat') {
         // 微信支付流程
-        setError("WeChat payment is under development")
-        setLoading(false)
+        const response = await fetch('/api/payment/wechat/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            planType,
+            billingCycle,
+            userEmail: user.email,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create WeChat payment')
+        }
+
+        if (data.qrCodeUrl) {
+          setWechatPayData({
+            qrCodeUrl: data.qrCodeUrl,
+            outTradeNo: data.outTradeNo,
+            amount: data.amountInCents || (selectedPlanData?.price * 100 * 7.2) // 兜底计算
+          })
+          setLoading(false)
+        } else {
+          throw new Error('No QR code received')
+        }
       } else if (selectedPaymentMethod === 'alipay') {
         // 支付宝支付流程
         const response = await fetch('/api/payment/alipay/create', {
@@ -250,17 +278,36 @@ export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProp
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl bg-slate-800 border-slate-700 text-white">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Crown className="w-6 h-6 text-yellow-400" />
-            Upgrade to Pro
-          </DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Choose your plan and payment method to unlock premium features
-          </DialogDescription>
-        </DialogHeader>
+        {wechatPayData ? (
+          <div className="flex items-center justify-center p-12">
+            <WechatPayQR 
+              qrCodeUrl={wechatPayData.qrCodeUrl}
+              outTradeNo={wechatPayData.outTradeNo}
+              amount={wechatPayData.amount}
+              onSuccess={() => {
+                setSuccess(true)
+                setWechatPayData(null)
+                setTimeout(() => {
+                  onSuccess()
+                  onOpenChange(false)
+                }, 2000)
+              }}
+              onCancel={() => setWechatPayData(null)}
+            />
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <Crown className="w-6 h-6 text-yellow-400" />
+                Upgrade to Pro
+              </DialogTitle>
+              <DialogDescription className="text-slate-400">
+                Choose your plan and payment method to unlock premium features
+              </DialogDescription>
+            </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Plans Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Choose Your Plan</h3>
@@ -423,8 +470,8 @@ export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProp
               <Shield className="w-4 h-4 inline mr-1" />
               Your payment is secure and encrypted
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

@@ -8,6 +8,7 @@ import { useGeo } from '@/contexts/geo-context'
 import { useLanguage } from '@/contexts/language-context'
 import { useAuth } from '@/contexts/auth-context'
 import { Badge } from '@/components/ui/badge'
+import { WechatPayQR } from '@/components/wechat-pay-qr'
 import { paymentTranslationsZh } from '@/lib/i18n/payment-zh'
 import { paymentTranslationsEn } from '@/lib/i18n/payment-en'
 
@@ -18,6 +19,7 @@ export default function PaymentPage() {
   const [loadingPayPal, setLoadingPayPal] = useState(false)
   const [loadingAlipay, setLoadingAlipay] = useState(false)
   const [userEmail, setUserEmail] = useState('')
+  const [wechatPayData, setWechatPayData] = useState<{ qrCodeUrl: string, outTradeNo: string, amount: number } | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe' | 'paypal' | 'alipay' | 'wechat'>('stripe')
   const { location, loading: geoLoading, isChina, isEurope } = useGeo()
   const { language } = useLanguage()
@@ -252,8 +254,11 @@ export default function PaymentPage() {
       const data = await response.json()
 
       if (data.qrCodeUrl) {
-        // TODO: 显示二维码让用户扫码支付
-        alert('微信支付功能开发中...')
+        setWechatPayData({
+          qrCodeUrl: data.qrCodeUrl,
+          outTradeNo: data.outTradeNo,
+          amount: data.amountInCents || (selectedPlan === 'pro' ? (billingCycle === 'monthly' ? 19.99 : 168) : (billingCycle === 'monthly' ? 299.99 : 2520)) * 7.2 * 100
+        })
       } else {
         throw new Error(data.error || 'No QR code received')
       }
@@ -654,6 +659,23 @@ export default function PaymentPage() {
           </p>
         </div>
       </div>
+      {/* WeChat Pay Modal */}
+      {wechatPayData && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="max-w-sm w-full">
+            <WechatPayQR 
+              qrCodeUrl={wechatPayData.qrCodeUrl}
+              outTradeNo={wechatPayData.outTradeNo}
+              amount={wechatPayData.amount}
+              onSuccess={() => {
+                setWechatPayData(null)
+                window.location.href = '/dashboard?payment=success'
+              }}
+              onCancel={() => setWechatPayData(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -78,9 +78,9 @@ export async function POST(req: NextRequest) {
     // 生成订单号
     const outTradeNo = `WX${Date.now()}${Math.random().toString(36).substr(2, 9)}`
 
-    // 创建支付订单
+    // 创建支付订单 (使用 Native 支付，适用于扫码)
     const orderData = {
-      appid: process.env.WECHAT_PAY_APP_ID!, // 微信公众号/小程序APPID
+      appid: process.env.WECHAT_PAY_APP_ID!, 
       mchid: wechatpayConfig.mchid,
       description: `SiteHub ${planType.toUpperCase()} - ${billingCycle}`,
       out_trade_no: outTradeNo,
@@ -89,13 +89,10 @@ export async function POST(req: NextRequest) {
         total: amountInCents,
         currency: 'CNY',
       },
-      payer: {
-        openid: 'PLACEHOLDER_OPENID', // 需要用户微信登录后获取
-      },
     }
 
-    // 调用微信支付API创建订单
-    const response = await wechatpay.v3.pay.transactions.jsapi.post(orderData)
+    // 调用微信支付API创建订单 (Native 支付)
+    const response = await wechatpay.v3.pay.transactions.native.post(orderData)
 
     // 保存交易记录到数据库
     const transactionRecord = {
@@ -129,6 +126,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       outTradeNo,
+      amountInCents,
       qrCodeUrl: response.data.code_url, // 扫码支付链接
       prepayId: response.data.prepay_id,
       // 前端需要的支付参数
