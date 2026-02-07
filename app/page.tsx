@@ -1162,7 +1162,7 @@ export default function SiteHub() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <main className="container mx-auto px-3 sm:px-4 md:px-6 py-2 sm:py-3">
+        <main className="container mx-auto px-2 sm:px-4 md:px-6 py-1 sm:py-3">
           {!isHydrated && (
             <div className="flex items-center justify-center min-h-[200px]">
               <div className="text-white text-xl animate-pulse">Loading...</div>
@@ -1205,11 +1205,6 @@ export default function SiteHub() {
           </div>
         )}
 
-        <section className="mb-3 sm:mb-4">
-          <h1 className="text-xl sm:text-2xl font-bold text-white">{text.hero.title}</h1>
-          <p className="text-xs sm:text-sm text-white/60 mt-1">{text.hero.subtitle}</p>
-        </section>
-
         <FeaturedProducts sites={isHydrated ? sites.filter((site) => site.featured) : []} />
 
         <SearchAndFilters
@@ -1222,10 +1217,10 @@ export default function SiteHub() {
           totalCount={mounted ? nonFeaturedCount : 0}
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0 mb-2 sm:mb-3">
           <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold truncate">{text.stats.heading}</h2>
-            <p className="text-xs text-white/60 truncate">{summaryLabel}</p>
+            <h2 className="text-sm sm:text-lg font-bold truncate">{text.stats.heading}</h2>
+            <p className="text-[10px] sm:text-xs text-white/60 truncate">{summaryLabel}</p>
           </div>
           <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
             <Button

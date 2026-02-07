@@ -185,16 +185,16 @@ export function SearchAndFilters({
   const toggleLabel = isFiltersOpen ? text.collapseFilters : text.expandFilters
 
   return (
-    <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
+    <div className="mb-2.5 sm:mb-6 space-y-2.5 sm:space-y-4">
       {/* Search Bar - 移动端优化 */}
       <div className="relative w-full sm:max-w-md">
-        <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 text-white/60 w-3 h-3 sm:w-4 sm:h-4" />
         <Input
           type="text"
           placeholder={text.placeholder.replace("{count}", placeholderCount)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 sm:pl-10 pr-9 sm:pr-10 h-9 sm:h-10 text-sm bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-blue-400 touch-manipulation"
+          className="pl-8 sm:pl-10 pr-9 sm:pr-10 h-8 sm:h-10 text-[13px] sm:text-sm bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-blue-400 touch-manipulation"
           aria-label={sectionLabel}
         />
         {searchQuery && (
