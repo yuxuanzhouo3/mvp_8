@@ -470,9 +470,11 @@ export function PaymentModal({ open, onOpenChange, onSuccess }: PaymentModalProp
               <Shield className="w-4 h-4 inline mr-1" />
               Your payment is secure and encrypted
             </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+          </div>
+        </div>
+      </>
+    )}
+  </DialogContent>
+</Dialog>
   )
 } 

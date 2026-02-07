@@ -38,6 +38,8 @@ interface SearchText {
   customLabel: string
   allSites: string
   chinaSites: string
+  expandFilters: string
+  collapseFilters: string
 }
 
 interface StatsText {
@@ -139,7 +141,9 @@ export const homeUiText: Record<SupportedLanguage, HomeUiText> = {
       favoritesLabel: "收藏网站",
       customLabel: "自定义网站",
       allSites: "全部网站",
-      chinaSites: "中国网站"
+      chinaSites: "中国网站",
+      expandFilters: "展开筛选",
+      collapseFilters: "收起筛选"
     },
     stats: {
       heading: "300+ 网站 · 单页尽览",
@@ -219,7 +223,9 @@ export const homeUiText: Record<SupportedLanguage, HomeUiText> = {
       favoritesLabel: "favorite sites",
       customLabel: "custom sites",
       allSites: "All Sites",
-      chinaSites: "China Sites"
+      chinaSites: "China Sites",
+      expandFilters: "Show filters",
+      collapseFilters: "Hide filters"
     },
     stats: {
       heading: "300+ Sites · One Page View",

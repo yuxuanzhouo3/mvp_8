@@ -598,8 +598,20 @@
       ]
     },
     {
+      "id": "chatgpt",
+      "name_en": "ChatGPT",
+      "url": "https://chat.openai.com",
+      "logo": "🤖",
+      "category": "tools",
+      "isCN": false,
+      "tags": [
+        "ai",
+        "chat"
+      ]
+    },
+    {
       "id": "twitter",
-      "name_en": "Twitter",
+      "name_en": "X (Twitter)",
       "url": "https://twitter.com",
       "logo": "🐦",
       "category": "social",
@@ -607,6 +619,53 @@
       "tags": [
         "social",
         "microblog"
+      ]
+    },
+    {
+      "id": "reddit",
+      "name_en": "Reddit",
+      "url": "https://reddit.com",
+      "logo": "🤖",
+      "category": "social",
+      "isCN": false,
+      "tags": [
+        "forum",
+        "discussion"
+      ]
+    },
+    {
+      "id": "whatsapp",
+      "name_en": "WhatsApp",
+      "url": "https://whatsapp.com",
+      "logo": "📱",
+      "category": "social",
+      "isCN": false,
+      "tags": [
+        "chat",
+        "messaging"
+      ]
+    },
+    {
+      "id": "bing",
+      "name_en": "Bing",
+      "url": "https://bing.com",
+      "logo": "🔍",
+      "category": "tools",
+      "isCN": false,
+      "tags": [
+        "search"
+      ]
+    },
+    {
+      "id": "wikipedia",
+      "name_en": "Wikipedia",
+      "url": "https://wikipedia.org",
+      "logo": "📖",
+      "category": "education",
+      "isCN": false,
+      "tags": [
+        "knowledge",
+        "encyclopedia"
       ]
     },
     {
@@ -801,18 +860,6 @@
       ]
     },
     {
-      "id": "reddit",
-      "name_en": "Reddit",
-      "url": "https://reddit.com",
-      "logo": "🤖",
-      "category": "social",
-      "isCN": false,
-      "tags": [
-        "forum",
-        "discussion"
-      ]
-    },
-    {
       "id": "discord",
       "name_en": "Discord",
       "url": "https://discord.com",
@@ -838,18 +885,6 @@
       ]
     },
     {
-      "id": "whatsapp",
-      "name_en": "WhatsApp",
-      "url": "https://whatsapp.com",
-      "logo": "📱",
-      "category": "social",
-      "isCN": false,
-      "tags": [
-        "chat",
-        "messaging"
-      ]
-    },
-    {
       "id": "skype",
       "name_en": "Skype",
       "url": "https://skype.com",
@@ -859,18 +894,6 @@
       "tags": [
         "call",
         "video"
-      ]
-    },
-    {
-      "id": "chatgpt",
-      "name_en": "ChatGPT",
-      "url": "https://chat.openai.com",
-      "logo": "🤖",
-      "category": "tools",
-      "isCN": false,
-      "tags": [
-        "ai",
-        "chat"
       ]
     },
     {
@@ -1082,18 +1105,6 @@
       "tags": [
         "qa",
         "knowledge"
-      ]
-    },
-    {
-      "id": "wikipedia",
-      "name_en": "Wikipedia",
-      "url": "https://wikipedia.org",
-      "logo": "📖",
-      "category": "education",
-      "isCN": false,
-      "tags": [
-        "knowledge",
-        "encyclopedia"
       ]
     },
     {
