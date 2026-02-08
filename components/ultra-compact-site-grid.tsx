@@ -34,7 +34,7 @@ const UltraCompactSiteCard = React.memo(function UltraCompactSiteCard({ site, on
 
   // ✅ 性能优化：预计算CSS类，避免字符串拼接
   const cardClassName = useMemo(() => {
-    const baseClasses = 'group relative p-1.5 sm:p-2 bg-white/10 rounded-md border border-white/10 hover:border-blue-400/60 hover:bg-white/20 touch-manipulation min-h-[60px] sm:min-h-[70px]'
+    const baseClasses = 'group relative p-1.5 sm:p-2 bg-slate-200/50 dark:bg-white/10 rounded-md border border-slate-200 dark:border-white/10 hover:border-blue-400/60 dark:hover:border-blue-400/60 hover:bg-slate-300 dark:hover:bg-white/20 touch-manipulation min-h-[60px] sm:min-h-[70px] transition-colors duration-300'
     const cursorClass = isDragDisabled ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
     const dragClass = isDragging ? 'shadow-lg border-blue-500 bg-blue-500/20' : ''
     const disabledClass = isDragDisabled ? 'opacity-60' : ''
@@ -66,20 +66,20 @@ const UltraCompactSiteCard = React.memo(function UltraCompactSiteCard({ site, on
           {/* Drag indicator - 移动端隐藏 */}
           {!isDragDisabled && (
             <div className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 hidden sm:block">
-              <GripVertical className="w-2 h-2 text-white/60" />
+              <GripVertical className="w-2 h-2 text-slate-400 dark:text-white/60" />
             </div>
           )}
 
           <div onClick={(e) => handleSiteClick(e, site.url)} className="relative text-center space-y-0.5 sm:space-y-1">
             <div className="text-base sm:text-lg">{site.logo}</div>
-            <div className="text-[10px] sm:text-xs text-white/80 group-hover:text-white font-medium truncate leading-tight px-0.5">
+            <div className="text-[10px] sm:text-xs text-slate-700 dark:text-white/80 group-hover:text-slate-900 dark:group-hover:text-white font-medium truncate leading-tight px-0.5">
               {site.name}
             </div>
           </div>
 
           {/* Custom site indicator */}
           {site.custom && (
-            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full border border-slate-800" />
+            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-blue-500 rounded-full border border-white dark:border-slate-800" />
           )}
 
           {/* Favorite indicator - 移动端触摸优化 */}
@@ -101,7 +101,7 @@ const UltraCompactSiteCard = React.memo(function UltraCompactSiteCard({ site, on
                 handleToggleFavorite(site.id)
               }}
             >
-              <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/40 hover:text-red-400 active:scale-90" />
+              <Heart className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 dark:text-white/40 hover:text-red-400 active:scale-90" />
             </div>
           )}
 
@@ -112,20 +112,20 @@ const UltraCompactSiteCard = React.memo(function UltraCompactSiteCard({ site, on
         </div>
       </ContextMenuTrigger>
 
-      <ContextMenuContent className="bg-slate-800 border-slate-700">
+      <ContextMenuContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
         <ContextMenuItem
           onClick={() => handleSiteClick({ stopPropagation: () => {} }, site.url)}
-          className="text-white hover:bg-slate-700"
+          className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           <ExternalLink className="w-4 h-4 mr-2" />
           Open in New Tab
         </ContextMenuItem>
-        <ContextMenuItem onClick={() => handleToggleFavorite(site.id)} className="text-white hover:bg-slate-700">
+        <ContextMenuItem onClick={() => handleToggleFavorite(site.id)} className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">
           <Heart className={`w-4 h-4 mr-2 ${isFavorited ? "fill-red-500 text-red-500" : ""}`} />
           {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
         </ContextMenuItem>
         {site.custom && (
-          <ContextMenuItem onClick={() => handleRemove(site.id)} className="text-red-400 hover:bg-slate-700">
+          <ContextMenuItem onClick={() => handleRemove(site.id)} className="text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700">
             <Trash2 className="w-4 h-4 mr-2" />
             Remove Site
           </ContextMenuItem>
@@ -259,7 +259,7 @@ const UltraCompactSiteGrid = React.memo(function UltraCompactSiteGrid({ sites, o
             className="col-span-full h-20 flex items-center justify-center"
             aria-label="Loading more sites"
           >
-            <div className="text-white/40 text-xs">加载更多...</div>
+            <div className="text-slate-400 dark:text-white/40 text-xs">加载更多...</div>
           </div>
         )}
       </div>

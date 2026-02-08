@@ -166,25 +166,25 @@ export function ParseSitesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl w-[95vw] sm:w-full bg-slate-900 text-white border-slate-700 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl w-[95vw] sm:w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <ListPlus className="w-5 h-5 text-blue-400" />
+          <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl font-bold">
+            <ListPlus className="w-5 h-5 text-blue-500 dark:text-blue-400" />
             智能解析链接
           </DialogTitle>
-          <DialogDescription className="text-sm sm:text-base text-slate-400">
+          <DialogDescription className="text-sm sm:text-base text-slate-500 dark:text-slate-400">
             粘贴聊天记录或分享文本，自动提取其中的链接，快速批量加入自定义网站。
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-6">
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">粘贴文本</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">粘贴文本</label>
             <Textarea
               value={rawText}
               onChange={(event) => setRawText(event.target.value)}
               placeholder={`例如：\n- 看看这个工具 https://chatgpt.com/\n- GitHub 上的项目：https://github.com/vercel/next.js\n- 小红书：https://www.xiaohongshu.com/...`}
-              className="min-h-[140px] bg-slate-800 border-slate-700 focus-visible:ring-blue-500 resize-vertical"
+              className="min-h-[140px] bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-blue-500 text-slate-900 dark:text-white resize-vertical"
             />
           </div>
 
@@ -192,10 +192,10 @@ export function ParseSitesModal({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* 统计信息 - 移动端横向滚动 */}
             <div className="flex items-center gap-2 text-xs sm:text-sm overflow-x-auto pb-1">
-              <Badge variant="outline" className="border-slate-600 text-slate-200 whitespace-nowrap">
+              <Badge variant="outline" className="border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                 共 {parsed.length} 条
               </Badge>
-              <Badge variant="outline" className="border-slate-600 text-emerald-200 whitespace-nowrap">
+              <Badge variant="outline" className="border-slate-200 dark:border-slate-600 text-emerald-600 dark:text-emerald-200 whitespace-nowrap">
                 可添加 {actionableSites.length}
               </Badge>
               {duplicateCount > 0 && (

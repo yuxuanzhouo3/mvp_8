@@ -83,7 +83,7 @@ export function GuestTimer({ user, loading, onTimeExpired, onUpgradeClick }: Gue
       </Badge>
 
       {getWarningMessage() && (
-        <div className="hidden sm:block text-xs text-red-400 animate-pulse">
+        <div className="hidden sm:block text-xs text-red-600 dark:text-red-300 animate-pulse font-medium">
           {getWarningMessage()}
         </div>
       )}
@@ -98,7 +98,7 @@ export function GuestTimer({ user, loading, onTimeExpired, onUpgradeClick }: Gue
             <Crown className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">{isExpired ? text.upgradeCtaExpired : text.upgradeCtaActive}</span>
           </Button>
-          <span className="hidden sm:inline text-xs text-yellow-300">
+          <span className="hidden sm:inline text-xs text-yellow-600 dark:text-yellow-200 font-medium">
             {isExpired ? text.upgradeHintExpired : text.upgradeHintActive}
           </span>
         </div>

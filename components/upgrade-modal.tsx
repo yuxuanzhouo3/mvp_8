@@ -50,12 +50,12 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white">
+      <DialogContent className="max-w-md bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
         <DialogHeader>
           <div className="text-center space-y-4">
             <div className="text-4xl">💾</div>
-            <DialogTitle className="text-xl">{isTimeExpired ? "Save Your Data!" : "Unlock Full Access"}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogTitle className="text-xl font-bold">{isTimeExpired ? "Save Your Data!" : "Unlock Full Access"}</DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
               {isTimeExpired
                 ? "Your session expired! Sign up now to save your favorites & custom sites permanently"
                 : "Get unlimited access to all features with a free account"}
@@ -66,13 +66,13 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
         <div className="space-y-6">
           {/* Features List */}
           <div className="space-y-3">
-            <h4 className="font-semibold text-center">What you'll get:</h4>
+            <h4 className="font-semibold text-center text-slate-700 dark:text-slate-200">What you'll get:</h4>
             {features.map((feature, index) => (
               <div key={index} className="flex items-center gap-3">
-                <feature.icon className="w-4 h-4 text-blue-400" />
-                <span className="text-sm">{feature.text}</span>
+                <feature.icon className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">{feature.text}</span>
                 {feature.premium && (
-                  <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-xs">
+                  <Badge className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white text-xs border-none">
                     <Crown className="w-3 h-3 mr-1" />
                     Pro
                   </Badge>
@@ -86,7 +86,7 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
             <div className="grid gap-2">
               <Button
                 variant="outline"
-                className="bg-white text-black hover:bg-gray-100"
+                className="bg-white dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-600 border-slate-200 dark:border-slate-600"
                 onClick={() => {
                   if (isMountedRef.current) {
                     // 国内用户打开登录模态框,海外用户使用Google登录
@@ -94,17 +94,17 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
                   }
                 }}
               >
-                <Chrome className="w-4 h-4 mr-2" />
+                <Chrome className="w-4 h-4 mr-2 text-blue-500" />
                 {region === "China" ? "立即登录" : "Continue with Google"}
               </Button>
             </div>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-600" />
+                <span className="w-full border-t border-slate-200 dark:border-slate-600" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-slate-800 px-2 text-slate-400">
+                <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
                   {region === "China" ? "或使用邮箱" : "Or with email"}
                 </span>
               </div>
@@ -112,37 +112,37 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
 
             <div className="space-y-3">
               <div>
-                <Label htmlFor="email">{region === "China" ? "邮箱" : "Email"}</Label>
+                <Label htmlFor="email" className="text-slate-800 dark:text-slate-200">{region === "China" ? "邮箱" : "Email"}</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder={region === "China" ? "your@email.com" : "your@email.com"}
-                  className="bg-slate-700 border-slate-600"
+                  className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
               <div>
-                <Label htmlFor="password">{region === "China" ? "密码" : "Password"}</Label>
+                <Label htmlFor="password" className="text-slate-800 dark:text-slate-200">{region === "China" ? "密码" : "Password"}</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  className="bg-slate-700 border-slate-600"
+                  className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
 
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleEmailSignup}>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white" onClick={handleEmailSignup}>
               <Mail className="w-4 h-4 mr-2" />
               {region === "China" ? "创建免费账户" : "Create Free Account"}
             </Button>
 
-            <div className="text-center text-xs text-slate-400">
+            <div className="text-center text-xs text-slate-500 dark:text-slate-400">
               {region === "China" ? "已有账号？" : "Already have an account?"}{" "}
-              <button className="text-blue-400 hover:underline" onClick={() => {
+              <button className="text-blue-600 dark:text-blue-400 hover:underline" onClick={() => {
                 if (isMountedRef.current) {
                   onAuth("login")
                 }
@@ -154,8 +154,8 @@ export function UpgradeModal({ isOpen, onClose, onAuth, isTimeExpired, region = 
 
           {/* Data Loss Warning */}
           {isTimeExpired && (
-            <div className="p-3 bg-red-600/20 border border-red-500/30 rounded-lg text-center">
-              <div className="flex items-center justify-center gap-2 text-sm text-red-200">
+            <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg text-center shadow-sm">
+              <div className="flex items-center justify-center gap-2 text-sm text-red-600 dark:text-red-100">
                 <Clock className="w-4 h-4" />
                 <span>Your favorites & custom sites will be lost! Sign up to save them!</span>
               </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { useTheme } from "next-themes"
 
 interface Settings {
   theme: "dark" | "light" | "auto"
@@ -29,6 +30,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [isLoaded, setIsLoaded] = useState(false)
+  const { setTheme } = useTheme()
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -37,12 +39,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(savedSettings)
         setSettings({ ...defaultSettings, ...parsed })
+        
+        // Apply theme immediately if possible to reduce flicker
+        if (parsed.theme) {
+          setTheme(parsed.theme)
+        }
       } catch (error) {
         console.error("Failed to parse saved settings:", error)
       }
     }
     setIsLoaded(true)
-  }, [])
+  }, [setTheme])
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
@@ -50,17 +57,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       try {
         localStorage.setItem("sitehub-settings", JSON.stringify(settings))
         
-        // Apply theme
-        if (settings.theme === "dark" || (settings.theme === "auto" && typeof window !== 'undefined' && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-          document.documentElement.classList.add("dark")
-        } else {
-          document.documentElement.classList.remove("dark")
-        }
+        // Sync with next-themes
+        setTheme(settings.theme)
       } catch (error) {
         console.error("Error saving settings:", error)
       }
     }
-  }, [settings, isLoaded])
+  }, [settings, isLoaded, setTheme])
 
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings(prev => ({ ...prev, ...newSettings }))

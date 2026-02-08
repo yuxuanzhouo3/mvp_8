@@ -9,157 +9,102 @@
     {
       "id": "sitehub",
       "name_en": "SiteHub",
-      "url": "https://mornhub.help",
+      "url_cn": "https://site.mornscience.top/",
+      "url_intl": "https://www.mornhub.help/",
       "logo": "🌅",
       "category": "tools",
       "isCN": false,
-      "tags": [
-        "navigation",
-        "dashboard",
-        "tools"
-      ]
+      "tags": ["navigation", "dashboard", "tools"]
     },
     {
       "id": "mornsocial",
-      "name_en": "MornSocial",
-      "url": "https://mornhub.lat",
+      "name_en": "Personalink",
+      "url_cn": "https://personalink.mornscience.top",
+      "url_intl": "https://www.mornhub.lat",
       "logo": "🤝",
       "category": "social",
       "isCN": false,
-      "tags": [
-        "social",
-        "networking"
-      ]
+      "tags": ["social", "networking"]
     },
     {
       "id": "morngpt",
-      "name_en": "MornGPT",
-      "url": "https://mornhub.net",
+      "name_en": "MultiGPT",
+      "url_cn": "https://multigpt.mornscience.top/",
+      "url_intl": "https://www.morn.work/",
       "logo": "🤖",
       "category": "ai",
       "isCN": false,
-      "tags": [
-        "ai",
-        "chat",
-        "gpt"
-      ]
+      "tags": ["ai", "chat", "gpt"]
     },
     {
-      "id": "deepfake5",
-      "name_en": "DeepFake",
-      "url": "https://mornhub.pics",
+      "id": "mornspeaker",
+      "name_en": "MornSpeaker",
+      "url_cn": "https://mornspeaker.mornscience.top/",
+      "url_intl": "https://www.mornscience.onl/",
       "logo": "🎭",
       "category": "ai",
       "isCN": false,
-      "tags": [
-        "ai",
-        "image",
-        "generation"
-      ]
+      "tags": ["audio", "voice", "ai"]
     },
     {
-      "id": "deepfake6",
-      "name_en": "MornStudio",
-      "url": "https://mornhub.onl",
+      "id": "mornclient",
+      "name_en": "MornClient",
+      "url_cn": "https://mornclient.mornscience.top/",
+      "url_intl": "https://www.mornscience.biz",
       "logo": "🎨",
       "category": "ai",
       "isCN": false,
-      "tags": [
-        "ai",
-        "image",
-        "generation"
-      ]
+      "tags": ["client", "tools"]
     },
     {
-      "id": "secfile",
-      "name_en": "SecFile",
-      "url": "https://mornhub.quest",
+      "id": "morncoach",
+      "name_en": "MornCoach",
+      "url_cn": "http://morncoach.mornscience.top",
+      "url_intl": "https://mornhub.biz",
       "logo": "🔐",
       "category": "security",
       "isCN": false,
-      "tags": [
-        "security",
-        "encryption",
-        "files"
-      ]
+      "tags": ["coach", "development"]
     },
     {
-      "id": "autotools",
-      "name_en": "AutoTools",
-      "url": "https://mornhub.lol",
+      "id": "morntool",
+      "name_en": "MornTool",
+      "url_cn": "http://morntool.mornscience.top",
+      "url_intl": "https://www.mornhub.lol/",
       "logo": "🛠️",
       "category": "tools",
       "isCN": false,
-      "tags": [
-        "automation",
-        "tools",
-        "productivity"
-      ]
+      "tags": ["automation", "tools"]
     },
     {
-      "id": "mornjob",
-      "name_en": "MornJob",
-      "url": "https://mornhub.work",
+      "id": "mornfront",
+      "name_en": "MornFront",
+      "url_cn": "https://mornfront.mornscience.top/",
+      "url_intl": "https://www.mornscience.dev/",
       "logo": "💼",
       "category": "career",
       "isCN": false,
-      "tags": [
-        "job",
-        "career",
-        "recruitment"
-      ]
+      "tags": ["frontend", "development"]
     },
     {
-      "id": "mvp2",
-      "name_en": "MornTopics",
-      "url": "https://mornhub.xyz",
+      "id": "orbital",
+      "name_en": "OrbitChat",
+      "url_cn": "https://orbital.mornscience.top/",
+      "url_intl": "http://mornscience.work/",
       "logo": "🌐",
       "category": "tools",
       "isCN": false,
-      "tags": [
-        "topics",
-        "random",
-        "interesting"
-      ]
+      "tags": ["chat", "orbital"]
     },
     {
-      "id": "mvp3",
-      "name_en": "MornCompare",
-      "url": "https://mornscience.quest",
+      "id": "mornxyz",
+      "name_en": "MornXYZ",
+      "url_cn": "https://mornxyz.mornscience.top/",
+      "url_intl": "https://www.mornhub.xyz/",
       "logo": "🔬",
       "category": "shopping",
       "isCN": false,
-      "tags": [
-        "compare",
-        "price",
-        "products"
-      ]
-    },
-    {
-      "id": "mvp11",
-      "name_en": "MornCoder",
-      "url": "https://mornscience.app",
-      "logo": "🧪",
-      "category": "tools",
-      "isCN": false,
-      "tags": [
-        "coding",
-        "ide",
-        "api"
-      ]
-    },
-    {
-      "id": "mvp15",
-      "name_en": "MornInterviewer",
-      "url": "https://mornhub.top",
-      "logo": "⭐",
-      "category": "career",
-      "isCN": false,
-      "tags": [
-        "interview",
-        "ai",
-        "career"
-      ]
+      "tags": ["topics", "xyz"]
     }
   ],
   "categories": [

@@ -28,16 +28,16 @@ export function SiteGrid({ sites, onRemove }) {
           <ContextMenuTrigger>
             <div
               onClick={() => handleSiteClick(site.url)}
-              className="group relative cursor-pointer p-3 bg-white/8 backdrop-blur-sm rounded-xl border border-white/10 hover:border-blue-400/50 hover:bg-white/15 transition-all duration-200 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-105"
+              className="group relative cursor-pointer p-3 bg-slate-100 dark:bg-white/8 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-white/10 hover:border-blue-500/50 dark:hover:border-blue-400/50 hover:bg-slate-200 dark:hover:bg-white/15 transition-all duration-200 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-105"
             >
               <div className="text-center space-y-2">
                 <div className="text-2xl group-hover:scale-110 transition-transform duration-200">{site.logo}</div>
-                <div className="text-xs text-white/80 group-hover:text-white font-medium truncate">{site.name}</div>
+                <div className="text-xs text-slate-600 dark:text-white/80 group-hover:text-slate-900 dark:group-hover:text-white font-medium truncate">{site.name}</div>
               </div>
 
               {/* Custom site indicator */}
               {site.custom && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-slate-800" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white dark:border-slate-800" />
               )}
 
               {/* Favorite indicator */}

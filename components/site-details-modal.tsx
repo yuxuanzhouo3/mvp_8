@@ -66,9 +66,9 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               <span className="font-medium">{site?.rating || 0}</span>
             </div>
-            <Badge variant="outline">{site?.category || "Unknown"}</Badge>
+            <Badge variant="outline" className="border-slate-200 dark:border-white/20">{site?.category || "Unknown"}</Badge>
             {site?.supportsLogin && (
-              <Badge variant="secondary" className="bg-green-100 text-green-700">
+              <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                 <Shield className="w-3 h-3 mr-1" />
                 Login Enabled
               </Badge>
@@ -86,23 +86,24 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
 
           {/* Login Section */}
           {site?.supportsLogin && (
-            <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
-              <h4 className="font-semibold text-gray-900">Save Login Credentials</h4>
+            <div className="space-y-4 p-4 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/10">
+              <h4 className="font-semibold text-slate-900 dark:text-white">Save Login Credentials</h4>
 
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="email">Email or Username</Label>
+                  <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Email or Username</Label>
                   <Input
                     id="email"
                     type="email"
                     placeholder="your@email.com"
                     value={credentials.email}
                     onChange={(e) => setCredentials((prev) => ({ ...prev, email: e.target.value }))}
+                    className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -110,12 +111,13 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
                       placeholder="••••••••"
                       value={credentials.password}
                       onChange={(e) => setCredentials((prev) => ({ ...prev, password: e.target.value }))}
+                      className="bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
+                      className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -124,18 +126,18 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 bg-transparent"
+                  className="flex-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-white"
                   onClick={handleSaveCredentials}
                   disabled={!credentials.email || !credentials.password}
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Save & Login
                 </Button>
-                <Button variant="outline" className="flex-1 bg-transparent">
-                  <Chrome className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="flex-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-white">
+                  <Chrome className="w-4 h-4 mr-2 text-blue-500" />
                   Sign in with Google
                 </Button>
               </div>
@@ -143,7 +145,7 @@ export function SiteDetailsModal({ site, isOpen, onClose }: SiteDetailsModalProp
           )}
 
           {/* User Reviews */}
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400">
             <p>⭐ Trusted by 50,000+ users</p>
             <p className="mt-1">"Fast and reliable access" - Sarah M.</p>
           </div>

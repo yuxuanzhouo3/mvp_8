@@ -8,6 +8,7 @@ import { GeoProvider } from "@/contexts/geo-context"
 import { LanguageProvider } from "@/contexts/language-context"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { LinkInterceptor } from "@/components/link-interceptor"
+import { ThemeProvider } from "@/components/theme-provider"
 
 // Force dynamic rendering to prevent hydration issues
 export const dynamic = 'force-dynamic'
@@ -47,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="UTF-8" />
         <link rel="manifest" href="/manifest.json" />
@@ -67,16 +68,23 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <SettingsProvider>
-            <GeoProvider>
-              <LanguageProvider>
-                <LinkInterceptor />
-                {children}
-              </LanguageProvider>
-            </GeoProvider>
-          </SettingsProvider>
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <SettingsProvider>
+              <GeoProvider>
+                <LanguageProvider>
+                  <LinkInterceptor />
+                  {children}
+                </LanguageProvider>
+              </GeoProvider>
+            </SettingsProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

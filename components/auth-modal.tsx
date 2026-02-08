@@ -240,23 +240,23 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} key={`auth-modal-${mode}`}>
-      <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white max-h-[90vh] overflow-y-auto shadow-xl transition-colors">
         {isEurope ? (
           <>
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-center">
                 Service Not Available in Europe
               </DialogTitle>
-              <DialogDescription className="text-slate-400 text-center">
+              <DialogDescription className="text-slate-500 dark:text-slate-400 text-center">
                 Due to regulatory requirements (GDPR), we are currently unable to offer authentication services in European countries.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <p className="text-sm text-slate-300 text-center">
+              <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
                 We apologize for any inconvenience. You can still browse our content as a guest.
               </p>
               <Button
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                 onClick={() => window.open('mailto:mornscience@gmail.com?subject=Inquiry from Europe', '_blank')}
               >
                 <Mail className="w-4 h-4 mr-2" />
@@ -271,7 +271,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               <DialogTitle className="text-xl font-bold">
                 {mode === "login" ? t.login.title : t.signup.title}
               </DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-slate-500 dark:text-slate-400">
                 {mode === "login" ? t.login.subtitle : t.signup.subtitle}
               </DialogDescription>
             </DialogHeader>
@@ -301,10 +301,10 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-600" />
+                  <span className="w-full border-t border-slate-200 dark:border-slate-600" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-slate-800 px-2 text-slate-400">
+                  <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
                     或使用邮箱登录
                   </span>
                 </div>
@@ -313,7 +313,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               {/* Email Form - 国内次要显示邮箱表单 */}
               <div className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-sm font-medium">
+              <Label htmlFor="email" className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
               </Label>
               <Input
@@ -322,13 +322,13 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
                 placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-sm font-medium">
+              <Label htmlFor="password" className="text-sm font-medium text-slate-800 dark:text-slate-200">
                 {mode === "login" ? t.login.passwordLabel : t.signup.passwordLabel}
               </Label>
               <div className="relative">
@@ -338,21 +338,21 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
                   placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
+                  className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 pr-10"
                   disabled={loading}
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-600"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-700"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="w-4 h-4 text-slate-400" />
+                    <EyeOff className="w-4 h-4 text-slate-500 dark:text-slate-300" />
                   ) : (
-                    <Eye className="w-4 h-4 text-slate-400" />
+                    <Eye className="w-4 h-4 text-slate-500 dark:text-slate-300" />
                   )}
                 </Button>
               </div>
@@ -394,7 +394,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
           <div className="text-center text-sm space-y-2">
             <button
               onClick={toggleMode}
-              className="text-blue-400 hover:underline block"
+              className="text-blue-600 dark:text-blue-400 hover:underline block"
               disabled={loading}
             >
               {mode === "login"
@@ -407,7 +407,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
             {mode === "login" && (
               <button
                 onClick={() => window.open('/auth/forgot-password', '_blank')}
-                className="text-slate-400 hover:text-slate-300 text-xs block"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 text-xs block"
                 disabled={loading}
               >
                 {t.login.forgotPassword}
@@ -417,33 +417,33 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
 
           {/* Benefits - Collapsible */}
           {showBenefits ? (
-            <div className="bg-slate-700/50 rounded-lg p-3 space-y-2 relative">
+            <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 space-y-2 relative border border-slate-200 dark:border-transparent">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm">您将获得:</h4>
+                <h4 className="font-medium text-sm text-slate-700 dark:text-white">您将获得:</h4>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowBenefits(false)}
-                  className="h-6 w-6 p-0 hover:bg-slate-600"
+                  className="h-6 w-6 p-0 hover:bg-slate-200 dark:hover:bg-slate-600"
                 >
                   <X className="w-3 h-3" />
                 </Button>
               </div>
-              <div className="space-y-1 text-xs text-slate-300">
+              <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">✓</Badge>
+                  <Badge variant="secondary" className="text-xs bg-slate-200 dark:bg-white/10">✓</Badge>
                   <span>无限制的自定义网站和收藏</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">✓</Badge>
+                  <Badge variant="secondary" className="text-xs bg-slate-200 dark:bg-white/10">✓</Badge>
                   <span>跨设备同步您的数据</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">✓</Badge>
+                  <Badge variant="secondary" className="text-xs bg-slate-200 dark:bg-white/10">✓</Badge>
                   <span>统一管理300+网站</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">✓</Badge>
+                  <Badge variant="secondary" className="text-xs bg-slate-200 dark:bg-white/10">✓</Badge>
                   <span>永不丢失您的数据</span>
                 </div>
               </div>
@@ -453,7 +453,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               variant="ghost"
               size="sm"
               onClick={() => setShowBenefits(true)}
-              className="text-xs text-slate-400 hover:text-slate-300"
+              className="text-xs text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white"
             >
               Show benefits
             </Button>
@@ -467,7 +467,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               <DialogTitle className="text-xl font-bold">
                 {mode === "login" ? t.login.title : t.signup.title}
               </DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogDescription className="text-slate-500 dark:text-slate-400">
                 {mode === "login" ? t.login.subtitle : t.signup.subtitle}
               </DialogDescription>
             </DialogHeader>
@@ -477,7 +477,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               <div className="grid gap-3">
                 <Button
                   variant="outline"
-                  className="bg-white text-black hover:bg-gray-100 relative"
+                  className="bg-white text-black hover:bg-gray-100 relative border-slate-200"
                   onClick={() => handleSocialAuth("google")}
                   disabled={loading || appleLoading}
                 >
@@ -496,7 +496,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
 
                 <Button
                   variant="outline"
-                  className="bg-black text-white hover:bg-gray-900 relative"
+                  className="bg-black text-white hover:bg-black/90 relative border-transparent"
                   onClick={() => handleSocialAuth("apple")}
                   disabled={loading || appleLoading}
                 >
@@ -519,10 +519,10 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               {/* Divider */}
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-600" />
+                  <span className="w-full border-t border-slate-200 dark:border-slate-600" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-slate-800 px-2 text-slate-400">
+                  <span className="bg-white dark:bg-slate-800 px-2 text-slate-500 dark:text-slate-400">
                     {mode === "login" ? t.login.orContinueWith : t.signup.orContinueWith}
                   </span>
                 </div>
@@ -531,7 +531,7 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
               {/* Email Form - 海外次要显示 */}
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="email-overseas" className="text-sm font-medium">
+                  <Label htmlFor="email-overseas" className="text-sm font-medium text-slate-800 dark:text-slate-200">
                     {mode === "login" ? t.login.emailLabel : t.signup.emailLabel}
                   </Label>
                   <Input
@@ -540,13 +540,13 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
                     placeholder={mode === "login" ? t.login.emailPlaceholder : t.signup.emailPlaceholder}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400"
+                    className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                     disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="password-overseas" className="text-sm font-medium">
+                  <Label htmlFor="password-overseas" className="text-sm font-medium text-slate-800 dark:text-slate-200">
                     {mode === "login" ? t.login.passwordLabel : t.signup.passwordLabel}
                   </Label>
                   <div className="relative">
@@ -556,21 +556,21 @@ export function AuthModal({ open, onOpenChange, onAuth, authMode = "login", regi
                       placeholder={mode === "login" ? t.login.passwordPlaceholder : t.signup.passwordPlaceholder}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 pr-10"
+                      className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 pr-10"
                       disabled={loading}
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-600"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-700"
                       onClick={() => setShowPassword(!showPassword)}
                       disabled={loading}
                     >
                       {showPassword ? (
-                        <EyeOff className="w-4 h-4 text-slate-400" />
+                        <EyeOff className="w-4 h-4 text-slate-500 dark:text-slate-300" />
                       ) : (
-                        <Eye className="w-4 h-4 text-slate-400" />
+                        <Eye className="w-4 h-4 text-slate-500 dark:text-slate-300" />
                       )}
                     </Button>
                   </div>

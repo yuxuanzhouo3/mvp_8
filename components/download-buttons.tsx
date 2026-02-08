@@ -115,7 +115,7 @@ export function DownloadButtons({ compact = false }: DownloadButtonsProps = {}) 
         <Button
           variant="ghost"
           size={compact ? "sm" : "lg"}
-          className={`text-white hover:bg-white/10 p-2 ${compact ? 'sm:px-3' : ''}`}
+          className={`text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 p-2 ${compact ? 'sm:px-3' : ''}`}
         >
           <Download className="w-4 h-4" />
           {!compact && (
@@ -129,26 +129,26 @@ export function DownloadButtons({ compact = false }: DownloadButtonsProps = {}) 
 
       <DropdownMenuContent
         align="end"
-        className="w-80 bg-black/95 border-white/20 backdrop-blur-sm"
+        className="w-80 bg-white/95 dark:bg-black/95 border-slate-200 dark:border-white/20 backdrop-blur-sm shadow-xl"
       >
-        <DropdownMenuLabel className="text-white">
+        <DropdownMenuLabel className="text-slate-900 dark:text-white">
           {isChina ? "选择下载版本" : "Choose Download Version"}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-white/20" />
+        <DropdownMenuSeparator className="bg-slate-200 dark:bg-white/20" />
 
         {downloads.map((download, index) => (
           <DropdownMenuItem
             key={index}
             onClick={() => handleDownload(download.url)}
-            className="text-white hover:bg-white/10 cursor-pointer py-3 px-4"
+            className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 cursor-pointer py-3 px-4"
           >
             <div className="flex items-start gap-3 w-full">
-              <div className="mt-0.5 text-blue-400">
+              <div className="mt-0.5 text-blue-600 dark:text-blue-400">
                 {download.icon}
               </div>
               <div className="flex-1">
                 <div className="font-medium">{download.name}</div>
-                <div className="text-sm text-white/60 mt-1">
+                <div className="text-sm text-slate-500 dark:text-white/60 mt-1">
                   {download.description}
                 </div>
               </div>

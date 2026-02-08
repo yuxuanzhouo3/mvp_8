@@ -3,17 +3,15 @@
 
 export const zhProducts: Record<string, string> = {
   "SiteHub": "辰汇导航",
-  "MornSocial": "辰汇社交",
-  "MornGPT": "辰汇GPT",
-  "DeepFake": "辰汇创影",
-  "MornStudio": "辰汇工作室",
-  "SecFile": "辰汇加密",
-  "AutoTools": "辰汇自动化",
-  "MornJob": "辰汇招聘",
-  "MornTopics": "辰汇话题",
-  "MornCompare": "辰汇比价",
-  "MornCoder": "辰汇编程",
-  "MornInterviewer": "辰汇面试"
+  "Personalink": "辰汇社交",
+  "MultiGPT": "辰汇GPT",
+  "MornSpeaker": "辰汇配音",
+  "MornClient": "辰汇客户端",
+  "MornCoach": "辰汇教练",
+  "MornTool": "辰汇工具",
+  "MornFront": "辰汇前沿",
+  "OrbitChat": "辰汇聊天",
+  "MornXYZ": "辰汇话题"
 }
 
 export const zhCategories: Record<string, string> = {

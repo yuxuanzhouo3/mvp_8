@@ -157,13 +157,13 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-slate-800 border-slate-700 text-white">
+      <DialogContent className="max-w-md bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-xl transition-colors">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+            <Settings className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             Settings
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-slate-500 dark:text-slate-400">
             Customize your experience
           </DialogDescription>
         </DialogHeader>
@@ -171,27 +171,27 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
         <div className="space-y-4">
           {/* Profile Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <User className="w-4 h-4" />
+            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1">
+              <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Profile
             </h3>
             <div className="space-y-3">
               <div>
-                <Label htmlFor="name" className="text-xs">Display Name</Label>
+                <Label htmlFor="name" className="text-xs text-slate-500 dark:text-slate-400">Display Name</Label>
                 <Input
                   id="name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white h-8"
+                  className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white h-8 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <Label htmlFor="email" className="text-xs">Email</Label>
+                <Label htmlFor="email" className="text-xs text-slate-500 dark:text-slate-400">Email</Label>
                 <Input
                   id="email"
                   value={user?.email || ""}
                   disabled
-                  className="bg-slate-700 border-slate-600 text-white opacity-50 h-8"
+                  className="bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white opacity-60 h-8"
                 />
               </div>
             </div>
@@ -199,18 +199,18 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
 
           {/* Appearance Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Palette className="w-4 h-4" />
+            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1">
+              <Palette className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Appearance
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="theme" className="text-xs">Theme</Label>
+                <Label htmlFor="theme" className="text-xs text-slate-500 dark:text-slate-400">Theme</Label>
                 <Select value={localSettings.theme} onValueChange={(value) => setLocalSettings({...localSettings, theme: value as "dark" | "light" | "auto"})}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white h-8">
+                  <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white h-8">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectContent className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white">
                     <SelectItem value="dark">Dark</SelectItem>
                     <SelectItem value="light">Light</SelectItem>
                     <SelectItem value="auto">Auto</SelectItem>
@@ -218,12 +218,12 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
                 </Select>
               </div>
               <div>
-                <Label htmlFor="layout" className="text-xs">Layout</Label>
+                <Label htmlFor="layout" className="text-xs text-slate-500 dark:text-slate-400">Layout</Label>
                 <Select value={localSettings.layout} onValueChange={(value) => setLocalSettings({...localSettings, layout: value as "grid" | "list" | "compact"})}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white h-8">
+                  <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white h-8">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-slate-700 border-slate-600">
+                  <SelectContent className="bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white">
                     <SelectItem value="grid">Grid</SelectItem>
                     <SelectItem value="list">List</SelectItem>
                     <SelectItem value="compact">Compact</SelectItem>
@@ -235,15 +235,15 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
 
           {/* Preferences Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Layout className="w-4 h-4" />
+            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1">
+              <Layout className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Preferences
             </h3>
             <div className="space-y-2">
                               <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-xs">Show favorites first</Label>
-                    <p className="text-xs text-slate-400">Prioritize favorites</p>
+                    <Label className="text-xs text-slate-700 dark:text-slate-300">Show favorites first</Label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Prioritize favorites</p>
                   </div>
                   <Switch
                     checked={localSettings.showFavoritesFirst}
@@ -252,8 +252,8 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-xs">Auto-sync</Label>
-                    <p className="text-xs text-slate-400">Sync across devices</p>
+                    <Label className="text-xs text-slate-700 dark:text-slate-300">Auto-sync</Label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Sync across devices</p>
                   </div>
                   <Switch
                     checked={localSettings.autoSync}
@@ -262,8 +262,8 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-xs">Notifications</Label>
-                    <p className="text-xs text-slate-400">Enable notifications</p>
+                    <Label className="text-xs text-slate-700 dark:text-slate-300">Notifications</Label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Enable notifications</p>
                   </div>
                   <Switch
                     checked={localSettings.notifications}
@@ -275,8 +275,8 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
 
           {/* Data Management Section */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Shield className="w-4 h-4" />
+            <h3 className="text-sm font-semibold flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-1">
+              <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Data
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -285,7 +285,7 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
                 size="sm"
                 onClick={handleExport}
                 disabled={loading}
-                className="border-slate-600 hover:bg-slate-700 h-8"
+                className="bg-slate-50 dark:bg-transparent border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 h-8"
               >
                 {loading ? (
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
@@ -299,7 +299,7 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
                 size="sm"
                 onClick={handleImport}
                 disabled={loading}
-                className="border-slate-600 hover:bg-slate-700 h-8"
+                className="bg-slate-50 dark:bg-transparent border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 h-8"
               >
                 {loading ? (
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
@@ -312,18 +312,18 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
           </div>
 
           {/* Account Status */}
-          <div className="p-3 bg-slate-700/50 rounded-lg">
-            <h4 className="font-medium text-sm mb-2">Account</h4>
+          <div className="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+            <h4 className="font-medium text-sm mb-2 text-slate-900 dark:text-white">Account</h4>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between">
-                <span>Plan:</span>
+                <span className="text-slate-500 dark:text-slate-400">Plan:</span>
                 <Badge variant={user?.pro ? "default" : "secondary"} className="text-xs">
                   {user?.pro ? "Pro" : "Free"}
                 </Badge>
               </div>
               <div className="flex justify-between">
-                <span>Custom Sites:</span>
-                <span>{user?.customCount || 0}</span>
+                <span className="text-slate-500 dark:text-slate-400">Custom Sites:</span>
+                <span className="text-slate-900 dark:text-white">{user?.customCount || 0}</span>
               </div>
             </div>
           </div>
@@ -334,7 +334,7 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="border-slate-600 hover:bg-slate-700 h-8"
+              className="border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 h-8"
             >
               <X className="w-3 h-3 mr-1" />
               Cancel
@@ -343,7 +343,7 @@ export function SettingsModal({ open, onOpenChange, user }: SettingsModalProps) 
               size="sm"
               onClick={handleSave}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 h-8"
+              className="bg-blue-600 hover:bg-blue-700 h-8 text-white shadow-md shadow-blue-500/20"
             >
               {loading ? (
                 <Loader2 className="w-3 h-3 mr-1 animate-spin" />
