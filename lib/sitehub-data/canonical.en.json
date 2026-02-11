@@ -7,16 +7,6 @@
   },
   "products": [
     {
-      "id": "sitehub",
-      "name_en": "SiteHub",
-      "url_cn": "https://site.mornscience.top/",
-      "url_intl": "https://www.mornhub.help/",
-      "logo": "🌅",
-      "category": "tools",
-      "isCN": false,
-      "tags": ["navigation", "dashboard", "tools"]
-    },
-    {
       "id": "mornsocial",
       "name_en": "Personalink",
       "url_cn": "https://personalink.mornscience.top",

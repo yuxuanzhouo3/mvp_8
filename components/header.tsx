@@ -16,7 +16,6 @@ import { User, Crown, Settings, LogOut, MessageSquare, Globe, Check, Download, M
 import { GuestTimer } from "@/components/guest-timer"
 import { AuthModal } from "@/components/auth-modal"
 import { PaymentModal } from "@/components/payment-modal"
-import { DownloadButtons } from "@/components/download-buttons"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import { useSettings } from "@/contexts/settings-context"
@@ -107,7 +106,16 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
           <div className="flex items-center gap-2 sm:gap-4">
             <GuestTimer user={user} loading={loading} onTimeExpired={onGuestTimeExpired} onUpgradeClick={onUpgradeClick} />
 
-            <DownloadButtons compact />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/downloads")}
+              className="text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 p-2 sm:px-3"
+              title={language === "zh" ? "下载" : "Download"}
+            >
+              <Download className="w-4 h-4" />
+              <span className="ml-2 hidden sm:inline">{language === "zh" ? "下载" : "Download"}</span>
+            </Button>
 
             {/* Theme Toggle */}
             <Button
