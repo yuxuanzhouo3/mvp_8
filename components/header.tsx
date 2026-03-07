@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,10 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { User, Crown, Settings, LogOut, MessageSquare, Globe, Check, Download, Moon, Sun } from "lucide-react"
+import { User, Crown, Settings, LogOut, MessageSquare, Check, TrendingUp } from "lucide-react"
 import { GuestTimer } from "@/components/guest-timer"
-import { AuthModal } from "@/components/auth-modal"
 import { PaymentModal } from "@/components/payment-modal"
+import { DownloadButtons } from "@/components/download-buttons"
 import { useAuth } from "@/contexts/auth-context"
 import { useLanguage } from "@/contexts/language-context"
 import { useSettings } from "@/contexts/settings-context"
@@ -25,43 +25,17 @@ import { useTheme } from "next-themes"
 interface HeaderProps {
   onGuestTimeExpired: () => void
   onUpgradeClick: () => void
+  onOpenAuth?: (mode: "login" | "signup") => void
 }
 
-export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
+export function Header({ onGuestTimeExpired, onUpgradeClick, onOpenAuth }: HeaderProps) {
   const { user, signOut, loading } = useAuth()
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
-  const { settings, updateSettings } = useSettings()
+  const { theme } = useTheme()
+  const { updateSettings } = useSettings()
   const { language, setLanguage, isAuto } = useLanguage()
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login")
-  const [mounted, setMounted] = useState(false)
   const headerText = homeUiText[language].header
-
-  // Avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Listen for custom events to open auth modal
-  useEffect(() => {
-    const handleOpenAuthModal = (event: CustomEvent) => {
-      setAuthMode(event.detail.mode || "login")
-      setShowAuthModal(true)
-    }
-
-    window.addEventListener('openAuthModal', handleOpenAuthModal as EventListener)
-    
-    return () => {
-      window.removeEventListener('openAuthModal', handleOpenAuthModal as EventListener)
-    }
-  }, [])
-
-  const handleAuth = (userData: any) => {
-    // Auth is now handled by the context
-    setShowAuthModal(false)
-  }
 
   const handleSignOut = async () => {
     await signOut()
@@ -106,44 +80,33 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
           <div className="flex items-center gap-2 sm:gap-4">
             <GuestTimer user={user} loading={loading} onTimeExpired={onGuestTimeExpired} onUpgradeClick={onUpgradeClick} />
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/downloads")}
-              className="text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 p-2 sm:px-3"
-              title={language === "zh" ? "下载" : "Download"}
-            >
-              <Download className="w-4 h-4" />
-              <span className="ml-2 hidden sm:inline">{language === "zh" ? "下载" : "Download"}</span>
-            </Button>
-
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => updateSettings({ theme: theme === "dark" ? "light" : "dark" })}
-              className="p-2 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10"
-              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {mounted ? (
-                theme === "dark" ? (
-                  <Sun className="w-5 h-5 transition-all" />
-                ) : (
-                  <Moon className="w-5 h-5 transition-all text-blue-600" />
-                )
-              ) : (
-                <div className="w-5 h-5" /> // Spacer for hydration
-              )}
-            </Button>
+            <DownloadButtons compact />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 p-2 sm:px-3">
-                  <Globe className="w-4 h-4" />
-                  <span className="hidden sm:inline">{language === "zh" ? headerText.languageChinese : headerText.languageEnglish}</span>
+                <Button
+                  variant="ghost"
+                  className="flex items-center text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 p-2 sm:px-3"
+                  title={headerText.settings}
+                  aria-label={headerText.settings}
+                >
+                  <Settings className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white shadow-xl">
+                <DropdownMenuLabel className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {headerText.settings}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
+                <DropdownMenuItem
+                  onClick={() => updateSettings({ theme: theme === "dark" ? "light" : "dark" })}
+                  className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                >
+                  {language === "zh"
+                    ? (theme === "dark" ? "切换到浅色模式" : "切换到深色模式")
+                    : (theme === "dark" ? "Switch to light mode" : "Switch to dark mode")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
                 <DropdownMenuLabel className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {headerText.languageMenuTitle}
                 </DropdownMenuLabel>
@@ -193,7 +156,9 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10 p-2 sm:px-3">
                   <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">{user?.type === "guest" ? headerText.guestUser : user?.name || "Loading..."}</span>
+                  {user?.type !== "guest" && (
+                    <span className="hidden sm:inline">{user?.name || "Loading..."}</span>
+                  )}
                   {user?.pro && <Crown className="w-4 h-4 text-yellow-400" />}
                 </Button>
               </DropdownMenuTrigger>
@@ -201,19 +166,16 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
                 {user?.type === "guest" ? (
                   <>
                     <DropdownMenuItem 
-                      onClick={() => {
-                        setAuthMode("signup")
-                        setShowAuthModal(true)
-                      }} 
+                      onClick={() => onOpenAuth?.("login")}
+                      className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                    >
+                      {headerText.login}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onOpenAuth?.("signup")}
                       className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
                     >
                       {headerText.signUp}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">
-                      <div className="flex flex-col">
-                        <span>{headerText.guestAccount}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{headerText.limitedFeatures}</span>
-                      </div>
                     </DropdownMenuItem>
                   </>
                 ) : (
@@ -241,6 +203,13 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
+                    <DropdownMenuItem
+                      onClick={() => router.push('/invite')}
+                      className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2 text-slate-500 dark:text-slate-400" />
+                      {language === "zh" ? "邀请中心" : "Invite Center"}
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => router.push('/settings')}
                       className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
@@ -270,14 +239,6 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
           </div>
         )}
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        onAuth={handleAuth}
-        authMode={authMode}
-      />
 
       {/* Payment Modal */}
       <PaymentModal

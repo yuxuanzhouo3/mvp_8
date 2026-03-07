@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/downloads/admin-auth"
-import { deleteAd, updateAdStatus, type AdRegion } from "@/lib/ads/repository"
+import { resolveDeploymentRegion } from "@/lib/config/deployment-region"
+import { deleteAd, updateAdStatus } from "@/lib/ads/repository"
 
 export const runtime = "nodejs"
-
-function normalizeRegion(value?: string | null): AdRegion {
-  return String(value || "").toUpperCase() === "INTL" ? "INTL" : "CN"
-}
 
 export async function PATCH(
   request: NextRequest,
@@ -18,7 +15,7 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const body = await request.json()
-    const region = normalizeRegion(body?.region)
+    const region = resolveDeploymentRegion()
     const isActive = Boolean(body?.isActive)
 
     if (!id) {
@@ -44,7 +41,7 @@ export async function DELETE(
 
   try {
     const { id } = await context.params
-    const region = normalizeRegion(request.nextUrl.searchParams.get("region"))
+    const region = resolveDeploymentRegion()
 
     if (!id) {
       return NextResponse.json({ success: false, error: "Ad id is required" }, { status: 400 })

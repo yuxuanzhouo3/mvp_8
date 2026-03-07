@@ -9,6 +9,7 @@
 export interface SignupResponse {
   success: boolean
   message: string
+  error?: string
   token?: string  // JWT Token
   user?: {
     id: string
@@ -25,6 +26,7 @@ export interface SignupResponse {
 export interface LoginResponse {
   success: boolean
   message: string
+  error?: string
   token?: string  // JWT Token
   user?: {
     id: string
@@ -43,7 +45,8 @@ export interface LoginResponse {
  */
 export async function signupWithEmailCN(
   email: string,
-  password: string
+  password: string,
+  verificationCode?: string
 ): Promise<SignupResponse> {
   try {
     const response = await fetch('/api/auth-cn', {
@@ -54,7 +57,8 @@ export async function signupWithEmailCN(
       body: JSON.stringify({
         action: 'signup',
         email,
-        password
+        password,
+        verificationCode
       })
     })
 
@@ -103,3 +107,66 @@ export async function loginWithEmailCN(
   }
 }
 
+export async function sendEmailCodeCN(
+  email: string,
+  action: 'signup' | 'reset'
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const response = await fetch('/api/auth/email-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        action
+      })
+    })
+
+    const data = await response.json()
+    return {
+      success: Boolean(data?.success && response.ok),
+      message: data?.message,
+      error: data?.error || data?.message,
+    }
+  } catch (error) {
+    console.error('发送验证码失败:', error)
+    return {
+      success: false,
+      error: '网络错误，请稍后重试'
+    }
+  }
+}
+
+export async function resetPasswordWithEmailCodeCN(
+  email: string,
+  verificationCode: string,
+  newPassword: string
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const response = await fetch('/api/auth/email-reset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        verificationCode,
+        newPassword
+      })
+    })
+
+    const data = await response.json()
+    return {
+      success: Boolean(data?.success && response.ok),
+      message: data?.message,
+      error: data?.error || data?.message,
+    }
+  } catch (error) {
+    console.error('重置密码失败:', error)
+    return {
+      success: false,
+      error: '网络错误，请稍后重试'
+    }
+  }
+}

@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/downloads/admin-auth"
+import { resolveDeploymentRegion } from "@/lib/config/deployment-region"
 import { deletePackageById, updatePackageActive } from "@/lib/downloads/repository"
-import { PackageRegion } from "@/lib/downloads/types"
 
 export const runtime = "nodejs"
-
-function normalizeRegion(value?: string | null): PackageRegion {
-  return String(value || "").toUpperCase() === "INTL" ? "INTL" : "CN"
-}
 
 export async function PATCH(
   request: NextRequest,
@@ -19,7 +15,7 @@ export async function PATCH(
   try {
     const { id } = await context.params
     const body = await request.json()
-    const region = normalizeRegion(body?.region)
+    const region = resolveDeploymentRegion()
     const isActive = Boolean(body?.isActive)
 
     if (!id) {
@@ -46,7 +42,7 @@ export async function DELETE(
 
   try {
     const { id } = await context.params
-    const region = normalizeRegion(request.nextUrl.searchParams.get("region"))
+    const region = resolveDeploymentRegion()
 
     if (!id) {
       return NextResponse.json({ success: false, error: "Package id is required" }, { status: 400 })

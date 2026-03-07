@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import cloudbase from '@cloudbase/node-sdk'
 import * as jwt from 'jsonwebtoken'
+import { bindReferralFromRequest } from '@/lib/market/referrals'
 
 /**
  * 微信网页授权回调
@@ -100,6 +101,7 @@ export async function GET(req: NextRequest) {
 
       let userId: string
       let isPro = false
+      let isNewUser = false
 
       if (existingUser.data && existingUser.data.length > 0) {
         // 更新现有用户
@@ -120,8 +122,22 @@ export async function GET(req: NextRequest) {
             created_at: new Date(),
           })
 
-        userId = result.id
+        userId = String(result.id || "")
+        if (!userId) {
+          throw new Error('创建微信用户后未返回 userId')
+        }
+        isNewUser = true
         console.log('✅ 创建微信用户成功:', userId)
+      }
+
+      if (isNewUser) {
+        await bindReferralFromRequest({
+          request: req,
+          invitedUserId: userId,
+          invitedEmail: null,
+        }).catch((error) => {
+          console.warn('[Referral] bind failed after wechat signup:', error)
+        })
       }
 
       // 生成 JWT Token

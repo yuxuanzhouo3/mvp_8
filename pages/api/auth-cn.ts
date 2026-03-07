@@ -2,6 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import cloudbase from '@cloudbase/node-sdk'
 import bcrypt from 'bcryptjs'
 import * as jwt from 'jsonwebtoken'
+import { verifyChinaEmailVerificationCode } from '@/lib/auth/china-email-code'
+import { resolveDeploymentRegion } from '@/lib/config/deployment-region'
+import {
+  bindReferralFromShareCode,
+  decodeReferralAttributionCookie,
+  REFERRAL_ATTRIBUTION_COOKIE,
+} from '@/lib/market/referrals'
 
 /**
  * 国内用户邮箱注册/登录 API
@@ -25,8 +32,15 @@ export default async function handler(
     })
   }
 
+  if (resolveDeploymentRegion() !== 'CN') {
+    return res.status(403).json({
+      success: false,
+      message: 'auth-cn 仅在国内版部署可用'
+    })
+  }
+
   try {
-    const { email, password, action = 'signup' } = req.body
+    const { email, password, action = 'signup', verificationCode } = req.body
     
     // ✅ 诊断日志 2: 打印提取的 email 和 action
     console.log(`✅ [Action]: ${action}, [Email to Check]: ${email}`)
@@ -38,6 +52,8 @@ export default async function handler(
         message: '请提供邮箱和密码'
       })
     }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
 
     // 验证密码长度
     if (password.length < 6) {
@@ -60,15 +76,35 @@ export default async function handler(
     if (action === 'signup') {
       // 注册逻辑
       try {
+        if (!verificationCode || !/^\d{6}$/.test(String(verificationCode))) {
+          return res.status(400).json({
+            success: false,
+            message: '请输入6位邮箱验证码'
+          })
+        }
+
+        const verifyResult = await verifyChinaEmailVerificationCode({
+          email: normalizedEmail,
+          purpose: 'signup',
+          code: String(verificationCode),
+        })
+
+        if (!verifyResult.success) {
+          return res.status(400).json({
+            success: false,
+            message: verifyResult.error || '验证码错误或已过期，请重新获取'
+          })
+        }
+
         // ✅ 诊断日志 3: 在数据库查询之前打印即将查询的 email
-        console.log(`🔍 [Querying Database For]: ${email}`)
+        console.log(`🔍 [Querying Database For]: ${normalizedEmail}`)
         
         // 先检查邮箱是否已存在
-        const existingUserResult = await usersCollection.where({ email }).get()
+        const existingUserResult = await usersCollection.where({ email: normalizedEmail }).get()
         console.log(`🔍 [Existing User Check]: Found ${existingUserResult.data?.length || 0} user(s)`)
         
         if (existingUserResult.data && existingUserResult.data.length > 0) {
-          console.log(`⚠️ [Email Already Exists]: ${email}`)
+          console.log(`⚠️ [Email Already Exists]: ${normalizedEmail}`)
           return res.status(400).json({
             success: false,
             message: '该邮箱已被注册'
@@ -80,9 +116,9 @@ export default async function handler(
 
         // 创建新用户
         const newUser = {
-          email: email,
+          email: normalizedEmail,
           password: hashedPassword,
-          name: email.includes('@') ? email.split('@')[0] : email,
+          name: normalizedEmail.includes('@') ? normalizedEmail.split('@')[0] : normalizedEmail,
           pro: false,
           region: 'china',
           createdAt: new Date().toISOString(),
@@ -91,13 +127,27 @@ export default async function handler(
 
         console.log('✅ [Creating User]:', JSON.stringify(newUser, null, 2))
         const result = await usersCollection.add(newUser)
-        console.log(`✅ [User Created Successfully]: ID=${result.id}, Email=${email}`)
+        console.log(`✅ [User Created Successfully]: ID=${result.id}, Email=${normalizedEmail}`)
+
+        const referralCookie = req.cookies?.[REFERRAL_ATTRIBUTION_COOKIE]
+        const referralAttribution = decodeReferralAttributionCookie(referralCookie || null)
+        if (referralAttribution?.shareCode) {
+          await bindReferralFromShareCode({
+            shareCode: referralAttribution.shareCode,
+            source: referralAttribution.source,
+            toolSlug: referralAttribution.toolSlug,
+            invitedUserId: result.id,
+            invitedEmail: normalizedEmail,
+          }).catch((error) => {
+            console.warn('⚠️ [Referral] 绑定邀请关系失败（忽略不影响注册）:', error)
+          })
+        }
 
         // 生成 JWT Token（注册成功后自动登录）
         // 注意：CloudBase add() 返回的 result.id 就是文档的 _id
         const tokenPayload = {
           userId: result.id, // CloudBase add() 返回的 id 就是 _id
-          email: email,
+          email: normalizedEmail,
           region: 'china'
         }
 
@@ -110,7 +160,7 @@ export default async function handler(
           { expiresIn: expiresIn }
         )
 
-        console.log(`✅ [JWT Token Generated]: For new user ${email}`)
+        console.log(`✅ [JWT Token Generated]: For new user ${normalizedEmail}`)
 
         return res.status(200).json({
           success: true,
@@ -118,7 +168,7 @@ export default async function handler(
           user: {
             id: result.id, // 返回给前端的用户ID
             userId: result.id, // 确保userId字段也存在
-            email,
+            email: normalizedEmail,
             name: newUser.name,
             pro: false,
             region: 'china'
@@ -150,10 +200,10 @@ export default async function handler(
       // 登录逻辑
       try {
         // ✅ 诊断日志: 在登录查询之前打印即将查询的 email
-        console.log(`🔍 [Login - Querying Database For]: ${email}`)
+        console.log(`🔍 [Login - Querying Database For]: ${normalizedEmail}`)
         
         // 查找用户
-        const userResult = await usersCollection.where({ email }).get()
+        const userResult = await usersCollection.where({ email: normalizedEmail }).get()
         console.log(`🔍 [Login - Found]: ${userResult.data?.length || 0} user(s)`)
 
         if (!userResult.data || userResult.data.length === 0) {
@@ -176,14 +226,14 @@ export default async function handler(
         console.log(`🤔 [bcrypt.compare Result]: ${isPasswordValid}`)
         
         if (!isPasswordValid) {
-          console.log(`❌ [Login Failed]: Password mismatch for email ${email}`)
+          console.log(`❌ [Login Failed]: Password mismatch for email ${normalizedEmail}`)
           return res.status(400).json({
             success: false,
             message: '用户不存在或密码错误'
           })
         }
         
-        console.log(`✅ [Login Success]: User ${email} logged in successfully`)
+        console.log(`✅ [Login Success]: User ${normalizedEmail} logged in successfully`)
 
         // 检查用户是否有活跃订阅
         let hasActiveSubscription = user.pro || false
@@ -219,7 +269,7 @@ export default async function handler(
           { expiresIn: expiresIn }
         )
 
-        console.log(`✅ [JWT Token Generated]: For user ${email}`)
+        console.log(`✅ [JWT Token Generated]: For user ${normalizedEmail}`)
 
         return res.status(200).json({
           success: true,
@@ -256,7 +306,7 @@ export default async function handler(
         console.log(`🔄 [Token Refresh]: 开始刷新用户 ${userId} 的Token`)
 
         // 从CloudBase获取用户信息
-        const cloudbaseDB = cloudbaseApp.database()
+        const cloudbaseDB = app.database()
         const userResult = await cloudbaseDB
           .collection('web_users')
           .doc(userId)
@@ -343,4 +393,3 @@ export default async function handler(
     })
   }
 }
-

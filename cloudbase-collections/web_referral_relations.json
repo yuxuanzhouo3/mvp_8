@@ -1,0 +1,1 @@
+{"_id":"example_ref_relation_1","inviter_user_id":"example_user_1","invited_user_id":"example_user_2","share_code":"Ab3Kx9Qp","tool_slug":"example-tool","first_tool_id":null,"status":"bound","created_at":{"$date":"2026-03-07T00:00:00.000Z"},"activated_at":null,"updated_at":{"$date":"2026-03-07T00:00:00.000Z"}}

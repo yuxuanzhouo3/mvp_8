@@ -98,9 +98,13 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 p-2 sm:px-3">
+                <Button
+                  variant="ghost"
+                  className="flex items-center text-white hover:bg-white/10 p-2 sm:px-3"
+                  title={language === "zh" ? headerText.languageChinese : headerText.languageEnglish}
+                  aria-label={language === "zh" ? headerText.languageChinese : headerText.languageEnglish}
+                >
                   <Globe className="w-4 h-4" />
-                  <span className="hidden sm:inline">{language === "zh" ? headerText.languageChinese : headerText.languageEnglish}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700 text-white">
@@ -151,10 +155,13 @@ export function Header({ onGuestTimeExpired, onUpgradeClick }: HeaderProps) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-white/10 p-2 sm:px-3">
+                <Button
+                  variant="ghost"
+                  className="flex items-center text-white hover:bg-white/10 p-2 sm:px-3"
+                  title={user?.type === "guest" ? headerText.guestUser : user?.name || "User"}
+                  aria-label={user?.type === "guest" ? headerText.guestUser : user?.name || "User"}
+                >
                   <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">{user?.type === "guest" ? headerText.guestUser : user?.name || "Loading..."}</span>
-                  {user?.pro && <Crown className="w-4 h-4 text-yellow-400" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-slate-800 border-slate-700">

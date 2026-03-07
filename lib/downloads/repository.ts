@@ -53,6 +53,125 @@ function mapCloudbasePackage(row: any): DownloadPackageRecord {
   }
 }
 
+function toNumber(value: any): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function normalizeDateInput(value: any): string | number | Date | null {
+  if (value === null || value === undefined) return null
+  if (value instanceof Date || typeof value === "string" || typeof value === "number") return value
+  if (typeof value === "object" && value !== null && "$date" in value) {
+    return (value as any).$date
+  }
+  return null
+}
+
+function toTimestamp(value: any): number | null {
+  const normalized = normalizeDateInput(value)
+  if (normalized === null) return null
+  const timestamp = new Date(normalized).getTime()
+  return Number.isFinite(timestamp) ? timestamp : null
+}
+
+function toIsoString(value: any): string {
+  const timestamp = toTimestamp(value)
+  return timestamp === null ? new Date().toISOString() : new Date(timestamp).toISOString()
+}
+
+function isOnOrAfterTimestamp(value: any, thresholdMs: number): boolean {
+  const timestamp = toTimestamp(value)
+  return timestamp !== null && timestamp >= thresholdMs
+}
+
+function isAfterTimestamp(value: any, thresholdMs: number): boolean {
+  const timestamp = toTimestamp(value)
+  return timestamp !== null && timestamp > thresholdMs
+}
+
+function normalizeIdentity(value: any): string | null {
+  if (value === null || value === undefined) return null
+  const normalized = String(value).trim().toLowerCase()
+  return normalized ? normalized : null
+}
+
+function pickIdentity(row: any): string | null {
+  return (
+    normalizeIdentity(row?.user_email) ||
+    normalizeIdentity(row?.email) ||
+    normalizeIdentity(row?.user_id) ||
+    normalizeIdentity(row?.id) ||
+    normalizeIdentity(row?._id)
+  )
+}
+
+function isCompletedStatus(value: any): boolean {
+  const status = String(value || "").toLowerCase()
+  return status === "completed" || status === "success" || status === "succeeded" || status === "paid"
+}
+
+function isCompletedTransaction(row: any): boolean {
+  return isCompletedStatus(row?.status) || isCompletedStatus(row?.payment_status)
+}
+
+function isActiveSubscription(row: any, nowMs: number): boolean {
+  const status = String(row?.status || "").toLowerCase()
+  if (["cancelled", "canceled", "expired", "inactive", "failed"].includes(status)) {
+    return false
+  }
+
+  const expiresAt =
+    row?.current_period_end ??
+    row?.expire_time ??
+    row?.subscription_expires_at ??
+    row?.membership_expires_at ??
+    row?.expires_at
+
+  const expiresAtMs = toTimestamp(expiresAt)
+  if (expiresAtMs !== null) return expiresAtMs > nowMs
+
+  return status === "active" || status === "trialing"
+}
+
+function getTransactionAmount(row: any, currency: "CNY" | "USD"): number {
+  const rowCurrency = String(row?.currency || "").toUpperCase()
+
+  if (currency === "CNY") {
+    if (row?.amount_cny !== undefined && row?.amount_cny !== null) return toNumber(row.amount_cny)
+    if ((rowCurrency === "CNY" || !rowCurrency) && row?.amount !== undefined && row?.amount !== null) {
+      return toNumber(row.amount)
+    }
+    if (rowCurrency === "CNY" && row?.gross_amount !== undefined && row?.gross_amount !== null) {
+      return toNumber(row.gross_amount) / 100
+    }
+    return 0
+  }
+
+  if (row?.amount_usd !== undefined && row?.amount_usd !== null) return toNumber(row.amount_usd)
+  if ((rowCurrency === "USD" || !rowCurrency) && row?.amount !== undefined && row?.amount !== null) {
+    return toNumber(row.amount)
+  }
+  if ((rowCurrency === "USD" || !rowCurrency) && row?.gross_amount !== undefined && row?.gross_amount !== null) {
+    return toNumber(row.gross_amount) / 100
+  }
+  return 0
+}
+
+async function safeCloudbaseCollectionGet(db: any, collectionName: string, where?: Record<string, any>) {
+  try {
+    let query = db.collection(collectionName)
+    if (where) query = query.where(where)
+    const result = await query.get()
+    return Array.isArray(result?.data) ? result.data : []
+  } catch (error: any) {
+    const message = String(error?.message || "")
+    if (message.includes("Db or Table not exist") || message.includes("DATABASE_COLLECTION_NOT_EXIST")) {
+      return []
+    }
+    throw error
+  }
+}
+
 async function ensureCloudbaseCollections(db: any) {
   for (const name of ["download_packages", "download_events"]) {
     try {
@@ -223,7 +342,7 @@ export async function listDownloadPackages(options?: {
     }
     const result = await query.get()
     const records = (result?.data || []).map(mapCloudbasePackage)
-    return records.sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
+    return records.sort((a: DownloadPackageRecord, b: DownloadPackageRecord) => (a.createdAt > b.createdAt ? -1 : 1))
   }
 
   const current = resolveDeploymentRegion()
@@ -231,12 +350,9 @@ export async function listDownloadPackages(options?: {
 }
 
 export async function listAllDownloadPackagesForAdmin(): Promise<DownloadPackageRecord[]> {
-  const [cn, intl] = await Promise.all([
-    listDownloadPackages({ region: "CN", onlyActive: false }).catch(() => []),
-    listDownloadPackages({ region: "INTL", onlyActive: false }).catch(() => []),
-  ])
-
-  return [...cn, ...intl].sort((a: DownloadPackageRecord, b: DownloadPackageRecord) =>
+  const activeRegion = resolveDeploymentRegion()
+  const records = await listDownloadPackages({ region: activeRegion, onlyActive: false }).catch(() => [])
+  return records.sort((a: DownloadPackageRecord, b: DownloadPackageRecord) =>
     a.createdAt > b.createdAt ? -1 : 1
   )
 }
@@ -414,18 +530,20 @@ export async function downloadCloudbasePackageFile(fileID: string): Promise<Buff
 }
 
 export async function getDownloadStatsSummary() {
-  const [allPackages, cnUsers, intlUsers] = await Promise.all([
-    listAllDownloadPackagesForAdmin(),
-    countChinaUsers().catch(() => 0),
-    countIntlUsers().catch(() => 0),
+  const activeRegion = resolveDeploymentRegion()
+  const [allPackages, activeUsers] = await Promise.all([
+    listDownloadPackages({ region: activeRegion, onlyActive: false }).catch(() => []),
+    (activeRegion === "CN" ? countChinaUsers() : countIntlUsers()).catch(() => 0),
   ])
 
   const totalDownloads = allPackages.reduce((sum, item) => sum + Number(item.downloadCount || 0), 0)
-  const cnPackages = allPackages.filter((item) => item.region === "CN").length
-  const intlPackages = allPackages.filter((item) => item.region === "INTL").length
+  const cnPackages = activeRegion === "CN" ? allPackages.length : 0
+  const intlPackages = activeRegion === "INTL" ? allPackages.length : 0
+  const cnUsers = activeRegion === "CN" ? activeUsers : 0
+  const intlUsers = activeRegion === "INTL" ? activeUsers : 0
 
   return {
-    totalUsers: cnUsers + intlUsers,
+    totalUsers: activeUsers,
     cnUsers,
     intlUsers,
     totalDownloads,
@@ -437,21 +555,28 @@ export async function getDownloadStatsSummary() {
 
 async function countIntlUsers(): Promise<number> {
   const supabase = getSupabaseAdminForDownloads()
-  const { count, error } = await supabase
-    .from("user")
+  const profilesCount = await supabase
+    .from("profiles")
     .select("id", { count: "exact", head: true })
 
-  if (error) {
-    throw new Error(error.message)
+  if (!profilesCount.error) {
+    return Number(profilesCount.count || 0)
   }
 
-  return Number(count || 0)
+  // Backward compatibility for projects still on web_users.
+  const usersCount = await supabase
+    .from("web_users")
+    .select("id", { count: "exact", head: true })
+  if (usersCount.error) {
+    throw new Error(profilesCount.error.message)
+  }
+  return Number(usersCount.count || 0)
 }
 
 async function countChinaUsers(): Promise<number> {
   const db = await getDatabase()
-  const result = await db.collection("web_users").get()
-  return Array.isArray(result?.data) ? result.data.length : 0
+  const users = await safeCloudbaseCollectionGet(db, "web_users")
+  return users.length
 }
 
 export async function getAdminDashboardStats() {
@@ -459,26 +584,25 @@ export async function getAdminDashboardStats() {
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
   const todayStartIso = todayStart.toISOString()
+  const activeRegion = resolveDeploymentRegion()
 
-  const [downloadStats, cnMetrics, intlMetrics] = await Promise.all([
+  const emptyMetrics = {
+    totalUsers: 0,
+    paidUsers: 0,
+    activeMembers: 0,
+    completedOrders: 0,
+    revenue: 0,
+    todayNewUsers: 0,
+  }
+
+  const [downloadStats, activeMetrics] = await Promise.all([
     getDownloadStatsSummary(),
-    getCnBusinessMetrics(todayStartIso, nowIso).catch(() => ({
-      totalUsers: 0,
-      paidUsers: 0,
-      activeMembers: 0,
-      completedOrders: 0,
-      revenue: 0,
-      todayNewUsers: 0,
-    })),
-    getIntlBusinessMetrics(todayStartIso, nowIso).catch(() => ({
-      totalUsers: 0,
-      paidUsers: 0,
-      activeMembers: 0,
-      completedOrders: 0,
-      revenue: 0,
-      todayNewUsers: 0,
-    })),
+    (activeRegion === "CN" ? getCnBusinessMetrics(todayStartIso, nowIso) : getIntlBusinessMetrics(todayStartIso, nowIso))
+      .catch(() => emptyMetrics),
   ])
+
+  const cnMetrics = activeRegion === "CN" ? activeMetrics : emptyMetrics
+  const intlMetrics = activeRegion === "INTL" ? activeMetrics : emptyMetrics
 
   return {
     overview: {
@@ -498,67 +622,99 @@ export async function getAdminDashboardStats() {
 }
 
 export async function getRecentAdminUsers(limit = 20) {
-  const [cnUsers, intlUsers] = await Promise.all([
-    getCnUsers().catch(() => []),
-    getIntlUsers(limit).catch(() => []),
-  ])
-
-  return [...cnUsers, ...intlUsers]
+  const activeRegion = resolveDeploymentRegion()
+  const users = await (activeRegion === "CN" ? getCnUsers() : getIntlUsers(limit)).catch(() => [])
+  return users
     .sort((a: any, b: any) => (a.createdAt > b.createdAt ? -1 : 1))
     .slice(0, limit)
 }
 
 export async function getRecentAdminOrders(limit = 20) {
-  const [cnOrders, intlOrders] = await Promise.all([
-    getCnOrders().catch(() => []),
-    getIntlOrders(limit).catch(() => []),
-  ])
-
-  return [...cnOrders, ...intlOrders]
+  const activeRegion = resolveDeploymentRegion()
+  const orders = await (activeRegion === "CN" ? getCnOrders() : getIntlOrders(limit)).catch(() => [])
+  return orders
     .sort((a: any, b: any) => (a.createdAt > b.createdAt ? -1 : 1))
     .slice(0, limit)
 }
 
 export async function getRecentDownloadEvents(limit = 20) {
-  const [cnEvents, intlEvents] = await Promise.all([
-    getCnDownloadEvents().catch(() => []),
-    getIntlDownloadEvents(limit).catch(() => []),
-  ])
-
-  return [...cnEvents, ...intlEvents]
+  const activeRegion = resolveDeploymentRegion()
+  const events = await (activeRegion === "CN" ? getCnDownloadEvents() : getIntlDownloadEvents(limit)).catch(() => [])
+  return events
     .sort((a: any, b: any) => (a.createdAt > b.createdAt ? -1 : 1))
     .slice(0, limit)
 }
 
 async function getCnBusinessMetrics(todayStartIso: string, nowIso: string) {
   const db = await getDatabase()
+  const nowMs = toTimestamp(nowIso) || Date.now()
+  const todayStartMs = toTimestamp(todayStartIso) || nowMs
 
-  const usersResult = await db.collection("web_users").get()
-  const users = Array.isArray(usersResult?.data) ? usersResult.data : []
+  const [users, subscriptions, transactions] = await Promise.all([
+    safeCloudbaseCollectionGet(db, "web_users"),
+    safeCloudbaseCollectionGet(db, "web_subscriptions").catch(() => []),
+    safeCloudbaseCollectionGet(db, "web_payment_transactions").catch(() => []),
+  ])
 
-  const paidUsers = users.filter((item: any) => Boolean(item?.pro) || String(item?.subscription_tier || "") !== "free").length
-  const activeMembers = users.filter((item: any) => {
-    const raw = item?.subscription_expires_at || item?.membership_expires_at
-    if (!raw) return false
-    const expire = new Date(raw).toISOString()
-    return expire > nowIso
-  }).length
+  let todayNewUsers = 0
+  const paidUsersSet = new Set<string>()
+  const activeUsersSet = new Set<string>()
 
-  const todayNewUsers = users.filter((item: any) => {
-    const created = item?.createdAt || item?.created_at
-    if (!created) return false
-    return String(created) >= todayStartIso
-  }).length
+  for (const item of users) {
+    const identity = pickIdentity(item)
+    const tier = String(item?.subscription_tier || "").toLowerCase()
+    const isPaidTier = Boolean(tier) && tier !== "free"
+    const isPaidFlag = Boolean(item?.pro) || Boolean(item?.is_pro)
 
-  const paymentResult = await db.collection("payments").where({ status: "completed" }).get()
-  const payments = Array.isArray(paymentResult?.data) ? paymentResult.data : []
-  const revenue = payments.reduce((sum: number, item: any) => sum + Number(item?.amount_cny || item?.amount || 0), 0)
+    if (identity && (isPaidFlag || isPaidTier)) {
+      paidUsersSet.add(identity)
+    }
+
+    const membershipExpire =
+      item?.subscription_expires_at ??
+      item?.membership_expires_at ??
+      item?.current_period_end ??
+      item?.expire_time
+
+    if (identity && isAfterTimestamp(membershipExpire, nowMs)) {
+      activeUsersSet.add(identity)
+    }
+
+    const createdAt = item?.createdAt ?? item?.created_at
+    if (isOnOrAfterTimestamp(createdAt, todayStartMs)) {
+      todayNewUsers += 1
+    }
+  }
+
+  for (const item of subscriptions) {
+    const identity = pickIdentity(item)
+    if (!identity) continue
+
+    const status = String(item?.status || "").toLowerCase()
+    if (status !== "pending" && status !== "failed") {
+      paidUsersSet.add(identity)
+    }
+
+    if (isActiveSubscription(item, nowMs)) {
+      activeUsersSet.add(identity)
+    }
+  }
+
+  const completedTransactions = transactions.filter((item: any) => isCompletedTransaction(item))
+  for (const item of completedTransactions) {
+    const identity = pickIdentity(item)
+    if (identity) paidUsersSet.add(identity)
+  }
+  const revenue = completedTransactions.reduce(
+    (sum: number, item: any) => sum + getTransactionAmount(item, "CNY"),
+    0
+  )
 
   return {
     totalUsers: users.length,
-    paidUsers,
-    activeMembers,
-    completedOrders: payments.length,
+    paidUsers: paidUsersSet.size,
+    activeMembers: activeUsersSet.size,
+    completedOrders: completedTransactions.length,
     revenue: Number(revenue.toFixed(2)),
     todayNewUsers,
   }
@@ -566,31 +722,78 @@ async function getCnBusinessMetrics(todayStartIso: string, nowIso: string) {
 
 async function getIntlBusinessMetrics(todayStartIso: string, nowIso: string) {
   const supabase = getSupabaseAdminForDownloads()
+  const nowMs = toTimestamp(nowIso) || Date.now()
+  const todayStartMs = toTimestamp(todayStartIso) || nowMs
 
-  const [usersCount, paidCount, activeCount, orderCount, revenueRows, todayUsersCount] = await Promise.all([
-    supabase.from("user").select("id", { count: "exact", head: true }),
-    supabase.from("user").select("id", { count: "exact", head: true }).neq("subscription_tier", "free"),
-    supabase.from("user").select("id", { count: "exact", head: true }).gt("subscription_expires_at", nowIso),
-    supabase.from("payment_transactions").select("id", { count: "exact", head: true }).eq("status", "completed"),
-    supabase.from("payment_transactions").select("amount_usd").eq("status", "completed"),
-    supabase.from("user").select("id", { count: "exact", head: true }).gte("created_at", todayStartIso),
+  const [profilesResult, fallbackUsersResult, subscriptionsResult, transactionsResult] = await Promise.all([
+    supabase.from("profiles").select("*"),
+    supabase.from("web_users").select("*"),
+    supabase.from("web_subscriptions").select("*"),
+    supabase.from("web_payment_transactions").select("*"),
   ])
 
-  const totalUsers = Number(usersCount.count || 0)
-  const paidUsers = Number(paidCount.count || 0)
-  const activeMembers = Number(activeCount.count || 0)
-  const completedOrders = Number(orderCount.count || 0)
-  const todayNewUsers = Number(todayUsersCount.count || 0)
+  const profileUsers = profilesResult.error ? [] : profilesResult.data || []
+  const fallbackUsers = fallbackUsersResult.error ? [] : fallbackUsersResult.data || []
+  const subscriptions = subscriptionsResult.error ? [] : subscriptionsResult.data || []
+  const transactions = transactionsResult.error ? [] : transactionsResult.data || []
 
-  const revenue = Array.isArray(revenueRows.data)
-    ? revenueRows.data.reduce((sum: number, item: any) => sum + Number(item?.amount_usd || 0), 0)
-    : 0
+  const usersByIdentity = new Map<string, any>()
+  for (const row of [...profileUsers, ...fallbackUsers]) {
+    const identity = pickIdentity(row)
+    if (!identity || usersByIdentity.has(identity)) continue
+    usersByIdentity.set(identity, row)
+  }
+
+  const users = Array.from(usersByIdentity.values())
+  const paidUsersSet = new Set<string>()
+  const activeUsersSet = new Set<string>()
+
+  let todayNewUsers = 0
+  for (const item of users) {
+    const identity = pickIdentity(item)
+    if (!identity) continue
+
+    const tier = String(item?.subscription_tier || "").toLowerCase()
+    const isPaidTier = Boolean(tier) && tier !== "free"
+    const isPaidFlag = Boolean(item?.is_pro) || Boolean(item?.pro)
+    if (isPaidFlag || isPaidTier) {
+      paidUsersSet.add(identity)
+    }
+
+    if (isOnOrAfterTimestamp(item?.created_at || item?.createdAt, todayStartMs)) {
+      todayNewUsers += 1
+    }
+  }
+
+  for (const item of subscriptions) {
+    const identity = pickIdentity(item)
+    if (!identity) continue
+
+    const status = String(item?.status || "").toLowerCase()
+    if (status !== "pending" && status !== "failed") {
+      paidUsersSet.add(identity)
+    }
+
+    if (isActiveSubscription(item, nowMs)) {
+      activeUsersSet.add(identity)
+    }
+  }
+
+  const completedTransactions = transactions.filter((item: any) => isCompletedTransaction(item))
+  for (const item of completedTransactions) {
+    const identity = pickIdentity(item)
+    if (identity) paidUsersSet.add(identity)
+  }
+  const revenue = completedTransactions.reduce(
+    (sum: number, item: any) => sum + getTransactionAmount(item, "USD"),
+    0
+  )
 
   return {
-    totalUsers,
-    paidUsers,
-    activeMembers,
-    completedOrders,
+    totalUsers: users.length,
+    paidUsers: paidUsersSet.size,
+    activeMembers: activeUsersSet.size,
+    completedOrders: completedTransactions.length,
     revenue: Number(revenue.toFixed(2)),
     todayNewUsers,
   }
@@ -598,61 +801,73 @@ async function getIntlBusinessMetrics(todayStartIso: string, nowIso: string) {
 
 async function getCnUsers() {
   const db = await getDatabase()
-  const result = await db.collection("web_users").get()
-  const rows = Array.isArray(result?.data) ? result.data : []
+  const rows = await safeCloudbaseCollectionGet(db, "web_users")
 
   return rows.map((row: any) => ({
     id: String(row?._id || ""),
     email: String(row?.email || ""),
     region: "CN",
-    subscriptionTier: String(row?.subscription_tier || (row?.pro ? "pro" : "free")),
+    subscriptionTier: String(
+      row?.subscription_tier ||
+      ((row?.pro || row?.is_pro) ? "pro" : "free")
+    ),
     credits: Number(row?.credits || 0),
-    createdAt: String(row?.createdAt || row?.created_at || new Date().toISOString()),
+    createdAt: toIsoString(row?.createdAt || row?.created_at),
   }))
 }
 
 async function getIntlUsers(limit = 20) {
   const supabase = getSupabaseAdminForDownloads()
-  const { data, error } = await supabase
-    .from("user")
-    .select("id,email,subscription_tier,credits,created_at")
+  let queryResult = await supabase
+    .from("profiles")
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(limit)
 
-  if (error) throw new Error(error.message)
+  if (queryResult.error) {
+    queryResult = await supabase
+      .from("web_users")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit)
+  }
 
-  return (data || []).map((row: any) => ({
+  if (queryResult.error) throw new Error(queryResult.error.message)
+
+  return (queryResult.data || []).map((row: any) => ({
     id: String(row?.id || ""),
     email: String(row?.email || ""),
     region: "INTL",
-    subscriptionTier: String(row?.subscription_tier || "free"),
-    credits: Number(row?.credits || 0),
-    createdAt: String(row?.created_at || new Date().toISOString()),
+    subscriptionTier: String(
+      row?.subscription_tier ||
+      ((row?.is_pro || row?.pro) ? "pro" : "free")
+    ),
+    credits: Number(row?.credits || row?.custom_count || 0),
+    createdAt: toIsoString(row?.created_at || row?.createdAt),
   }))
 }
 
 async function getCnOrders() {
   const db = await getDatabase()
-  const result = await db.collection("payments").get()
-  const rows = Array.isArray(result?.data) ? result.data : []
+  const rows = await safeCloudbaseCollectionGet(db, "web_payment_transactions")
 
   return rows.map((row: any) => ({
-    id: String(row?._id || row?.out_trade_no || ""),
+    id: String(row?._id || row?.transaction_id || row?.out_trade_no || ""),
     region: "CN",
     method: String(row?.payment_method || "wechat"),
-    status: String(row?.status || "pending"),
-    amount: Number(row?.amount_cny || row?.amount || 0),
-    currency: "CNY",
+    status: String(row?.status || row?.payment_status || "pending"),
+    amount: Number(getTransactionAmount(row, "CNY").toFixed(2)),
+    currency: String(row?.currency || "CNY"),
     userEmail: String(row?.user_email || ""),
-    createdAt: String(row?.created_at || new Date().toISOString()),
+    createdAt: toIsoString(row?.payment_time || row?.created_at),
   }))
 }
 
 async function getIntlOrders(limit = 20) {
   const supabase = getSupabaseAdminForDownloads()
   const { data, error } = await supabase
-    .from("payment_transactions")
-    .select("id,payment_method,status,amount_usd,user_email,created_at")
+    .from("web_payment_transactions")
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(limit)
 
@@ -662,11 +877,11 @@ async function getIntlOrders(limit = 20) {
     id: String(row?.id || ""),
     region: "INTL",
     method: String(row?.payment_method || "stripe"),
-    status: String(row?.status || "pending"),
-    amount: Number(row?.amount_usd || 0),
-    currency: "USD",
+    status: String(row?.status || row?.payment_status || "pending"),
+    amount: Number(getTransactionAmount(row, "USD").toFixed(2)),
+    currency: String(row?.currency || "USD"),
     userEmail: String(row?.user_email || ""),
-    createdAt: String(row?.created_at || new Date().toISOString()),
+    createdAt: toIsoString(row?.payment_time || row?.created_at),
   }))
 }
 

@@ -132,7 +132,7 @@ export const homeUiText: Record<SupportedLanguage, HomeUiText> = {
     hero: {
       title: "SiteHub 工具集",
       subtitle: "一站式网站导航平台",
-      productLabel: "辰汇科技产品集"
+      productLabel: "MornScience Products"
     },
     search: {
       placeholder: `搜索 ${countPlaceholder}+ 网站...`,
@@ -214,7 +214,7 @@ export const homeUiText: Record<SupportedLanguage, HomeUiText> = {
     hero: {
       title: "SiteHub Dashboard",
       subtitle: "All-in-one website navigation hub",
-      productLabel: "MornHub Products"
+      productLabel: "MornScience Products"
     },
     search: {
       placeholder: `Search ${countPlaceholder}+ websites...`,

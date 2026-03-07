@@ -6,12 +6,11 @@ export function resolveDeploymentRegion(): DeploymentRegion {
     process.env.NEXT_PUBLIC_DEPLOYMENT_REGION ||
     "CN";
 
-  const region = rawRegion.toUpperCase();
+  const region = String(rawRegion).trim().toLowerCase();
 
-  if (region === "INTL") {
+  if (["intl", "international", "overseas", "global"].includes(region)) {
     return "INTL";
   }
 
   return "CN";
 }
-

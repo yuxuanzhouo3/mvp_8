@@ -113,6 +113,11 @@ type AdClickStats = {
   recentDaily: Array<{ date: string; clicks: number }>
 }
 
+function resolveClientDeploymentRegion(): Region {
+  const region = String(process.env.NEXT_PUBLIC_DEPLOYMENT_REGION || "").trim().toLowerCase()
+  return ["intl", "international", "overseas", "global"].includes(region) ? "INTL" : "CN"
+}
+
 export default function AdminPage() {
   const router = useRouter()
 
@@ -129,14 +134,14 @@ export default function AdminPage() {
   const [ads, setAds] = useState<AdminAd[]>([])
   const [adStats, setAdStats] = useState<AdClickStats | null>(null)
 
-  const [region, setRegion] = useState<Region>("CN")
+  const [region, setRegion] = useState<Region>(() => resolveClientDeploymentRegion())
   const [platform, setPlatform] = useState("windows")
   const [version, setVersion] = useState("1.0.0")
   const [releaseNotes, setReleaseNotes] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [file, setFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const [adRegion, setAdRegion] = useState<Region>("CN")
+  const [adRegion, setAdRegion] = useState<Region>(() => resolveClientDeploymentRegion())
   const [adTitle, setAdTitle] = useState("")
   const [adImageUrl, setAdImageUrl] = useState("")
   const [adLinkUrl, setAdLinkUrl] = useState("")
@@ -144,6 +149,7 @@ export default function AdminPage() {
   const [adPlacement, setAdPlacement] = useState<string>("dashboard_top")
   const [adImageFile, setAdImageFile] = useState<File | null>(null)
   const [adUploadProgress, setAdUploadProgress] = useState<number | null>(null)
+  const deploymentRegion = resolveClientDeploymentRegion()
 
   const tabs = useMemo(
     () => [
@@ -220,6 +226,11 @@ export default function AdminPage() {
     }
     run()
   }, [])
+
+  useEffect(() => {
+    setRegion(deploymentRegion)
+    setAdRegion(deploymentRegion)
+  }, [deploymentRegion])
 
   const uploadPackage = async () => {
     if (!file) {
@@ -552,20 +563,24 @@ export default function AdminPage() {
               <h2 className="text-xl font-semibold">业务总览</h2>
               {stats ? (
                 <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
                     <StatCard title="总用户" value={stats.overview.totalUsers} />
                     <StatCard title="付费用户" value={stats.overview.paidUsers} />
                     <StatCard title="活跃会员" value={stats.overview.activeMembers} />
                     <StatCard title="成功订单" value={stats.overview.completedOrders} />
-                    <StatCard title="国内收入 (CNY)" value={stats.overview.totalRevenueCny} />
-                    <StatCard title="国际收入 (USD)" value={stats.overview.totalRevenueUsd} />
+                    <StatCard
+                      title={deploymentRegion === "CN" ? "收入 (CNY)" : "收入 (USD)"}
+                      value={deploymentRegion === "CN" ? stats.overview.totalRevenueCny : stats.overview.totalRevenueUsd}
+                    />
                     <StatCard title="总下载" value={stats.overview.totalDownloads} />
                     <StatCard title="今日新增" value={stats.overview.todayNewUsers} />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <RegionCard title="国内版 CN" data={stats.cn} />
-                    <RegionCard title="国际版 INTL" data={stats.intl} />
+                  <div className="grid md:grid-cols-1 gap-4">
+                    <RegionCard
+                      title={deploymentRegion === "CN" ? "国内版 CN" : "国际版 INTL"}
+                      data={deploymentRegion === "CN" ? stats.cn : stats.intl}
+                    />
                   </div>
                 </>
               ) : (
@@ -608,10 +623,12 @@ export default function AdminPage() {
                   <select
                     value={region}
                     onChange={(event) => setRegion(event.target.value as Region)}
+                    disabled
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                   >
-                    <option value="CN">国内版 (CloudBase)</option>
-                    <option value="INTL">国际版 (Supabase)</option>
+                    <option value={deploymentRegion}>
+                      {deploymentRegion === "CN" ? "国内版 (CloudBase)" : "国际版 (Supabase)"}
+                    </option>
                   </select>
                 </Field>
 
@@ -684,18 +701,18 @@ export default function AdminPage() {
 
           {tab === "ads" && (
             <Panel title="广告管理">
-              <div className="grid md:grid-cols-3 gap-3 mb-4">
+              <div className="grid md:grid-cols-2 gap-3 mb-4">
                 <div className="rounded-lg border p-3 bg-muted/30">
                   <div className="text-xs text-muted-foreground">近30天总点击</div>
                   <div className="text-xl font-semibold mt-1">{adStats?.totalClicks || 0}</div>
                 </div>
                 <div className="rounded-lg border p-3 bg-muted/30">
-                  <div className="text-xs text-muted-foreground">国内版点击</div>
-                  <div className="text-xl font-semibold mt-1">{adStats?.clicksByRegion?.CN || 0}</div>
-                </div>
-                <div className="rounded-lg border p-3 bg-muted/30">
-                  <div className="text-xs text-muted-foreground">国际版点击</div>
-                  <div className="text-xl font-semibold mt-1">{adStats?.clicksByRegion?.INTL || 0}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {deploymentRegion === "CN" ? "国内版点击" : "国际版点击"}
+                  </div>
+                  <div className="text-xl font-semibold mt-1">
+                    {deploymentRegion === "CN" ? (adStats?.clicksByRegion?.CN || 0) : (adStats?.clicksByRegion?.INTL || 0)}
+                  </div>
                 </div>
               </div>
 
@@ -720,10 +737,12 @@ export default function AdminPage() {
                   <select
                     value={adRegion}
                     onChange={(event) => setAdRegion(event.target.value as Region)}
+                    disabled
                     className="h-10 rounded-md border border-input bg-background px-3 text-sm"
                   >
-                    <option value="CN">国内版</option>
-                    <option value="INTL">国际版</option>
+                    <option value={deploymentRegion}>
+                      {deploymentRegion === "CN" ? "国内版" : "国际版"}
+                    </option>
                   </select>
                 </Field>
 

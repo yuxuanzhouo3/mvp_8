@@ -2,16 +2,16 @@
 // 从小程序迁移，与 canonical.en.json 配合使用
 
 export const zhProducts: Record<string, string> = {
-  "SiteHub": "辰汇导航",
-  "Personalink": "辰汇社交",
-  "MultiGPT": "辰汇GPT",
-  "MornSpeaker": "辰汇配音",
-  "MornClient": "辰汇客户端",
-  "MornCoach": "辰汇教练",
-  "MornTool": "辰汇工具",
-  "MornFront": "辰汇前沿",
-  "OrbitChat": "辰汇聊天",
-  "MornXYZ": "辰汇话题"
+  "SiteHub": "SiteHub",
+  "PersonaLink": "PersonaLink",
+  "MornSpeaker": "MornSpeaker",
+  "MornClient": "MornClient",
+  "MornCoach": "MornCoach",
+  "MornTool": "MornTool",
+  "MornFront": "MornFront",
+  "MultiGPT": "MultiGPT",
+  "MornGPT": "MornGPT",
+  "MornXYZ": "MornXYZ"
 }
 
 export const zhCategories: Record<string, string> = {

@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/downloads/admin-auth"
+import { resolveDeploymentRegion } from "@/lib/config/deployment-region"
 import { uploadToCloudbaseStorage } from "@/lib/downloads/cloudbase-storage"
 import {
   createDownloadPackage,
-  listAllDownloadPackagesForAdmin,
+  listDownloadPackages,
 } from "@/lib/downloads/repository"
 import { ensureSupabaseBucketExists, getSupabaseAdminForDownloads, getSupabaseDownloadBucket } from "@/lib/downloads/supabase-admin"
-import { PackageRegion } from "@/lib/downloads/types"
 
 export const runtime = "nodejs"
-
-function normalizeRegion(value?: string | null): PackageRegion {
-  return String(value || "").toUpperCase() === "INTL" ? "INTL" : "CN"
-}
 
 function getIntlUploadMaxBytes() {
   const raw = Number(process.env.SUPABASE_UPLOAD_MAX_MB || 50)
@@ -64,7 +60,8 @@ export async function GET(request: NextRequest) {
   if (!auth.ok) return auth.response
 
   try {
-    const packages = await listAllDownloadPackagesForAdmin()
+    const region = resolveDeploymentRegion()
+    const packages = await listDownloadPackages({ region, onlyActive: false })
     return NextResponse.json({ success: true, packages })
   } catch (error: any) {
     return NextResponse.json(
@@ -80,7 +77,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const formData = await request.formData()
-    const region = normalizeRegion(String(formData.get("region") || ""))
+    // Backend isolation: always use current deployment region.
+    const region = resolveDeploymentRegion()
     const platform = String(formData.get("platform") || "").trim()
     const version = String(formData.get("version") || "").trim()
     const title = `Morntool ${platform || "package"}`
@@ -90,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     if (!platform || !version || !(fileValue instanceof File)) {
       return NextResponse.json(
-        { success: false, error: "Missing required fields: region/platform/version/file" },
+        { success: false, error: "Missing required fields: platform/version/file" },
         { status: 400 }
       )
     }

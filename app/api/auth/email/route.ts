@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 import cloudbase from '@cloudbase/node-sdk'
+import { verifyChinaEmailVerificationCode } from '@/lib/auth/china-email-code'
+import { resolveDeploymentRegion } from '@/lib/config/deployment-region'
+import { bindReferralFromRequest } from '@/lib/market/referrals'
 
 // 服务器端Supabase客户端（无需localStorage）
 function createServerClient() {
@@ -25,8 +28,8 @@ function createServerClient() {
  */
 
 // 从环境变量读取部署区域（默认为国内版）
-const DEPLOYMENT_REGION = process.env.NEXT_PUBLIC_DEPLOYMENT_REGION || 'china'
-const IS_CHINA_DEPLOYMENT = DEPLOYMENT_REGION === 'china'
+const DEPLOYMENT_REGION = resolveDeploymentRegion()
+const IS_CHINA_DEPLOYMENT = DEPLOYMENT_REGION === 'CN'
 
 // 国内部署认证（使用腾讯云CloudBase数据库）
 async function cloudbaseEmailAuth(email: string, password: string, mode: 'login' | 'signup') {
@@ -177,7 +180,15 @@ async function supabaseEmailAuth(email: string, password: string, mode: 'login' 
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, mode } = await request.json()
+    const { email, password, mode, verificationCode } = await request.json()
+    const authMode = mode === 'signup' ? 'signup' : mode === 'login' ? 'login' : null
+
+    if (!authMode) {
+      return NextResponse.json(
+        { error: '不支持的认证操作' },
+        { status: 400 }
+      )
+    }
 
     if (!email || !password) {
       return NextResponse.json(
@@ -185,6 +196,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
 
     console.log(`📍 部署区域: ${DEPLOYMENT_REGION} → ${IS_CHINA_DEPLOYMENT ? '🇨🇳 国内版' : '🌍 海外版'}`)
 
@@ -196,14 +209,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (IS_CHINA_DEPLOYMENT && authMode === 'signup') {
+      if (!verificationCode || !/^\d{6}$/.test(String(verificationCode))) {
+        return NextResponse.json(
+          { error: '请输入6位邮箱验证码' },
+          { status: 400 }
+        )
+      }
+
+      const verifyResult = await verifyChinaEmailVerificationCode({
+        email: normalizedEmail,
+        purpose: 'signup',
+        code: String(verificationCode),
+      })
+
+      if (!verifyResult.success) {
+        return NextResponse.json(
+          { error: verifyResult.error || '验证码错误或已过期，请重新获取' },
+          { status: 400 }
+        )
+      }
+    }
+
     // 根据环境变量选择认证方式
     let result
     if (IS_CHINA_DEPLOYMENT) {
       console.log('🔐 [国内版] 使用CloudBase数据库')
-      result = await cloudbaseEmailAuth(email, password, mode as 'login' | 'signup')
+      result = await cloudbaseEmailAuth(normalizedEmail, password, authMode)
     } else {
       console.log('🔐 [海外版] 使用Supabase数据库')
-      result = await supabaseEmailAuth(email, password, mode as 'login' | 'signup')
+      result = await supabaseEmailAuth(normalizedEmail, password, authMode)
     }
 
     if (result.error) {
@@ -211,6 +246,16 @@ export async function POST(request: NextRequest) {
         { error: result.error },
         { status: 400 }
       )
+    }
+
+    if (authMode === 'signup' && result.user?.id) {
+      await bindReferralFromRequest({
+        request,
+        invitedUserId: String(result.user.id),
+        invitedEmail: normalizedEmail,
+      }).catch((error) => {
+        console.warn('[Referral] bind failed after signup:', error)
+      })
     }
 
     return NextResponse.json({

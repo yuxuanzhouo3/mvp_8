@@ -1,30 +1,22 @@
 {
   "_meta": {
-    "source": "MornHub original website data",
-    "version": "1.0.1",
+    "source": "MornScience curated product list",
+    "version": "1.1.1",
     "description": "Canonical English data source - single source of truth for all IDs, names, URLs",
-    "lastUpdated": "2025-10-09"
+    "lastUpdated": "2026-02-23"
   },
   "products": [
     {
       "id": "mornsocial",
-      "name_en": "Personalink",
+      "name_en": "PersonaLink",
       "url_cn": "https://personalink.mornscience.top",
       "url_intl": "https://www.mornhub.lat",
       "logo": "🤝",
       "category": "social",
       "isCN": false,
-      "tags": ["social", "networking"]
-    },
-    {
-      "id": "morngpt",
-      "name_en": "MultiGPT",
-      "url_cn": "https://multigpt.mornscience.top/",
-      "url_intl": "https://www.morn.work/",
-      "logo": "🤖",
-      "category": "ai",
-      "isCN": false,
-      "tags": ["ai", "chat", "gpt"]
+      "tags": ["social", "networking"],
+      "mini_program": "晨佑个人链接",
+      "latest_code_branch": "https://github.com/yuxuanzhouo3/mvp_1/tree/master"
     },
     {
       "id": "mornspeaker",
@@ -34,7 +26,9 @@
       "logo": "🎭",
       "category": "ai",
       "isCN": false,
-      "tags": ["audio", "voice", "ai"]
+      "tags": ["audio", "voice", "ai"],
+      "mini_program": "晨佑翻译",
+      "latest_code_branch": null
     },
     {
       "id": "mornclient",
@@ -44,7 +38,9 @@
       "logo": "🎨",
       "category": "ai",
       "isCN": false,
-      "tags": ["client", "tools"]
+      "tags": ["client", "tools"],
+      "mini_program": "晨佑端转化工具",
+      "latest_code_branch": null
     },
     {
       "id": "morncoach",
@@ -52,9 +48,11 @@
       "url_cn": "http://morncoach.mornscience.top",
       "url_intl": "https://mornhub.biz",
       "logo": "🔐",
-      "category": "security",
+      "category": "education",
       "isCN": false,
-      "tags": ["coach", "development"]
+      "tags": ["coach", "development"],
+      "mini_program": "晨佑AI教学",
+      "latest_code_branch": null
     },
     {
       "id": "morntool",
@@ -64,7 +62,9 @@
       "logo": "🛠️",
       "category": "tools",
       "isCN": false,
-      "tags": ["automation", "tools"]
+      "tags": ["automation", "tools"],
+      "mini_program": "未上线",
+      "latest_code_branch": "https://github.com/yuxuanzhouo3/mvp_7/tree/master"
     },
     {
       "id": "mornfront",
@@ -74,27 +74,45 @@
       "logo": "💼",
       "category": "career",
       "isCN": false,
-      "tags": ["frontend", "development"]
+      "tags": ["frontend", "development"],
+      "mini_program": "晨佑前端生成平台",
+      "latest_code_branch": null
     },
     {
-      "id": "orbital",
-      "name_en": "OrbitChat",
-      "url_cn": "https://orbital.mornscience.top/",
-      "url_intl": "http://mornscience.work/",
-      "logo": "🌐",
-      "category": "tools",
+      "id": "morngpt",
+      "name_en": "MultiGPT",
+      "url_cn": "https://multigpt.mornscience.top/",
+      "url_intl": "https://morn.work/",
+      "logo": "🤖",
+      "category": "ai",
       "isCN": false,
-      "tags": ["chat", "orbital"]
+      "tags": ["ai", "chat", "gpt"],
+      "mini_program": "AI联合智能",
+      "latest_code_branch": "https://github.com/yuxuanzhouo3/mvp_24/tree/master"
+    },
+    {
+      "id": "morngpt-platform",
+      "name_en": "MornGPT",
+      "url_cn": "https://morngpt.mornscience.top/",
+      "url_intl": "https://mornhub.net/",
+      "logo": "🌐",
+      "category": "ai",
+      "isCN": false,
+      "tags": ["ai", "platform", "chat"],
+      "mini_program": "晨佑AI平台",
+      "latest_code_branch": "https://github.com/yuxuanzhouo3/mvp_28/tree/master"
     },
     {
       "id": "mornxyz",
       "name_en": "MornXYZ",
       "url_cn": "https://mornxyz.mornscience.top/",
-      "url_intl": "https://www.mornhub.xyz/",
+      "url_intl": "https://mornhub.xyz/",
       "logo": "🔬",
       "category": "shopping",
       "isCN": false,
-      "tags": ["topics", "xyz"]
+      "tags": ["topics", "xyz"],
+      "mini_program": "辰汇个性推荐平台",
+      "latest_code_branch": null
     }
   ],
   "categories": [

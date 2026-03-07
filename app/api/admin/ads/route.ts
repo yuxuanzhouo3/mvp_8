@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/downloads/admin-auth"
-import { createAd, listAllAdsForAdmin, type AdRegion, validatePlacement } from "@/lib/ads/repository"
+import { resolveDeploymentRegion } from "@/lib/config/deployment-region"
+import { createAd, listAds, validatePlacement } from "@/lib/ads/repository"
 
 export const runtime = "nodejs"
-
-function normalizeRegion(value?: string | null): AdRegion {
-  return String(value || "").toUpperCase() === "INTL" ? "INTL" : "CN"
-}
 
 function isValidAdImageUrl(imageUrl: string) {
   return /^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("cloud://")
@@ -17,7 +14,8 @@ export async function GET(request: NextRequest) {
   if (!auth.ok) return auth.response
 
   try {
-    const ads = await listAllAdsForAdmin()
+    const region = resolveDeploymentRegion()
+    const ads = await listAds({ region, onlyActive: false, placement: "" })
     return NextResponse.json({ success: true, ads })
   } catch (error: any) {
     return NextResponse.json(
@@ -33,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const region = normalizeRegion(body?.region)
+    const region = resolveDeploymentRegion()
     const placement = validatePlacement(body?.placement)
     const title = String(body?.title || "").trim() || `广告位 · ${placement}`
     const imageUrl = String(body?.imageUrl || "").trim()

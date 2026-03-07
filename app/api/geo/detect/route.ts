@@ -57,6 +57,24 @@ function getClientIP(request: NextRequest): string {
   return ''
 }
 
+function getDefaultGeoLocation(): GeoLocation {
+  return {
+    country: 'United States',
+    countryCode: 'US',
+    region: '',
+    regionName: '',
+    city: '',
+    timezone: 'America/New_York',
+    currency: 'USD',
+    language: 'en-US',
+    paymentMethods: ['stripe', 'paypal'],
+    ip: 'unknown',
+    regionCategory: 'usa',
+    languageCode: 'en',
+    isEurope: false
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const clientIP = getClientIP(request)
@@ -64,25 +82,12 @@ export async function GET(request: NextRequest) {
     // 如果没有获取到 IP，直接返回默认配置
     if (!clientIP) {
       console.log('⚠️ [Geo] No IP detected, using default configuration')
-      const defaultLocation: GeoLocation = {
-        country: 'United States',
-        countryCode: 'US',
-        region: '',
-        regionName: '',
-        city: '',
-        timezone: 'America/New_York',
-        currency: 'USD',
-        language: 'en-US',
-        paymentMethods: ['stripe', 'paypal'],
-        ip: 'unknown',
-        regionCategory: 'usa',
-        languageCode: 'en',
-        isEurope: false
-      }
+      const defaultLocation = getDefaultGeoLocation()
       return NextResponse.json({
-        success: false,
-        error: 'No IP detected',
-        data: defaultLocation
+        success: true,
+        data: defaultLocation,
+        fallback: true,
+        reason: 'no_ip'
       })
     }
 
@@ -104,18 +109,32 @@ export async function GET(request: NextRequest) {
     const response = await fetch(`http://ip-api.com/json/${clientIP}?fields=status,message,country,countryCode,region,regionName,city,timezone,query`, {
       headers: {
         'Accept': 'application/json'
-      }
+      },
+      // 避免第三方地理服务卡住请求
+      signal: AbortSignal.timeout(2500)
     })
 
     if (!response.ok) {
-      throw new Error('IP-API request failed')
+      console.warn(`⚠️ [Geo] IP-API request failed: ${response.status} ${response.statusText}`)
+      return NextResponse.json({
+        success: true,
+        data: getDefaultGeoLocation(),
+        fallback: true,
+        reason: 'upstream_http_error'
+      })
     }
 
     const data = await response.json()
 
     // 检查 API 响应状态
     if (data.status !== 'success') {
-      throw new Error(data.message || 'IP detection failed')
+      console.warn(`⚠️ [Geo] IP-API detection failed: ${data.message || 'unknown'}`)
+      return NextResponse.json({
+        success: true,
+        data: getDefaultGeoLocation(),
+        fallback: true,
+        reason: 'upstream_status_error'
+      })
     }
 
     // 获取国家代码和区域分类
@@ -165,29 +184,15 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('IP detection error:', error)
-
-    // 返回默认配置（假设为美国用户）
-    const defaultLocation: GeoLocation = {
-      country: 'United States',
-      countryCode: 'US',
-      region: '',
-      regionName: '',
-      city: '',
-      timezone: 'America/New_York',
-      currency: 'USD',
-      language: 'en-US',
-      paymentMethods: ['stripe', 'paypal'],
-      ip: 'unknown',
-      regionCategory: 'usa',
-      languageCode: 'en',
-      isEurope: false
-    }
+    const message = error instanceof Error ? error.message : String(error)
+    // 不打印 error 对象本身，避免在 dev 日志里输出整段堆栈。
+    console.warn(`⚠️ [Geo] IP detection fallback: ${message}`)
 
     return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'IP detection failed',
-      data: defaultLocation // 返回默认值确保应用可用
+      success: true,
+      data: getDefaultGeoLocation(),
+      fallback: true,
+      reason: 'exception'
     })
   }
 }

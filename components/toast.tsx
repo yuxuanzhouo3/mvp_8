@@ -30,7 +30,7 @@ export function Toast({ message, type = "success" }) {
 
   // Always return the same structure, use CSS to hide when not visible
   return (
-    <div className={`fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${!isVisible ? "hidden" : ""}`}>
+    <div className={`fixed top-20 sm:top-24 right-4 z-40 animate-in slide-in-from-top-2 duration-300 ${!isVisible ? "hidden" : ""}`}>
       <div
         className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-white shadow-lg backdrop-blur-sm ${colors[type]}`}
       >

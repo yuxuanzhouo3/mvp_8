@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/downloads/admin-auth"
+import { resolveDeploymentRegion } from "@/lib/config/deployment-region"
 import { getAdClickStats } from "@/lib/ads/repository"
 
 export const runtime = "nodejs"
@@ -10,7 +11,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const days = Number(request.nextUrl.searchParams.get("days") || 30)
-    const stats = await getAdClickStats({ days })
+    const region = resolveDeploymentRegion()
+    const stats = await getAdClickStats({ days, region })
     return NextResponse.json({ success: true, stats })
   } catch (error: any) {
     return NextResponse.json(

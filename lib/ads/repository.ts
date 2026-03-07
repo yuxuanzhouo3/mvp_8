@@ -168,7 +168,10 @@ export async function listAds(options?: {
 }): Promise<AdRecord[]> {
   const region = options?.region || resolveDeploymentRegion()
   const onlyActive = options?.onlyActive !== false
-  const placement = String(options?.placement || "dashboard_top").trim()
+  const placement =
+    options?.placement === undefined
+      ? "dashboard_top"
+      : String(options?.placement || "").trim()
 
   if (region === "INTL") {
     const supabase = getSupabaseAdminForDownloads()
@@ -191,7 +194,7 @@ export async function listAds(options?: {
 
   const result = await db.collection("web_ads").where(whereQuery).get()
   const rows = (result?.data || []).map(mapCloudbaseAd)
-  const sorted = rows.sort((a, b) =>
+  const sorted = rows.sort((a: AdRecord, b: AdRecord) =>
     a.sortOrder === b.sortOrder ? (a.createdAt > b.createdAt ? -1 : 1) : a.sortOrder - b.sortOrder
   )
 
@@ -199,13 +202,9 @@ export async function listAds(options?: {
 }
 
 export async function listAllAdsForAdmin(): Promise<AdRecord[]> {
-  const [cn, intl] = await Promise.all([
-    listAds({ region: "CN", onlyActive: false, placement: "" }).catch(() => []),
-    listAds({ region: "INTL", onlyActive: false, placement: "" }).catch(() => []),
-  ])
-
-  const allAds = [...cn, ...intl].sort((a, b) => (a.createdAt > b.createdAt ? -1 : 1))
-  const stats = await getAdClickStats({ days: 365 }).catch(() => null)
+  const region = resolveDeploymentRegion()
+  const allAds = await listAds({ region, onlyActive: false, placement: "" }).catch(() => [])
+  const stats = await getAdClickStats({ days: 365, region }).catch(() => null)
 
   if (!stats) return allAds
 
@@ -334,16 +333,18 @@ export async function recordAdClick(input: RecordAdClickInput): Promise<void> {
   await db.collection("web_ad_clicks").add(payload)
 }
 
-export async function getAdClickStats(options?: { days?: number }): Promise<AdClickStats> {
+export async function getAdClickStats(options?: { days?: number; region?: AdRegion }): Promise<AdClickStats> {
   const days = Number(options?.days || 30)
+  const region = options?.region || resolveDeploymentRegion()
   const since = new Date()
   since.setUTCDate(since.getUTCDate() - Math.max(1, days) + 1)
   const sinceIso = since.toISOString()
 
-  const [intlRows, cnRows] = await Promise.all([
-    getIntlAdClicksSince(sinceIso).catch(() => []),
-    getCnAdClicksSince(sinceIso).catch(() => []),
-  ])
+  const [intlRows, cnRows] = await Promise.all(
+    region === "INTL"
+      ? [getIntlAdClicksSince(sinceIso).catch(() => []), Promise.resolve([])]
+      : [Promise.resolve([]), getCnAdClicksSince(sinceIso).catch(() => [])]
+  )
 
   const rows = [...intlRows, ...cnRows]
   const clicksByPlacement: Record<string, number> = {}

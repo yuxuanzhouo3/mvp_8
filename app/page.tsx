@@ -18,7 +18,6 @@ import { SearchAndFilters } from "@/components/search-and-filters"
 import { UltraCompactSiteGrid } from "@/components/ultra-compact-site-grid"
 import { AddSiteModal } from "@/components/add-site-modal"
 import { ParseSitesModal } from "@/components/parse-sites-modal"
-import { UpgradeModal } from "@/components/upgrade-modal"
 import { AuthModal } from "@/components/auth-modal"
 import { Toast } from "@/components/toast"
 import { Button } from "@/components/ui/button"
@@ -335,7 +334,6 @@ export default function SiteHub() {
   const [isShuffled, setIsShuffled] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showParseModal, setShowParseModal] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState<"login" | "signup">("login")
   const [toast, setToast] = useState<any>(null)
@@ -716,15 +714,18 @@ export default function SiteHub() {
     setTimeout(() => setToast(null), 3000)
   }, [])
 
+  const handleOpenAuthModal = useCallback((mode: "login" | "signup" = "signup") => {
+    setAuthMode(mode)
+    setShowAuthModal(true)
+  }, [])
+
   const handleGuestTimeExpired = useCallback(() => {
     setIsGuestTimeExpired(true)
     showToast(toastText.timeExpired, "info")
   }, [showToast, toastText])
 
   const handleUpgradeClick = useCallback(() => {
-    console.log('🔍 [Upgrade] 点击升级按钮，地区检测:', { isChina, regionCategory, timestamp: new Date().toISOString() })
-    
-    // If user is already logged in (authenticated), go to payment page
+    // If user is already logged in (authenticated), go to payment page.
     if (user.type === 'authenticated') {
       if (isHydrated && typeof window !== 'undefined') {
         window.location.href = '/payment'
@@ -732,27 +733,8 @@ export default function SiteHub() {
       return
     }
 
-    // 显示升级模态框（国内外用户统一处理）
-    console.log('🔍 [Upgrade] 显示升级模态框')
-    setShowUpgradeModal(true)
-  }, [isChina, regionCategory, user.type, isHydrated])
-
-  const handleAuth = useCallback((provider: string) => {
-    // Close the upgrade modal first
-    setShowUpgradeModal(false)
-
-    // 统一处理登录/注册逻辑（国内外用户都支持）
-    if (provider === "login") {
-      setShowAuthModal(true)
-      setAuthMode("login")
-    } else if (provider === "email") {
-      setShowAuthModal(true)
-      setAuthMode("signup")
-    } else {
-      setShowAuthModal(true)
-      setAuthMode("signup")
-    }
-  }, [])
+    handleOpenAuthModal("signup")
+  }, [user.type, isHydrated, handleOpenAuthModal])
 
   const handleOpenParseModal = useCallback(() => {
     try {
@@ -802,7 +784,7 @@ export default function SiteHub() {
 
   const handleReorder = useCallback((newSites: Site[]) => {
     if (user.type === "guest" && isGuestTimeExpired) {
-      setShowUpgradeModal(true)
+      handleOpenAuthModal("signup")
       return
     }
 
@@ -818,13 +800,13 @@ export default function SiteHub() {
     setRawSites(reorderedRawSites)
     if (isHydrated && typeof window !== 'undefined') {
       try {
-        localStorage.setItem("sitehub-sites", JSON.stringify(reorderedSites))
+        localStorage.setItem("sitehub-sites", JSON.stringify(reorderedRawSites))
       } catch (error) {
         console.error('❌ [LocalStorage] 保存重排序状态失败:', error)
       }
     }
     showToast(toastText.reordered)
-  }, [user.type, isGuestTimeExpired, rawSites, isHydrated, showToast, toastText])
+  }, [user.type, isGuestTimeExpired, handleOpenAuthModal, rawSites, isHydrated, showToast, toastText])
 
   const addCustomSite = useCallback(async (newSite: any): Promise<boolean> => {
     console.log('🔍 [AddSite] 开始添加网站:', newSite)
@@ -844,7 +826,7 @@ export default function SiteHub() {
     }
 
     if (user.type === "guest" && isGuestTimeExpired) {
-      setShowUpgradeModal(true)
+      handleOpenAuthModal("signup")
       showToast("Sign up to keep adding custom sites.", "info")
       return false
     }
@@ -966,7 +948,7 @@ export default function SiteHub() {
       }
       return false
     }
-  }, [existingUrls, user, isGuestTimeExpired, dbAdapter, isHydrated, isChina, showToast])
+  }, [existingUrls, user, isGuestTimeExpired, handleOpenAuthModal, dbAdapter, isHydrated, isChina, showToast])
 
   const toggleFavorite = useCallback(async (siteId: string) => {
     const isFavorited = favorites.includes(siteId)
@@ -1114,7 +1096,6 @@ export default function SiteHub() {
   // ✅ 关键修复：所有模态框回调函数都用 useCallback 包装
   const handleCloseAddModal = useCallback(() => setShowAddModal(false), [])
   const handleCloseParseModal = useCallback(() => setShowParseModal(false), [])
-  const handleCloseUpgradeModal = useCallback(() => setShowUpgradeModal(false), [])
   const handleCloseAuthModal = useCallback(() => setShowAuthModal(false), [])
   const handleAuthSuccess = useCallback((userData: any) => {
     console.log('🔍 [Auth] 用户认证成功:', userData)
@@ -1170,6 +1151,7 @@ export default function SiteHub() {
       <Header
         onGuestTimeExpired={handleGuestTimeExpired}
         onUpgradeClick={handleUpgradeClick}
+        onOpenAuth={handleOpenAuthModal}
       />
 
       <DndContext
@@ -1316,14 +1298,6 @@ export default function SiteHub() {
         existingUrls={existingUrls}
         isProUser={user.pro}
         remainingSlots={remainingCustomSlots}
-      />
-
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={handleCloseUpgradeModal}
-        onAuth={handleAuth}
-        isTimeExpired={isGuestTimeExpired}
-        region={isChina ? "China" : "Overseas"}
       />
 
       <AuthModal
