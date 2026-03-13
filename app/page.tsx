@@ -36,6 +36,7 @@ import { homeUiText, uiPlaceholders } from "@/lib/i18n/home-ui"
 import { createDatabaseAdapter, type IDatabaseAdapter } from "@/lib/database/adapter"
 import { getFavorites, addToFavorites, removeFromFavorites, type CreateFavoriteData } from "@/lib/favorites"
 import { getCustomWebsites, addCustomWebsite, deleteCustomWebsite, type CreateWebsiteData } from "@/lib/custom-websites"
+import { openInWebView } from "@/lib/webview-utils"
 
 interface Site {
   id: string
@@ -218,6 +219,33 @@ const localizeSite = (site: Site, language: SupportedLanguage): Site => {
 const localizeSites = (list: Site[], language: SupportedLanguage): Site[] =>
   list.map((site) => localizeSite(site, language))
 
+function toSearchText(value: string | null | undefined) {
+  return String(value || "").trim().toLowerCase()
+}
+
+function getWebSearchUrl(query: string, engine: "google" | "baidu") {
+  const url = new URL(engine === "baidu" ? "https://www.baidu.com/s" : "https://www.google.com/search")
+  url.searchParams.set(engine === "baidu" ? "wd" : "q", query)
+  return url.toString()
+}
+
+function parseGoogleDirective(rawQuery: string) {
+  const query = String(rawQuery || "").trim()
+  const lower = query.toLowerCase()
+  if (lower.startsWith("google ")) return query.slice(7).trim()
+  if (lower.startsWith("g ")) return query.slice(2).trim()
+  if (lower.startsWith("g:")) return query.slice(2).trim()
+  return ""
+}
+
+function normalizeDirectUrl(rawQuery: string) {
+  const query = String(rawQuery || "").trim()
+  if (!query) return ""
+  if (query.startsWith("http://") || query.startsWith("https://")) return query
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(query)) return `https://${query}`
+  return ""
+}
+
 // 辅助函数：获取用户地区（优先使用localStorage中的用户信息）
 function getUserRegionFromStorage(): 'china' | 'overseas' | null {
   if (typeof window === 'undefined') return null
@@ -318,6 +346,8 @@ export default function SiteHub() {
   const { language } = useLanguage()
   const text = homeUiText[language]
   const toastText = text.toasts
+  const searchEngine: "google" | "baidu" = isOverseas ? "google" : "baidu"
+  const searchEngineName = searchEngine === "baidu" ? "Baidu" : "Google"
 
   // 存储原始站点数据（未处理）
   const [rawSites, setRawSites] = useState<Site[]>([])
@@ -653,11 +683,18 @@ export default function SiteHub() {
 
     // Apply search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase()
+      const query = toSearchText(searchQuery)
       filtered = filtered.filter(
-        (site) =>
-          site.name.toLowerCase().includes(query) ||
-          site.category.toLowerCase().includes(query),
+        (site) => {
+          const keywords = [
+            site.name,
+            site.nameEn,
+            site.category,
+            site.id,
+            site.url,
+          ]
+          return keywords.some((value) => toSearchText(value).includes(query))
+        },
       )
     }
 
@@ -675,6 +712,81 @@ export default function SiteHub() {
 
     return filtered
   }, [sites.length, sites, searchQuery, selectedCategory, favorites.length, favorites, isHydrated])
+
+  const smartSearchMatches = useMemo<Site[]>(() => {
+    const query = toSearchText(searchQuery)
+    if (!query || !isHydrated) return []
+
+    return sites
+      .filter((site) => !site.featured)
+      .filter((site) => {
+        const keywords = [
+          site.name,
+          site.nameEn,
+          site.category,
+          site.id,
+          site.url,
+        ]
+        return keywords.some((value) => toSearchText(value).includes(query))
+      })
+  }, [searchQuery, sites, isHydrated])
+
+  const smartTopMatch = useMemo<Site | null>(() => {
+    const query = toSearchText(searchQuery)
+    if (!query || smartSearchMatches.length === 0) return null
+
+    const exact = smartSearchMatches.find((site) => {
+      const fields = [site.name, site.nameEn, site.id]
+      return fields.some((value) => toSearchText(value) === query)
+    })
+    if (exact) return exact
+
+    const prefix = smartSearchMatches.find((site) => {
+      const fields = [site.name, site.nameEn, site.id]
+      return fields.some((value) => toSearchText(value).startsWith(query))
+    })
+    if (prefix) return prefix
+
+    return smartSearchMatches.length === 1 ? smartSearchMatches[0] : null
+  }, [searchQuery, smartSearchMatches])
+
+  const openSiteBySearch = useCallback((site: Site) => {
+    if (!site?.url) return
+    void openInWebView(site.url)
+  }, [])
+
+  const handleWebSearch = useCallback((rawQuery: string) => {
+    const query = String(rawQuery || "").trim()
+    if (!query) return
+    void openInWebView(getWebSearchUrl(query, searchEngine))
+  }, [searchEngine])
+
+  const handleSmartSearchSubmit = useCallback((rawQuery: string) => {
+    const query = String(rawQuery || "").trim()
+    if (!query) return
+
+    const forcedSearchQuery = parseGoogleDirective(query)
+    if (forcedSearchQuery) {
+      handleWebSearch(forcedSearchQuery)
+      return
+    }
+
+    const directUrl = normalizeDirectUrl(query)
+    if (directUrl) {
+      void openInWebView(directUrl)
+      return
+    }
+
+    if (smartTopMatch) {
+      openSiteBySearch(smartTopMatch)
+      return
+    }
+
+    if (smartSearchMatches.length === 0) {
+      handleWebSearch(query)
+      return
+    }
+  }, [smartTopMatch, smartSearchMatches.length, handleWebSearch, openSiteBySearch])
 
   // 使用所有过滤后的站点（移除数量限制以显示全部站点）
   const displayedSites = useMemo(() => {
@@ -1213,6 +1325,11 @@ export default function SiteHub() {
           filteredCount={mounted ? filteredSites.length : 0}
           categoryOrder={canonicalCategoryOrder}
           totalCount={mounted ? nonFeaturedCount : 0}
+          smartMatchCount={mounted ? smartSearchMatches.length : 0}
+          smartTopMatchName={smartTopMatch?.name || smartTopMatch?.nameEn || null}
+          onSmartSubmit={handleSmartSearchSubmit}
+          onWebSearch={handleWebSearch}
+          searchEngineName={searchEngineName}
         />
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0 mb-2 sm:mb-3">

@@ -19,6 +19,11 @@ interface SearchAndFiltersProps {
   filteredCount: number
   categoryOrder?: string[]
   totalCount?: number
+  smartMatchCount?: number
+  smartTopMatchName?: string | null
+  onSmartSubmit?: (query: string) => void
+  onWebSearch?: (query: string) => void
+  searchEngineName?: string
 }
 
 const iconMap: Record<string, string> = {
@@ -141,6 +146,11 @@ export function SearchAndFilters({
   filteredCount,
   categoryOrder,
   totalCount,
+  smartMatchCount = 0,
+  smartTopMatchName = null,
+  onSmartSubmit,
+  onWebSearch,
+  searchEngineName = "Google",
 }: SearchAndFiltersProps) {
   const isMobile = useIsMobile()
   const [showAllCategories, setShowAllCategories] = useState(false)
@@ -193,6 +203,19 @@ export function SearchAndFilters({
 
   const sectionLabel = text.categoriesLabel
   const sitesSuffix = text.sitesSuffix
+  const trimmedSearchQuery = searchQuery.trim()
+  const smartMatchLabel =
+    language === "zh"
+      ? `站内匹配 ${smartMatchCount} 个结果`
+      : `${smartMatchCount} matches in SiteHub`
+  const smartOpenLabel =
+    language === "zh"
+      ? `直达：${smartTopMatchName || ""}`
+      : `Open: ${smartTopMatchName || ""}`
+  const webSearchLabel =
+    language === "zh"
+      ? `${searchEngineName} 搜索 "${trimmedSearchQuery}"`
+      : `Search "${trimmedSearchQuery}" on ${searchEngineName}`
 
   return (
     <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
@@ -204,6 +227,15 @@ export function SearchAndFilters({
           placeholder={text.placeholder.replace("{count}", placeholderCount)}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return
+            e.preventDefault()
+            if (e.metaKey || e.ctrlKey) {
+              onWebSearch?.(searchQuery)
+              return
+            }
+            onSmartSubmit?.(searchQuery)
+          }}
           className="pl-9 sm:pl-10 pr-9 sm:pr-10 h-9 sm:h-10 text-sm bg-slate-200 dark:bg-white/10 border-slate-200 dark:border-white/20 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-white/60 focus:border-blue-500 dark:focus:border-blue-400 touch-manipulation transition-colors"
           aria-label={sectionLabel}
         />
@@ -218,6 +250,35 @@ export function SearchAndFilters({
           </Button>
         )}
       </div>
+      {trimmedSearchQuery ? (
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+          <Badge
+            variant="secondary"
+            className="text-[10px] sm:text-xs bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-white/80 h-6"
+          >
+            {smartMatchLabel}
+          </Badge>
+          {smartTopMatchName ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSmartSubmit?.(searchQuery)}
+              className="text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation bg-slate-200 dark:bg-white/10 border-slate-200 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-300 dark:hover:bg-white/20"
+            >
+              {smartOpenLabel}
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onWebSearch?.(searchQuery)}
+            className="text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 min-w-[44px] touch-manipulation bg-slate-200 dark:bg-white/10 border-slate-200 dark:border-white/20 text-slate-700 dark:text-white hover:bg-slate-300 dark:hover:bg-white/20"
+          >
+            <Search className="w-3 h-3 mr-1" />
+            {webSearchLabel}
+          </Button>
+        </div>
+      ) : null}
 
       {/* Category Filters - 移动端优化 */}
       <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen} className="space-y-2 sm:space-y-3">

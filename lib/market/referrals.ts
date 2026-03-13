@@ -580,14 +580,14 @@ export async function ensureUserReferralCode(input: { userId: string; userEmail?
     }
 
     const referralCode = await findUniqueUserReferralCode("INTL")
-    const updateResult = await supabase
+    const { data: updatedUserRow, error: updateUserError } = await supabase
       .from("web_users")
       .update({ referral_code: referralCode, updated_at: nowIso() })
       .eq("id", userId)
+      .select("id")
+      .maybeSingle()
 
-    if (!updateResult.error) {
-      return referralCode
-    }
+    const updateUserSucceeded = !updateUserError && Boolean(updatedUserRow?.id)
 
     const { error: createGlobalLinkError } = await supabase.from("web_referral_links").insert({
       creator_user_id: userId,
@@ -600,7 +600,7 @@ export async function ensureUserReferralCode(input: { userId: string; userEmail?
       updated_at: nowIso(),
     })
 
-    if (createGlobalLinkError) {
+    if (createGlobalLinkError && !updateUserSucceeded) {
       throw new Error(createGlobalLinkError.message)
     }
 

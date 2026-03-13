@@ -11,8 +11,8 @@ import { ensureSupabaseBucketExists, getSupabaseAdminForDownloads, getSupabaseDo
 export const runtime = "nodejs"
 
 function getIntlUploadMaxBytes() {
-  const raw = Number(process.env.SUPABASE_UPLOAD_MAX_MB || 50)
-  const maxMb = Number.isFinite(raw) && raw > 0 ? raw : 50
+  const raw = Number(process.env.SUPABASE_UPLOAD_MAX_MB || 100)
+  const maxMb = Number.isFinite(raw) && raw > 0 ? raw : 100
   return Math.floor(maxMb * 1024 * 1024)
 }
 

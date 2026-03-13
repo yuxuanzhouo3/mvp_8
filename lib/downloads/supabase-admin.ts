@@ -29,7 +29,9 @@ export function getSupabaseAdBucket() {
 }
 
 function resolveBucketFileSizeLimit() {
-  return String(process.env.SUPABASE_BUCKET_FILE_SIZE_LIMIT || "2048MB").trim() || "2048MB"
+  const envValue = process.env.SUPABASE_BUCKET_FILE_SIZE_LIMIT
+  if (envValue) return String(envValue).trim()
+  return 104857600 // 100MB in bytes
 }
 
 export async function ensureSupabaseBucketExists(bucket: string, options?: { public?: boolean }) {

@@ -39,6 +39,12 @@ function isLocalOrigin(rawOrigin: string) {
 }
 
 function resolveRequestOrigin(request: NextRequest) {
+  const requestOrigin = normalizeOrigin(request.nextUrl.origin)
+
+  if (isLocalOrigin(requestOrigin)) {
+    return requestOrigin
+  }
+
   const forwardedProto = String(request.headers.get("x-forwarded-proto") || "").split(",")[0]?.trim().toLowerCase()
   const forwardedHost = String(request.headers.get("x-forwarded-host") || "").split(",")[0]?.trim()
 
@@ -46,13 +52,9 @@ function resolveRequestOrigin(request: NextRequest) {
     ? normalizeOrigin(`${forwardedProto || "https"}://${forwardedHost}`)
     : ""
 
-  const requestOrigin = normalizeOrigin(request.nextUrl.origin)
   const siteOrigin = normalizeOrigin(process.env.NEXT_PUBLIC_SITE_URL)
 
-  const preferred = [forwardedOrigin, requestOrigin, siteOrigin].find((value) => value && !isLocalOrigin(value))
-  if (preferred) return preferred
-
-  return forwardedOrigin || requestOrigin || siteOrigin || "http://localhost:3000"
+  return forwardedOrigin || siteOrigin || requestOrigin || "http://localhost:3000"
 }
 
 function normalizeTargetPath(rawValue: string | null, fallbackPath: string) {
