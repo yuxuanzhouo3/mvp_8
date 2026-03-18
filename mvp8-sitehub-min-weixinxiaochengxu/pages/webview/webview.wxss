@@ -1,0 +1,175 @@
+/* pages/webview/webview.wxss - Cookie 持久化版本 */
+
+.webview-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========== 顶部工具栏 ========== */
+.webview-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 88rpx;
+  height: calc(88rpx + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 16rpx;
+  padding-right: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  gap: 8rpx;
+}
+
+.toolbar-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16rpx;
+  gap: 12rpx;
+}
+
+.toolbar-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16rpx;
+  transition: all 0.2s ease;
+}
+
+.toolbar-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
+}
+
+.btn-icon {
+  font-size: 36rpx;
+  color: white;
+  font-weight: 600;
+}
+
+.toolbar-btn.favorited {
+  background: rgba(255, 215, 0, 0.3);
+}
+
+.toolbar-btn.favorited .btn-icon {
+  color: #FFD700;
+}
+
+/* ========== 加载进度条 ========== */
+.progress-bar {
+  position: fixed;
+  top: 88rpx;
+  top: calc(88rpx + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  height: 4rpx;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  z-index: 99;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+  animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  50% {
+    width: 75%;
+    margin-left: 25%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
+}
+
+/* ========== 加载页面 ========== */
+.loading-page {
+  position: fixed;
+  top: 88rpx;
+  top: calc(88rpx + env(safe-area-inset-top));
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 88rpx - env(safe-area-inset-top));
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32rpx;
+}
+
+/* 旋转动画 */
+.loading-spinner {
+  width: 80rpx;
+  height: 80rpx;
+  border: 6rpx solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-title {
+  color: #ffffff;
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.loading-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 28rpx;
+}
+
+.loading-hint {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 24rpx;
+  padding: 12rpx 24rpx;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20rpx;
+  margin-top: 16rpx;
+}
+
+/* ========== WebView 容器 ========== */
+web-view {
+  flex: 1;
+  margin-top: 88rpx;
+  margin-top: calc(88rpx + env(safe-area-inset-top));
+}

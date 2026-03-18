@@ -1,0 +1,403 @@
+<!--pages/settings/settings.wxml-->
+<view class="settings-container">
+
+  <!-- Tab 导航栏 -->
+  <view class="tabs-bar">
+    <view class="tab-item {{currentTab === 'account' ? 'active' : ''}}" 
+          bindtap="onTabChange" data-tab="account">
+      <text class="tab-text">{{uiText.tabs.account}}</text>
+      <view class="tab-indicator"></view>
+    </view>
+    <view class="tab-item {{currentTab === 'billing' ? 'active' : ''}}" 
+          bindtap="onTabChange" data-tab="billing">
+      <text class="tab-text">{{uiText.tabs.billing}}</text>
+      <view class="tab-indicator"></view>
+    </view>
+    <view class="tab-item {{currentTab === 'language' ? 'active' : ''}}" 
+          bindtap="onTabChange" data-tab="language">
+      <text class="tab-text">{{uiText.tabs.language}}</text>
+      <view class="tab-indicator"></view>
+    </view>
+    <view class="tab-item {{currentTab === 'legal' ? 'active' : ''}}" 
+          bindtap="onTabChange" data-tab="legal">
+      <text class="tab-text">{{uiText.tabs.legal}}</text>
+      <view class="tab-indicator"></view>
+    </view>
+  </view>
+
+  <!-- Tab 内容区 -->
+  <scroll-view class="tab-content" scroll-y="true" enable-back-to-top="true">
+
+    <!-- ========================================
+         Account Tab
+    ======================================== -->
+    <view wx:if="{{currentTab === 'account'}}" class="tab-panel">
+      
+      <!-- 个人信息 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">👤</text>
+          <text class="section-title">{{uiText.account.profileTitle}}</text>
+        </view>
+        
+        <view wx:if="{{userInfo}}" class="profile-card">
+          <image class="avatar" src="{{userInfo.avatarUrl || 'https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132'}}" mode="aspectFill" binderror="onAvatarError"></image>
+          <view class="profile-info">
+            <view class="info-row">
+              <text class="info-label">{{uiText.account.nickname}}:</text>
+              <text class="info-value">{{userInfo.nickName || 'User'}}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">{{uiText.account.userId}}:</text>
+              <text class="info-value">{{userInfo.userId || 'N/A'}}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">{{uiText.account.registered}}:</text>
+              <text class="info-value">{{userInfo.formattedCreatedAt || userInfo.createdAt || userInfo.created_at || '加载中...'}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view wx:else class="empty-state">
+          <text class="empty-icon">👤</text>
+          <text class="empty-text">{{uiText.loginRequired}}</text>
+        </view>
+      </view>
+
+      <!-- 会员信息 - 优化版 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">👑</text>
+          <text class="section-title">{{uiText.account.membershipTitle}}</text>
+        </view>
+
+        <!-- Pro会员卡 -->
+        <view wx:if="{{isPro && subscription && subscription.status === 'active'}}" class="pro-member-card">
+          <view class="card-decoration"></view>
+
+          <view class="member-header">
+            <view class="member-badge">
+              <text class="badge-icon">👑</text>
+              <text class="badge-text">{{subscription.plan_display}}</text>
+            </view>
+            <view class="member-tier">{{subscription.plan_tier_label}}</view>
+          </view>
+
+          <view class="member-summary">{{subscription.plan_summary}}</view>
+
+          <view class="member-expiry">
+            <view class="expiry-label">有效期至</view>
+            <view class="expiry-date">{{subscription.formattedExpiry}}</view>
+            <view wx:if="{{subscription.daysLeft > 0}}" class="expiry-badge">
+              <text>剩余{{subscription.daysLeft}}天</text>
+            </view>
+          </view>
+
+          <view class="member-features">
+            <view wx:for="{{subscription.featureList}}" wx:key="*this" class="feature-item">
+              <text class="feature-icon">✓</text>
+              <text class="feature-text">{{item}}</text>
+            </view>
+          </view>
+
+          <view class="member-actions">
+            <view class="action-link" bindtap="onViewBilling">
+              <text>查看账单</text>
+              <text class="arrow">›</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 免费用户卡 -->
+        <view wx:else class="free-member-card">
+          <view class="free-badge">
+            <text class="badge-text">免费版</text>
+          </view>
+          <view class="free-summary">当前权益</view>
+          <view class="free-limits">
+            <text class="limit-item">• 收藏上限 20 个</text>
+            <text class="limit-item">• 自定义站点 5 个</text>
+            <text class="limit-item">• 基础推荐与同步</text>
+          </view>
+          <view class="upgrade-section">
+            <text class="upgrade-prompt">升级 Pro 解锁更多高级功能</text>
+            <view class="upgrade-btn" bindtap="onUpgrade">
+              <text>立即升级 →</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+    </view>
+
+    <!-- ========================================
+         Billing Tab
+    ======================================== -->
+    <view wx:if="{{currentTab === 'billing'}}" class="tab-panel">
+      
+      <!-- 订阅状态 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">💳</text>
+          <text class="section-title">{{uiText.billing.statusTitle}}</text>
+        </view>
+        
+        <view wx:if="{{loadingSubscription}}" class="loading-state">
+          <text class="loading-icon">⏳</text>
+          <text class="loading-text">{{uiText.loading}}</text>
+        </view>
+        
+        <view wx:elif="{{subscription}}" class="subscription-card">
+          <view class="subscription-header">
+            <view class="subscription-plan">
+              <text class="plan-icon">👑</text>
+              <text class="plan-name">
+                {{subscription.plan_display}}
+              </text>
+            </view>
+            <view class="subscription-price">
+              <text class="currency">{{subscription.displayCurrency === 'CNY' ? '¥' : subscription.displayCurrency}}</text>
+              <text class="amount">{{subscription.displayAmount}}</text>
+              <text class="period">/{{subscription.normalizedCycle === 'monthly' ? '月' : '年'}}</text>
+            </view>
+          </view>
+          
+          <view class="subscription-info">
+            <view class="info-item">
+              <text class="info-label">{{uiText.billing.nextBilling}}:</text>
+              <text class="info-value">{{subscription.billing_display_date || subscription.formattedExpiry || subscription.current_period_end}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">{{uiText.billing.autoRenewal}}:</text>
+              <text class="info-value {{subscription.cancel_at_period_end ? 'disabled' : 'enabled'}}">
+                {{subscription.cancel_at_period_end ? uiText.billing.disabled : uiText.billing.enabled}}
+              </text>
+            </view>
+          </view>
+          
+          <view class="subscription-actions">
+            <view wx:if="{{subscription.canUpgrade}}" 
+                  class="action-btn upgrade-btn" bindtap="onUpgrade">
+              <text>{{uiText.billing.upgrade}}</text>
+            </view>
+            <view class="action-btn manage-btn" bindtap="onManageBilling">
+              <text>{{uiText.billing.manageBilling}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view wx:else class="empty-subscription">
+          <text class="empty-icon">💳</text>
+          <text class="empty-text">{{uiText.billing.noSubscription}}</text>
+          <view class="upgrade-button" bindtap="onUpgrade">
+            <text>{{uiText.billing.goUpgrade}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 计费历史 -->
+      <view wx:if="{{subscription}}" class="section">
+        <view class="section-header">
+          <text class="section-icon">📋</text>
+          <text class="section-title">{{uiText.billing.historyTitle}}</text>
+        </view>
+        
+        <view wx:if="{{subscriptionHistory.length > 0}}" class="history-list">
+          <view wx:for="{{subscriptionHistory}}" wx:key="subscription_id" class="history-item">
+            <view class="history-date">{{item.created_at_formatted || item.created_at}}</view>
+            <view class="history-info">
+              <text class="history-plan">
+                {{item.plan_type === 'team' ? 'Team 会员' : 'Pro 会员'}}
+                {{item.billing_cycle === 'monthly' ? '月付' : '年付'}}
+              </text>
+              <text class="history-amount">¥{{item.displayAmount || item.amount}}</text>
+            </view>
+            <view class="history-status {{item.status}}">
+              <text>{{uiText.billing[item.status] || item.status}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view wx:else class="empty-history">
+          <text class="empty-text">{{uiText.billing.noHistory}}</text>
+        </view>
+      </view>
+
+      <!-- 重要提示 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">⚠️</text>
+          <text class="section-title">{{uiText.billing.noticeTitle}}</text>
+        </view>
+        
+        <view class="notice-card">
+          <text class="notice-item">{{uiText.billing.notice1}}</text>
+          <text class="notice-item">{{uiText.billing.notice2}}</text>
+          <text class="notice-item">{{uiText.billing.notice3}}</text>
+          <text class="notice-item">{{uiText.billing.notice4}}</text>
+        </view>
+      </view>
+
+    </view>
+
+    <!-- ========================================
+         Language Tab
+    ======================================== -->
+    <view wx:if="{{currentTab === 'language'}}" class="tab-panel">
+      
+      <!-- 语言偏好 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">🌍</text>
+          <text class="section-title">{{uiText.language.preferenceTitle}}</text>
+        </view>
+        
+        <view class="language-current">
+          <view class="language-row">
+            <text class="language-label">{{uiText.language.currentLanguage}}:</text>
+            <text class="language-value">
+              {{currentLang === 'zh' ? '中文 🇨🇳' : 'English 🇺🇸'}}
+            </text>
+          </view>
+          <view class="language-row">
+            <text class="language-label">{{uiText.language.detectionMethod}}:</text>
+            <text class="language-value">
+              {{isAutoDetected ? uiText.language.autoDetected : uiText.language.manualSelected}}
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 切换语言 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">🔄</text>
+          <text class="section-title">{{uiText.language.switchTitle}}</text>
+        </view>
+        
+        <view class="language-options">
+          <!-- 自动检测 -->
+          <view class="language-option {{isAutoDetected ? 'selected' : ''}}" 
+                bindtap="onLanguageChange" data-lang="auto">
+            <view class="option-radio">
+              <text wx:if="{{isAutoDetected}}">⦿</text>
+              <text wx:else>⚪</text>
+            </view>
+            <view class="option-content">
+              <text class="option-title">{{uiText.language.autoOption}}</text>
+              <text class="option-desc">{{uiText.language.autoDesc}}</text>
+            </view>
+          </view>
+          
+          <!-- 中文 -->
+          <view class="language-option {{!isAutoDetected && currentLang === 'zh' ? 'selected' : ''}}" 
+                bindtap="onLanguageChange" data-lang="zh">
+            <view class="option-radio">
+              <text wx:if="{{!isAutoDetected && currentLang === 'zh'}}">⦿</text>
+              <text wx:else>⚪</text>
+            </view>
+            <view class="option-content">
+              <text class="option-title">{{uiText.language.zhOption}}</text>
+              <text class="option-desc">{{uiText.language.zhDesc}}</text>
+            </view>
+          </view>
+          
+          <!-- English -->
+          <view class="language-option {{!isAutoDetected && currentLang === 'en' ? 'selected' : ''}}" 
+                bindtap="onLanguageChange" data-lang="en">
+            <view class="option-radio">
+              <text wx:if="{{!isAutoDetected && currentLang === 'en'}}">⦿</text>
+              <text wx:else>⚪</text>
+            </view>
+            <view class="option-content">
+              <text class="option-title">{{uiText.language.enOption}}</text>
+              <text class="option-desc">{{uiText.language.enDesc}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 说明 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">ℹ️</text>
+          <text class="section-title">{{uiText.language.noteTitle}}</text>
+        </view>
+        
+        <view class="note-card">
+          <text class="note-item">{{uiText.language.note1}}</text>
+          <text class="note-item">{{uiText.language.note2}}</text>
+          <text class="note-item">{{uiText.language.note3}}</text>
+        </view>
+      </view>
+
+    </view>
+
+    <!-- ========================================
+         Legal Tab
+    ======================================== -->
+    <view wx:if="{{currentTab === 'legal'}}" class="tab-panel">
+      
+      <!-- 法律与政策 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">📄</text>
+          <text class="section-title">{{uiText.legal.title}}</text>
+        </view>
+        
+        <view class="legal-list">
+          <view class="legal-item" bindtap="onLegalItemClick" data-item="termsOfService">
+            <text class="legal-text">{{uiText.legal.termsOfService}}</text>
+            <text class="legal-arrow">›</text>
+          </view>
+          
+          <view class="legal-item" bindtap="onLegalItemClick" data-item="privacyPolicy">
+            <text class="legal-text">{{uiText.legal.privacyPolicy}}</text>
+            <text class="legal-arrow">›</text>
+          </view>
+          
+          <view class="legal-item" bindtap="onLegalItemClick" data-item="autoRenewalTerms">
+            <text class="legal-text">{{uiText.legal.autoRenewalTerms}}</text>
+            <text class="legal-arrow">›</text>
+          </view>
+          
+          <view class="legal-item" bindtap="onLegalItemClick" data-item="cancellationGuide">
+            <text class="legal-text">{{uiText.legal.cancellationGuide}}</text>
+            <text class="legal-arrow">›</text>
+          </view>
+          
+          <view class="legal-item" bindtap="onLegalItemClick" data-item="refundPolicy">
+            <text class="legal-text">{{uiText.legal.refundPolicy}}</text>
+            <text class="legal-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 联系我们 -->
+      <view class="section">
+        <view class="section-header">
+          <text class="section-icon">📧</text>
+          <text class="section-title">{{uiText.legal.contactTitle}}</text>
+        </view>
+        
+        <view class="contact-card">
+          <view class="contact-row">
+            <text class="contact-label">{{uiText.legal.email}}:</text>
+            <text class="contact-value">mornscience@gmail.com</text>
+          </view>
+          <view class="contact-row">
+            <text class="contact-label">{{uiText.legal.workingHours}}:</text>
+            <text class="contact-value">{{uiText.legal.workingHoursText}}</text>
+          </view>
+          
+          <view class="copy-email-btn" bindtap="onCopyEmail">
+            <text>{{uiText.legal.copyEmail}}</text>
+          </view>
+        </view>
+      </view>
+
+    </view>
+
+  </scroll-view>
+
+</view>

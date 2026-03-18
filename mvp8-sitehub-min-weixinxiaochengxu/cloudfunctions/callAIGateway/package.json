@@ -1,0 +1,10 @@
+{
+  "name": "callAIGateway",
+  "version": "1.0.0",
+  "description": "SiteHub智能路由云函数 - 支持IP检测和双数据库架构",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3",
+    "axios": "^1.6.0"
+  }
+}

@@ -1,0 +1,70 @@
+<!-- components/sidebar/sidebar.wxml -->
+<view class="sidebar-overlay {{show ? 'show' : ''}}" bindtap="onClose">
+  <view class="sidebar {{show ? 'show' : ''}}" catchtap="stopPropagation">
+
+    <!-- 返回按钮 -->
+    <view class="back-button" bindtap="onClose">
+      <text class="back-icon">←</text>
+      <text class="back-text">返回</text>
+    </view>
+
+    <!-- 用户信息区域 -->
+    <view class="user-section">
+      <view wx:if="{{userInfo}}" class="user-info" bindtap="onUserInfoClick">
+        <image class="user-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+        <view class="user-details">
+          <text class="user-name">{{userInfo.nickName}}</text>
+          <text class="user-email">{{userInfo.email || uiText.wechatUser}}</text>
+          <view wx:if="{{membershipStatus.isPro}}" class="pro-badge">
+            <text class="pro-icon">👑</text>
+            <text>{{uiText.proMember}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="guest-info" bindtap="onLoginClick">
+        <view class="guest-avatar">
+          <text class="guest-icon">👤</text>
+        </view>
+        <view class="guest-details">
+          <text class="guest-name">{{uiText.loginText}}</text>
+          <text class="guest-hint">{{uiText.loginHint}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 菜单项列表 -->
+    <view class="menu-section">
+
+      <!-- 升级会员 - 只对非会员显示 -->
+      <view wx:if="{{!membershipStatus.isPro}}" class="menu-item menu-item-upgrade" bindtap="onUpgradeClick">
+        <text class="menu-icon">👑</text>
+        <text class="menu-text">{{uiText.upgradeText}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <!-- 设置 -->
+      <view class="menu-item" bindtap="onSettingsClick">
+        <text class="menu-icon">⚙️</text>
+        <text class="menu-text">{{uiText.settingsText}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+
+      <!-- 联系客服 -->
+      <view class="menu-item" bindtap="onContactClick">
+        <text class="menu-icon">💬</text>
+        <text class="menu-text">{{uiText.contactText}}</text>
+        <text class="menu-arrow">›</text>
+      </view>
+
+    </view>
+
+    <!-- 底部退出登录 -->
+    <view class="logout-section" wx:if="{{userInfo}}">
+      <view class="logout-button" bindtap="onLogoutClick">
+        <text class="logout-text">{{uiText.logoutText}}</text>
+      </view>
+    </view>
+
+  </view>
+</view>

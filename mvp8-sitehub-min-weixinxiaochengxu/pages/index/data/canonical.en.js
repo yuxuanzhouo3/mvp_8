@@ -1,0 +1,479 @@
+// canonical.en.js - 权威英文数据源(微信小程序模块格式)
+// 单一事实来源:所有ID、name_en、URL与原网站保持100%一致
+
+module.exports = {
+  "_meta": {
+    "source": "MornHub original website data",
+    "version": "1.0.2",
+    "description": "Canonical English data source - single source of truth for all IDs, names, URLs",
+    "lastUpdated": "2026-01-09"
+  },
+
+  "products": [
+    {
+      "id": "sitehub",
+      "name_en": "SiteHub",
+      "url": "https://site.mornscience.top/",
+      "logo": "🌅",
+      "category": "tools",
+      "isCN": false,
+      "tags": ["navigation", "dashboard", "tools"]
+    },
+    {
+      "id": "morngpt",
+      "name_en": "MornGPT",
+      "url": "https://morngpt.mornscience.top/",
+      "logo": "🤖",
+      "category": "ai",
+      "isCN": false,
+      "tags": ["ai", "chat", "gpt"]
+    },
+    {
+      "id": "mornxyz",
+      "name_en": "MornXYZ",
+      "url": "https://mornxyz.mornscience.top/",
+      "logo": "🌐",
+      "category": "tools",
+      "isCN": false,
+      "tags": ["tools", "web", "navigation"]
+    },
+    {
+      "id": "mornfront",
+      "name_en": "MornFront",
+      "url": "https://mornfront.mornscience.top/",
+      "logo": "🧩",
+      "category": "tools",
+      "isCN": false,
+      "tags": ["frontend", "tools", "dev"]
+    },
+    {
+      "id": "multigpt",
+      "name_en": "MultiGPT",
+      "url": "https://multigpt.mornscience.top/",
+      "logo": "🧠",
+      "category": "ai",
+      "isCN": false,
+      "tags": ["ai", "gpt", "multi-model"]
+    }
+  ],
+
+  "categories": [
+    { "key": "favorites", "name_en": "Favorites" },
+    { "key": "custom", "name_en": "Custom Sites" },
+    { "key": "all", "name_en": "All Sites" },
+    { "key": "china", "name_en": "China" },
+    { "key": "social", "name_en": "Social Media" },
+    { "key": "video", "name_en": "Video & Streaming" },
+    { "key": "shopping", "name_en": "Shopping" },
+    { "key": "tools", "name_en": "Dev Tools" },
+    { "key": "news", "name_en": "News & Media" },
+    { "key": "finance", "name_en": "Finance" },
+    { "key": "education", "name_en": "Education" },
+    { "key": "productivity", "name_en": "Productivity" },
+    { "key": "design", "name_en": "Design" },
+    { "key": "gaming", "name_en": "Gaming" },
+    { "key": "travel", "name_en": "Travel" },
+    { "key": "food", "name_en": "Food & Delivery" },
+    { "key": "health", "name_en": "Health & Fitness" },
+    { "key": "music", "name_en": "Music" }
+  ],
+
+  "sites": [
+    // 国内主流网站 (按使用频率排序 - 超高频在前)
+    // 第一梯队：日活过亿的国民级应用
+    // 注意：微信和支付宝由于平台限制，在小程序中无法直接打开，会提示复制链接
+    { "id": "wechat", "name_en": "WeChat", "url": "https://weixin.qq.com", "logo": "💬", "category": "social", "isCN": true, "tags": ["chat", "social"], "openInBrowser": true },
+    { "id": "alipay", "name_en": "Alipay", "url": "https://www.alipay.com", "logo": "💰", "category": "finance", "isCN": true, "tags": ["payment", "finance"], "openInBrowser": true },
+    { "id": "taobao", "name_en": "Taobao", "url": "https://taobao.com", "logo": "🛒", "category": "shopping", "isCN": true, "tags": ["shopping", "ecommerce"] },
+    { "id": "baidu", "name_en": "Baidu", "url": "https://baidu.com", "logo": "🔍", "category": "tools", "isCN": true, "tags": ["search"] },
+    { "id": "douyin", "name_en": "Douyin", "url": "https://douyin.com", "logo": "🎵", "category": "video", "isCN": true, "tags": ["short video", "music"] },
+    
+    // 第二梯队：日活千万级的常用应用
+    { "id": "weibo", "name_en": "Weibo", "url": "https://weibo.com", "logo": "🐦", "category": "social", "isCN": true, "tags": ["social", "microblog"] },
+    { "id": "jd", "name_en": "JD", "url": "https://jd.com", "logo": "🛒", "category": "shopping", "isCN": true, "tags": ["shopping", "ecommerce"] },
+    { "id": "meituan", "name_en": "Meituan", "url": "https://meituan.com", "logo": "🍕", "category": "food", "isCN": true, "tags": ["food", "delivery", "lifestyle"] },
+    { "id": "bilibili", "name_en": "Bilibili", "url": "https://bilibili.com", "logo": "📺", "category": "video", "isCN": true, "tags": ["video", "animation", "learning"] },
+    { "id": "zhihu", "name_en": "Zhihu", "url": "https://zhihu.com", "logo": "🤔", "category": "social", "isCN": true, "tags": ["qa", "knowledge"] },
+    { "id": "qq", "name_en": "QQ", "url": "https://web.qq.com", "logo": "🐧", "category": "social", "isCN": true, "tags": ["chat", "social"] },
+    { "id": "xiaohongshu", "name_en": "Xiaohongshu", "url": "https://xiaohongshu.com", "logo": "📓", "category": "social", "isCN": true, "tags": ["social", "shopping"] },
+    
+    // 第三梯队：专业领域常用
+    { "id": "tencent-video", "name_en": "Tencent Video", "url": "https://v.qq.com", "logo": "📺", "category": "video", "isCN": true, "tags": ["video", "movie"] },
+    { "id": "iqiyi", "name_en": "iQiyi", "url": "https://iqiyi.com", "logo": "📺", "category": "video", "isCN": true, "tags": ["video", "movie"] },
+    { "id": "youku", "name_en": "Youku", "url": "https://youku.com", "logo": "📺", "category": "video", "isCN": true, "tags": ["video", "movie"] },
+    { "id": "kuaishou", "name_en": "Kuaishou", "url": "https://kuaishou.com", "logo": "⚡", "category": "video", "isCN": true, "tags": ["short video", "live"] },
+    { "id": "ele", "name_en": "Eleme", "url": "https://ele.me", "logo": "🍔", "category": "food", "isCN": true, "tags": ["food", "delivery"] },
+    { "id": "dianping", "name_en": "Dianping", "url": "https://dianping.com", "logo": "⭐", "category": "food", "isCN": true, "tags": ["food", "review"] },
+    { "id": "tmall", "name_en": "Tmall", "url": "https://tmall.com", "logo": "🛒", "category": "shopping", "isCN": true, "tags": ["shopping", "ecommerce"] },
+    { "id": "didi", "name_en": "Didi", "url": "https://didi.com", "logo": "🚗", "category": "travel", "isCN": true, "tags": ["transport", "ride"] },
+    { "id": "12306", "name_en": "12306", "url": "https://12306.cn", "logo": "🚄", "category": "travel", "isCN": true, "tags": ["train", "railway"] },
+    { "id": "ctrip", "name_en": "Ctrip", "url": "https://ctrip.com", "logo": "✈️", "category": "travel", "isCN": true, "tags": ["travel", "hotel", "flight"] },
+    { "id": "douban", "name_en": "Douban", "url": "https://douban.com", "logo": "📚", "category": "social", "isCN": true, "tags": ["movie", "book", "music"] },
+    { "id": "163", "name_en": "NetEase", "url": "https://163.com", "logo": "📧", "category": "news", "isCN": true, "tags": ["news", "email"] },
+    { "id": "sina", "name_en": "Sina", "url": "https://sina.com.cn", "logo": "📰", "category": "news", "isCN": true, "tags": ["news", "portal"] },
+
+    // 国际主流网站 (与原网站保持完全一致)
+    { "id": "google", "name_en": "Google", "url": "https://google.com", "logo": "🔍", "category": "tools", "isCN": false, "tags": ["search"] },
+    { "id": "youtube", "name_en": "YouTube", "url": "https://youtube.com", "logo": "📺", "category": "video", "isCN": false, "tags": ["video"] },
+    { "id": "facebook", "name_en": "Facebook", "url": "https://facebook.com", "logo": "👥", "category": "social", "isCN": false, "tags": ["social"] },
+    { "id": "instagram", "name_en": "Instagram", "url": "https://instagram.com", "logo": "📸", "category": "social", "isCN": false, "tags": ["photo", "social"] },
+    { "id": "twitter", "name_en": "Twitter", "url": "https://twitter.com", "logo": "🐦", "category": "social", "isCN": false, "tags": ["social", "microblog"] },
+    { "id": "linkedin", "name_en": "LinkedIn", "url": "https://linkedin.com", "logo": "💼", "category": "social", "isCN": false, "tags": ["work", "professional"] },
+    { "id": "github", "name_en": "GitHub", "url": "https://github.com", "logo": "👨‍💻", "category": "tools", "isCN": false, "tags": ["code", "development"] },
+    { "id": "netflix", "name_en": "Netflix", "url": "https://netflix.com", "logo": "🎬", "category": "video", "isCN": false, "tags": ["movie", "tv"] },
+    { "id": "amazon", "name_en": "Amazon", "url": "https://amazon.com", "logo": "📦", "category": "shopping", "isCN": false, "tags": ["shopping", "ecommerce"] },
+    { "id": "ebay", "name_en": "eBay", "url": "https://ebay.com", "logo": "🛒", "category": "shopping", "isCN": false, "tags": ["auction", "shopping"] },
+    { "id": "paypal", "name_en": "PayPal", "url": "https://paypal.com", "logo": "💳", "category": "finance", "isCN": false, "tags": ["payment"] },
+    { "id": "stripe", "name_en": "Stripe", "url": "https://stripe.com", "logo": "💳", "category": "finance", "isCN": false, "tags": ["payment", "developer"] },
+    { "id": "apple", "name_en": "Apple", "url": "https://apple.com", "logo": "🍎", "category": "shopping", "isCN": false, "tags": ["tech", "shopping"] },
+    { "id": "microsoft", "name_en": "Microsoft", "url": "https://microsoft.com", "logo": "🪟", "category": "tools", "isCN": false, "tags": ["tech", "software"] },
+    { "id": "notion", "name_en": "Notion", "url": "https://notion.so", "logo": "📝", "category": "productivity", "isCN": false, "tags": ["notes", "collaboration"] },
+    { "id": "figma", "name_en": "Figma", "url": "https://figma.com", "logo": "🎨", "category": "design", "isCN": false, "tags": ["design", "prototype"] },
+    { "id": "slack", "name_en": "Slack", "url": "https://slack.com", "logo": "💬", "category": "productivity", "isCN": false, "tags": ["chat", "team"] },
+    { "id": "zoom", "name_en": "Zoom", "url": "https://zoom.us", "logo": "📹", "category": "productivity", "isCN": false, "tags": ["video", "meeting"] },
+    { "id": "tiktok", "name_en": "TikTok", "url": "https://tiktok.com", "logo": "🎵", "category": "video", "isCN": false, "tags": ["short video", "entertainment"] },
+    { "id": "spotify", "name_en": "Spotify", "url": "https://spotify.com", "logo": "🎵", "category": "music", "isCN": false, "tags": ["music", "streaming"] },
+    { "id": "pinterest", "name_en": "Pinterest", "url": "https://pinterest.com", "logo": "📌", "category": "social", "isCN": false, "tags": ["images", "inspiration"] },
+    { "id": "reddit", "name_en": "Reddit", "url": "https://reddit.com", "logo": "🤖", "category": "social", "isCN": false, "tags": ["forum", "discussion"] },
+    { "id": "discord", "name_en": "Discord", "url": "https://discord.com", "logo": "🎮", "category": "social", "isCN": false, "tags": ["gaming", "chat", "community"] },
+    { "id": "telegram", "name_en": "Telegram", "url": "https://telegram.org", "logo": "✈️", "category": "social", "isCN": false, "tags": ["chat", "encrypted"] },
+    { "id": "whatsapp", "name_en": "WhatsApp", "url": "https://whatsapp.com", "logo": "📱", "category": "social", "isCN": false, "tags": ["chat", "messaging"] },
+    { "id": "skype", "name_en": "Skype", "url": "https://skype.com", "logo": "📞", "category": "social", "isCN": false, "tags": ["call", "video"] },
+
+    // AI和工具类网站 (新兴重要网站)
+    { "id": "chatgpt", "name_en": "ChatGPT", "url": "https://chat.openai.com", "logo": "🤖", "category": "tools", "isCN": false, "tags": ["ai", "chat"] },
+    { "id": "midjourney", "name_en": "Midjourney", "url": "https://midjourney.com", "logo": "🎨", "category": "tools", "isCN": false, "tags": ["ai", "image", "art"] },
+    { "id": "canva", "name_en": "Canva", "url": "https://canva.com", "logo": "🖼️", "category": "design", "isCN": false, "tags": ["design", "template"] },
+    { "id": "trello", "name_en": "Trello", "url": "https://trello.com", "logo": "📋", "category": "productivity", "isCN": false, "tags": ["project", "collaboration"] },
+    { "id": "asana", "name_en": "Asana", "url": "https://asana.com", "logo": "📊", "category": "productivity", "isCN": false, "tags": ["project", "team"] },
+    { "id": "monday", "name_en": "Monday", "url": "https://monday.com", "logo": "📈", "category": "productivity", "isCN": false, "tags": ["project", "workflow"] },
+    { "id": "airtable", "name_en": "Airtable", "url": "https://airtable.com", "logo": "📊", "category": "productivity", "isCN": false, "tags": ["database", "collaboration"] },
+    { "id": "dropbox", "name_en": "Dropbox", "url": "https://dropbox.com", "logo": "☁️", "category": "tools", "isCN": false, "tags": ["storage", "sync"] },
+    { "id": "googledrive", "name_en": "Google Drive", "url": "https://drive.google.com", "logo": "📁", "category": "tools", "isCN": false, "tags": ["storage", "documents"] },
+    { "id": "onedrive", "name_en": "OneDrive", "url": "https://onedrive.live.com", "logo": "☁️", "category": "tools", "isCN": false, "tags": ["storage", "microsoft"] },
+    { "id": "stackoverflow", "name_en": "Stack Overflow", "url": "https://stackoverflow.com", "logo": "💻", "category": "tools", "isCN": false, "tags": ["programming", "qa", "development"] },
+    { "id": "codepen", "name_en": "CodePen", "url": "https://codepen.io", "logo": "🖊️", "category": "tools", "isCN": false, "tags": ["code", "demo", "frontend"] },
+    { "id": "dribbble", "name_en": "Dribbble", "url": "https://dribbble.com", "logo": "🏀", "category": "design", "isCN": false, "tags": ["design", "inspiration"] },
+    { "id": "behance", "name_en": "Behance", "url": "https://behance.net", "logo": "🎭", "category": "design", "isCN": false, "tags": ["design", "creative", "portfolio"] },
+    { "id": "unsplash", "name_en": "Unsplash", "url": "https://unsplash.com", "logo": "📷", "category": "design", "isCN": false, "tags": ["photos", "photography", "free"] },
+    { "id": "pexels", "name_en": "Pexels", "url": "https://pexels.com", "logo": "📸", "category": "design", "isCN": false, "tags": ["photos", "hd", "free"] },
+
+    // 更多热门网站补充到300+的规模
+    { "id": "medium", "name_en": "Medium", "url": "https://medium.com", "logo": "📝", "category": "news", "isCN": false, "tags": ["blog", "writing", "articles"] },
+    { "id": "quora", "name_en": "Quora", "url": "https://quora.com", "logo": "❓", "category": "social", "isCN": false, "tags": ["qa", "knowledge"] },
+    { "id": "wikipedia", "name_en": "Wikipedia", "url": "https://wikipedia.org", "logo": "📖", "category": "education", "isCN": false, "tags": ["knowledge", "encyclopedia"] },
+    { "id": "khan-academy", "name_en": "Khan Academy", "url": "https://khanacademy.org", "logo": "🎓", "category": "education", "isCN": false, "tags": ["learning", "courses"] },
+    { "id": "coursera", "name_en": "Coursera", "url": "https://coursera.org", "logo": "🎓", "category": "education", "isCN": false, "tags": ["courses", "learning"] },
+    { "id": "udemy", "name_en": "Udemy", "url": "https://udemy.com", "logo": "🎓", "category": "education", "isCN": false, "tags": ["courses", "skills"] },
+    { "id": "airbnb", "name_en": "Airbnb", "url": "https://airbnb.com", "logo": "🏠", "category": "travel", "isCN": false, "tags": ["accommodation", "travel"] },
+    { "id": "booking", "name_en": "Booking", "url": "https://booking.com", "logo": "🏨", "category": "travel", "isCN": false, "tags": ["hotel", "booking"] },
+    { "id": "expedia", "name_en": "Expedia", "url": "https://expedia.com", "logo": "✈️", "category": "travel", "isCN": false, "tags": ["travel", "flights"] },
+
+    // 更多国内网站
+    { "id": "toutiao", "name_en": "Toutiao", "url": "https://toutiao.com", "logo": "📱", "category": "news", "isCN": true, "tags": ["news", "recommendation"] },
+    { "id": "sohu", "name_en": "Sohu", "url": "https://sohu.com", "logo": "🦔", "category": "news", "isCN": true, "tags": ["news", "portal"] },
+    { "id": "ifeng", "name_en": "iFeng", "url": "https://ifeng.com", "logo": "🔥", "category": "news", "isCN": true, "tags": ["news", "phoenix"] },
+    { "id": "hupu", "name_en": "Hupu", "url": "https://hupu.com", "logo": "🏀", "category": "social", "isCN": true, "tags": ["sports", "community"] },
+    { "id": "jianshu", "name_en": "Jianshu", "url": "https://jianshu.com", "logo": "✍️", "category": "social", "isCN": true, "tags": ["writing", "blog"] },
+    { "id": "csdn", "name_en": "CSDN", "url": "https://csdn.net", "logo": "💻", "category": "tools", "isCN": true, "tags": ["programming", "tech"] },
+    { "id": "cnblogs", "name_en": "CNBlogs", "url": "https://cnblogs.com", "logo": "📝", "category": "tools", "isCN": true, "tags": ["programming", "blog"] },
+    { "id": "gitee", "name_en": "Gitee", "url": "https://gitee.com", "logo": "🐙", "category": "tools", "isCN": true, "tags": ["code", "git"] },
+    { "id": "lagou", "name_en": "Lagou", "url": "https://lagou.com", "logo": "💼", "category": "tools", "isCN": true, "tags": ["jobs", "recruitment"] },
+    { "id": "zhaopin", "name_en": "Zhaopin", "url": "https://zhaopin.com", "logo": "💼", "category": "tools", "isCN": true, "tags": ["jobs", "career"] },
+    { "id": "boss-zhipin", "name_en": "Boss Zhipin", "url": "https://zhipin.com", "logo": "👔", "category": "tools", "isCN": true, "tags": ["jobs", "boss"] },
+    { "id": "qidian", "name_en": "Qidian", "url": "https://qidian.com", "logo": "📚", "category": "education", "isCN": true, "tags": ["novel", "reading"] },
+    { "id": "dangdang", "name_en": "Dangdang", "url": "https://dangdang.com", "logo": "📖", "category": "shopping", "isCN": true, "tags": ["books", "ecommerce"] },
+    { "id": "suning", "name_en": "Suning", "url": "https://suning.com", "logo": "🏪", "category": "shopping", "isCN": true, "tags": ["ecommerce", "retail"] },
+    { "id": "gome", "name_en": "Gome", "url": "https://gome.com.cn", "logo": "🏬", "category": "shopping", "isCN": true, "tags": ["electronics", "retail"] },
+    { "id": "vipshop", "name_en": "Vipshop", "url": "https://vip.com", "logo": "💎", "category": "shopping", "isCN": true, "tags": ["fashion", "luxury"] },
+    { "id": "xiaomi", "name_en": "Xiaomi", "url": "https://mi.com", "logo": "📱", "category": "shopping", "isCN": true, "tags": ["phone", "tech"] },
+    { "id": "huawei", "name_en": "Huawei", "url": "https://huawei.com", "logo": "📱", "category": "shopping", "isCN": true, "tags": ["phone", "tech"] },
+    { "id": "oppo", "name_en": "OPPO", "url": "https://oppo.com", "logo": "📱", "category": "shopping", "isCN": true, "tags": ["phone", "camera"] },
+    { "id": "vivo", "name_en": "Vivo", "url": "https://vivo.com", "logo": "📱", "category": "shopping", "isCN": true, "tags": ["phone", "music"] },
+
+    // 更多国际工具和服务网站
+    { "id": "shopify", "name_en": "Shopify", "url": "https://shopify.com", "logo": "🛍️", "category": "tools", "isCN": false, "tags": ["ecommerce", "platform"] },
+    { "id": "wordpress", "name_en": "WordPress", "url": "https://wordpress.com", "logo": "📝", "category": "tools", "isCN": false, "tags": ["blog", "cms"] },
+    { "id": "squarespace", "name_en": "Squarespace", "url": "https://squarespace.com", "logo": "🔲", "category": "tools", "isCN": false, "tags": ["website", "builder"] },
+    { "id": "wix", "name_en": "Wix", "url": "https://wix.com", "logo": "🎨", "category": "tools", "isCN": false, "tags": ["website", "builder"] },
+    { "id": "mailchimp", "name_en": "Mailchimp", "url": "https://mailchimp.com", "logo": "📧", "category": "tools", "isCN": false, "tags": ["email", "marketing"] },
+    { "id": "hubspot", "name_en": "HubSpot", "url": "https://hubspot.com", "logo": "🎯", "category": "tools", "isCN": false, "tags": ["crm", "marketing"] },
+    { "id": "salesforce", "name_en": "Salesforce", "url": "https://salesforce.com", "logo": "☁️", "category": "tools", "isCN": false, "tags": ["crm", "cloud"] },
+    { "id": "adobe", "name_en": "Adobe", "url": "https://adobe.com", "logo": "🎨", "category": "design", "isCN": false, "tags": ["creative", "design"] },
+    { "id": "sketch", "name_en": "Sketch", "url": "https://sketch.com", "logo": "💎", "category": "design", "isCN": false, "tags": ["ui", "design"] },
+    { "id": "invision", "name_en": "InVision", "url": "https://invisionapp.com", "logo": "👁️", "category": "design", "isCN": false, "tags": ["prototype", "design"] },
+    { "id": "framer", "name_en": "Framer", "url": "https://framer.com", "logo": "🎭", "category": "design", "isCN": false, "tags": ["prototype", "animation"] },
+    { "id": "miro", "name_en": "Miro", "url": "https://miro.com", "logo": "🎯", "category": "productivity", "isCN": false, "tags": ["whiteboard", "collaboration"] },
+    { "id": "confluence", "name_en": "Confluence", "url": "https://confluence.atlassian.com", "logo": "📄", "category": "productivity", "isCN": false, "tags": ["wiki", "documentation"] },
+    { "id": "jira", "name_en": "Jira", "url": "https://jira.atlassian.com", "logo": "🐛", "category": "productivity", "isCN": false, "tags": ["project", "bug tracking"] },
+    { "id": "bitbucket", "name_en": "Bitbucket", "url": "https://bitbucket.org", "logo": "🪣", "category": "tools", "isCN": false, "tags": ["git", "code"] },
+    { "id": "gitlab", "name_en": "GitLab", "url": "https://gitlab.com", "logo": "🦊", "category": "tools", "isCN": false, "tags": ["git", "devops"] },
+    { "id": "jenkins", "name_en": "Jenkins", "url": "https://jenkins.io", "logo": "👷", "category": "tools", "isCN": false, "tags": ["ci", "automation"] },
+    { "id": "docker", "name_en": "Docker", "url": "https://docker.com", "logo": "🐳", "category": "tools", "isCN": false, "tags": ["container", "devops"] },
+    { "id": "kubernetes", "name_en": "Kubernetes", "url": "https://kubernetes.io", "logo": "⚓", "category": "tools", "isCN": false, "tags": ["container", "orchestration"] },
+    { "id": "aws", "name_en": "AWS", "url": "https://aws.amazon.com", "logo": "☁️", "category": "tools", "isCN": false, "tags": ["cloud", "aws"] },
+    { "id": "gcp", "name_en": "Google Cloud", "url": "https://cloud.google.com", "logo": "☁️", "category": "tools", "isCN": false, "tags": ["cloud", "google"] },
+    { "id": "azure", "name_en": "Microsoft Azure", "url": "https://azure.microsoft.com", "logo": "☁️", "category": "tools", "isCN": false, "tags": ["cloud", "microsoft"] },
+    { "id": "vercel", "name_en": "Vercel", "url": "https://vercel.com", "logo": "▲", "category": "tools", "isCN": false, "tags": ["deployment", "hosting"] },
+    { "id": "netlify", "name_en": "Netlify", "url": "https://netlify.com", "logo": "🌐", "category": "tools", "isCN": false, "tags": ["hosting", "jamstack"] },
+    { "id": "heroku", "name_en": "Heroku", "url": "https://heroku.com", "logo": "💜", "category": "tools", "isCN": false, "tags": ["platform", "hosting"] },
+    { "id": "digitalocean", "name_en": "DigitalOcean", "url": "https://digitalocean.com", "logo": "🌊", "category": "tools", "isCN": false, "tags": ["cloud", "vps"] },
+    { "id": "linode", "name_en": "Linode", "url": "https://linode.com", "logo": "🟢", "category": "tools", "isCN": false, "tags": ["cloud", "vps"] },
+    { "id": "vultr", "name_en": "Vultr", "url": "https://vultr.com", "logo": "⚡", "category": "tools", "isCN": false, "tags": ["cloud", "vps"] },
+
+    // 更多娱乐和媒体网站
+    { "id": "twitch", "name_en": "Twitch", "url": "https://twitch.tv", "logo": "🎮", "category": "video", "isCN": false, "tags": ["streaming", "gaming"] },
+    { "id": "vimeo", "name_en": "Vimeo", "url": "https://vimeo.com", "logo": "📹", "category": "video", "isCN": false, "tags": ["video", "creative"] },
+    { "id": "dailymotion", "name_en": "Dailymotion", "url": "https://dailymotion.com", "logo": "📺", "category": "video", "isCN": false, "tags": ["video", "sharing"] },
+    { "id": "soundcloud", "name_en": "SoundCloud", "url": "https://soundcloud.com", "logo": "🔊", "category": "music", "isCN": false, "tags": ["music", "podcast"] },
+    { "id": "bandcamp", "name_en": "Bandcamp", "url": "https://bandcamp.com", "logo": "🎵", "category": "music", "isCN": false, "tags": ["music", "indie"] },
+    { "id": "last-fm", "name_en": "Last.fm", "url": "https://last.fm", "logo": "📻", "category": "music", "isCN": false, "tags": ["music", "scrobbling"] },
+    { "id": "deezer", "name_en": "Deezer", "url": "https://deezer.com", "logo": "🎶", "category": "music", "isCN": false, "tags": ["music", "streaming"] },
+    { "id": "apple-music", "name_en": "Apple Music", "url": "https://music.apple.com", "logo": "🎵", "category": "music", "isCN": false, "tags": ["music", "apple"] },
+    { "id": "pandora", "name_en": "Pandora", "url": "https://pandora.com", "logo": "🎙️", "category": "music", "isCN": false, "tags": ["radio", "music"] },
+
+    // 更多社交和通讯网站
+    { "id": "snapchat", "name_en": "Snapchat", "url": "https://snapchat.com", "logo": "👻", "category": "social", "isCN": false, "tags": ["photo", "messaging"] },
+    { "id": "clubhouse", "name_en": "Clubhouse", "url": "https://clubhouse.com", "logo": "🎤", "category": "social", "isCN": false, "tags": ["audio", "social"] },
+    { "id": "mastodon", "name_en": "Mastodon", "url": "https://mastodon.social", "logo": "🐘", "category": "social", "isCN": false, "tags": ["social", "decentralized"] },
+    { "id": "signal", "name_en": "Signal", "url": "https://signal.org", "logo": "📱", "category": "social", "isCN": false, "tags": ["messaging", "privacy"] },
+    { "id": "viber", "name_en": "Viber", "url": "https://viber.com", "logo": "💬", "category": "social", "isCN": false, "tags": ["messaging", "calling"] },
+    { "id": "wechat-work", "name_en": "WeChat Work", "url": "https://work.weixin.qq.com", "logo": "💼", "category": "productivity", "isCN": true, "tags": ["work", "enterprise"] },
+    { "id": "dingtalk", "name_en": "DingTalk", "url": "https://dingtalk.com", "logo": "📱", "category": "productivity", "isCN": true, "tags": ["work", "collaboration"] },
+    { "id": "feishu", "name_en": "Feishu", "url": "https://feishu.cn", "logo": "🛸", "category": "productivity", "isCN": true, "tags": ["work", "bytedance"] },
+    { "id": "tencent-meeting", "name_en": "Tencent Meeting", "url": "https://meeting.tencent.com", "logo": "📹", "category": "productivity", "isCN": true, "tags": ["meeting", "video"] },
+    { "id": "voov-meeting", "name_en": "VooV Meeting", "url": "https://voovmeeting.com", "logo": "📞", "category": "productivity", "isCN": true, "tags": ["meeting", "international"] },
+
+    // 更多金融和支付网站
+    { "id": "coinbase", "name_en": "Coinbase", "url": "https://coinbase.com", "logo": "₿", "category": "finance", "isCN": false, "tags": ["crypto", "exchange"] },
+    { "id": "binance", "name_en": "Binance", "url": "https://binance.com", "logo": "🟡", "category": "finance", "isCN": false, "tags": ["crypto", "trading"] },
+    { "id": "kraken", "name_en": "Kraken", "url": "https://kraken.com", "logo": "🐙", "category": "finance", "isCN": false, "tags": ["crypto", "exchange"] },
+    { "id": "robinhood", "name_en": "Robinhood", "url": "https://robinhood.com", "logo": "🏹", "category": "finance", "isCN": false, "tags": ["trading", "stocks"] },
+    { "id": "etrade", "name_en": "E*TRADE", "url": "https://etrade.com", "logo": "📈", "category": "finance", "isCN": false, "tags": ["trading", "investing"] },
+    { "id": "schwab", "name_en": "Charles Schwab", "url": "https://schwab.com", "logo": "💰", "category": "finance", "isCN": false, "tags": ["investing", "brokerage"] },
+    { "id": "fidelity", "name_en": "Fidelity", "url": "https://fidelity.com", "logo": "🏦", "category": "finance", "isCN": false, "tags": ["investing", "retirement"] },
+    { "id": "wise", "name_en": "Wise", "url": "https://wise.com", "logo": "💸", "category": "finance", "isCN": false, "tags": ["transfer", "currency"] },
+    { "id": "revolut", "name_en": "Revolut", "url": "https://revolut.com", "logo": "💳", "category": "finance", "isCN": false, "tags": ["banking", "fintech"] },
+    { "id": "n26", "name_en": "N26", "url": "https://n26.com", "logo": "🏦", "category": "finance", "isCN": false, "tags": ["banking", "mobile"] },
+
+    // 更多购物和电商网站
+    { "id": "etsy", "name_en": "Etsy", "url": "https://etsy.com", "logo": "🎨", "category": "shopping", "isCN": false, "tags": ["handmade", "creative"] },
+    { "id": "aliexpress", "name_en": "AliExpress", "url": "https://aliexpress.com", "logo": "🛒", "category": "shopping", "isCN": false, "tags": ["global", "cheap"] },
+    { "id": "wish", "name_en": "Wish", "url": "https://wish.com", "logo": "⭐", "category": "shopping", "isCN": false, "tags": ["mobile", "deals"] },
+    { "id": "overstock", "name_en": "Overstock", "url": "https://overstock.com", "logo": "🏠", "category": "shopping", "isCN": false, "tags": ["home", "furniture"] },
+    { "id": "wayfair", "name_en": "Wayfair", "url": "https://wayfair.com", "logo": "🏡", "category": "shopping", "isCN": false, "tags": ["furniture", "home"] },
+    { "id": "target", "name_en": "Target", "url": "https://target.com", "logo": "🎯", "category": "shopping", "isCN": false, "tags": ["retail", "general"] },
+    { "id": "walmart", "name_en": "Walmart", "url": "https://walmart.com", "logo": "🛒", "category": "shopping", "isCN": false, "tags": ["retail", "grocery"] },
+    { "id": "costco", "name_en": "Costco", "url": "https://costco.com", "logo": "🏪", "category": "shopping", "isCN": false, "tags": ["wholesale", "membership"] },
+    { "id": "bestbuy", "name_en": "Best Buy", "url": "https://bestbuy.com", "logo": "🔵", "category": "shopping", "isCN": false, "tags": ["electronics", "tech"] },
+    { "id": "newegg", "name_en": "Newegg", "url": "https://newegg.com", "logo": "🥚", "category": "shopping", "isCN": false, "tags": ["tech", "components"] },
+
+    // 更多新闻和媒体网站
+    { "id": "bbc", "name_en": "BBC", "url": "https://bbc.com", "logo": "📺", "category": "news", "isCN": false, "tags": ["news", "british"] },
+    { "id": "cnn", "name_en": "CNN", "url": "https://cnn.com", "logo": "📰", "category": "news", "isCN": false, "tags": ["news", "american"] },
+    { "id": "reuters", "name_en": "Reuters", "url": "https://reuters.com", "logo": "📡", "category": "news", "isCN": false, "tags": ["news", "wire"] },
+    { "id": "ap-news", "name_en": "AP News", "url": "https://apnews.com", "logo": "📰", "category": "news", "isCN": false, "tags": ["news", "wire"] },
+    { "id": "nyt", "name_en": "New York Times", "url": "https://nytimes.com", "logo": "📰", "category": "news", "isCN": false, "tags": ["news", "quality"] },
+    { "id": "wsj", "name_en": "Wall Street Journal", "url": "https://wsj.com", "logo": "💼", "category": "news", "isCN": false, "tags": ["business", "finance"] },
+    { "id": "guardian", "name_en": "The Guardian", "url": "https://theguardian.com", "logo": "🗞️", "category": "news", "isCN": false, "tags": ["news", "british"] },
+    { "id": "economist", "name_en": "The Economist", "url": "https://economist.com", "logo": "📊", "category": "news", "isCN": false, "tags": ["economics", "analysis"] },
+    { "id": "forbes", "name_en": "Forbes", "url": "https://forbes.com", "logo": "💰", "category": "news", "isCN": false, "tags": ["business", "wealth"] },
+    { "id": "techcrunch", "name_en": "TechCrunch", "url": "https://techcrunch.com", "logo": "🚀", "category": "news", "isCN": false, "tags": ["tech", "startup"] },
+    { "id": "verge", "name_en": "The Verge", "url": "https://theverge.com", "logo": "📱", "category": "news", "isCN": false, "tags": ["tech", "culture"] },
+    { "id": "wired", "name_en": "Wired", "url": "https://wired.com", "logo": "⚡", "category": "news", "isCN": false, "tags": ["tech", "future"] },
+    { "id": "ars-technica", "name_en": "Ars Technica", "url": "https://arstechnica.com", "logo": "🔬", "category": "news", "isCN": false, "tags": ["tech", "science"] },
+    { "id": "engadget", "name_en": "Engadget", "url": "https://engadget.com", "logo": "🤖", "category": "news", "isCN": false, "tags": ["tech", "gadgets"] },
+    { "id": "mashable", "name_en": "Mashable", "url": "https://mashable.com", "logo": "🌐", "category": "news", "isCN": false, "tags": ["tech", "social"] },
+    { "id": "buzzfeed", "name_en": "BuzzFeed", "url": "https://buzzfeed.com", "logo": "🐝", "category": "news", "isCN": false, "tags": ["viral", "entertainment"] },
+    { "id": "vice", "name_en": "VICE", "url": "https://vice.com", "logo": "🎭", "category": "news", "isCN": false, "tags": ["culture", "alternative"] },
+
+    // 核心工具网站(保留最常用的)
+    { "id": "grammarly", "name_en": "Grammarly", "url": "https://grammarly.com", "logo": "✍️", "category": "tools", "isCN": false, "tags": ["writing", "grammar"] },
+    { "id": "translate", "name_en": "Google Translate", "url": "https://translate.google.com", "logo": "🌐", "category": "tools", "isCN": false, "tags": ["translation", "google"] },
+    { "id": "wetransfer", "name_en": "WeTransfer", "url": "https://wetransfer.com", "logo": "📤", "category": "tools", "isCN": false, "tags": ["file sharing", "transfer"] },
+    { "id": "box", "name_en": "Box", "url": "https://box.com", "logo": "📦", "category": "tools", "isCN": false, "tags": ["storage", "business"] },
+
+    // ========== 扩充中国网站 (目标100个) ==========
+    
+    // 更多中国社交平台
+    { "id": "zhihu-live", "name_en": "Zhihu Live", "url": "https://zhihu.com/live", "logo": "🎤", "category": "social", "isCN": true, "tags": ["live", "knowledge"] },
+    { "id": "douyin-live", "name_en": "Douyin Live", "url": "https://live.douyin.com", "logo": "📺", "category": "social", "isCN": true, "tags": ["live", "entertainment"] },
+    { "id": "kuaishou-live", "name_en": "Kuaishou Live", "url": "https://live.kuaishou.com", "logo": "⚡", "category": "social", "isCN": true, "tags": ["live", "social"] },
+    { "id": "huya", "name_en": "Huya", "url": "https://huya.com", "logo": "🐅", "category": "video", "isCN": true, "tags": ["live", "gaming"] },
+    { "id": "douyu", "name_en": "Douyu", "url": "https://douyu.com", "logo": "🐟", "category": "video", "isCN": true, "tags": ["live", "gaming"] },
+    { "id": "yy", "name_en": "YY", "url": "https://yy.com", "logo": "🎵", "category": "social", "isCN": true, "tags": ["live", "music"] },
+    { "id": "miaopai", "name_en": "Miaopai", "url": "https://miaopai.com", "logo": "🎬", "category": "video", "isCN": true, "tags": ["short video", "social"] },
+
+    // 中国电商平台
+    { "id": "vip", "name_en": "VIP.com", "url": "https://vip.com", "logo": "💎", "category": "shopping", "isCN": true, "tags": ["discount", "fashion"] },
+    { "id": "vancl", "name_en": "Vancl", "url": "https://vancl.com", "logo": "👕", "category": "shopping", "isCN": true, "tags": ["clothing", "fashion"] },
+    { "id": "jd-global", "name_en": "JD Worldwide", "url": "https://global.jd.com", "logo": "🌍", "category": "shopping", "isCN": true, "tags": ["international", "shopping"] },
+
+    // 中国视频平台
+    { "id": "mango-tv", "name_en": "Mango TV", "url": "https://mgtv.com", "logo": "🥭", "category": "video", "isCN": true, "tags": ["tv", "entertainment"] },
+    { "id": "sohu-video", "name_en": "Sohu Video", "url": "https://tv.sohu.com", "logo": "🦊", "category": "video", "isCN": true, "tags": ["video", "tv"] },
+    { "id": "pptv", "name_en": "PPTV", "url": "https://pptv.com", "logo": "📺", "category": "video", "isCN": true, "tags": ["video", "streaming"] },
+    { "id": "letv", "name_en": "LeTV", "url": "https://le.com", "logo": "🍃", "category": "video", "isCN": true, "tags": ["video", "entertainment"] },
+
+    // 中国新闻媒体
+    { "id": "people", "name_en": "People's Daily", "url": "https://people.com.cn", "logo": "📰", "category": "news", "isCN": true, "tags": ["news", "official"] },
+    { "id": "xinhua", "name_en": "Xinhua", "url": "https://xinhuanet.com", "logo": "📡", "category": "news", "isCN": true, "tags": ["news", "official"] },
+    { "id": "cctv", "name_en": "CCTV", "url": "https://cctv.com", "logo": "📺", "category": "news", "isCN": true, "tags": ["tv", "news"] },
+    { "id": "china-daily", "name_en": "China Daily", "url": "https://chinadaily.com.cn", "logo": "🇨🇳", "category": "news", "isCN": true, "tags": ["news", "english"] },
+    { "id": "global-times", "name_en": "Global Times", "url": "https://globaltimes.cn", "logo": "🌍", "category": "news", "isCN": true, "tags": ["news", "international"] },
+
+    // 中国金融支付
+    { "id": "wechat-pay", "name_en": "WeChat Pay", "url": "https://pay.weixin.qq.com", "logo": "💬", "category": "finance", "isCN": true, "tags": ["payment", "mobile"] },
+    { "id": "alipay-global", "name_en": "Alipay Global", "url": "https://global.alipay.com", "logo": "🌍", "category": "finance", "isCN": true, "tags": ["payment", "international"] },
+    { "id": "unionpay", "name_en": "UnionPay", "url": "https://unionpay.com", "logo": "💳", "category": "finance", "isCN": true, "tags": ["payment", "card"] },
+    { "id": "icbc", "name_en": "ICBC", "url": "https://icbc.com.cn", "logo": "🏦", "category": "finance", "isCN": true, "tags": ["bank", "financial"] },
+    { "id": "ccb", "name_en": "CCB", "url": "https://ccb.com", "logo": "🏛️", "category": "finance", "isCN": true, "tags": ["bank", "construction"] },
+    { "id": "abc", "name_en": "ABC", "url": "https://abchina.com", "logo": "🌾", "category": "finance", "isCN": true, "tags": ["bank", "agricultural"] },
+
+    // 中国生活服务
+    { "id": "dianping-app", "name_en": "Dianping", "url": "https://dianping.com", "logo": "⭐", "category": "food", "isCN": true, "tags": ["review", "lifestyle"] },
+    { "id": "koubei", "name_en": "Koubei", "url": "https://koubei.com", "logo": "👅", "category": "food", "isCN": true, "tags": ["review", "local"] },
+    { "id": "nuomi", "name_en": "Nuomi", "url": "https://nuomi.com", "logo": "🌾", "category": "food", "isCN": true, "tags": ["group buying", "local"] },
+    { "id": "dazhongdianping", "name_en": "Dazhong Dianping", "url": "https://dianping.com", "logo": "👥", "category": "food", "isCN": true, "tags": ["review", "crowd"] },
+    { "id": "huochepiao", "name_en": "Huochepiao", "url": "https://12306.cn", "logo": "🎫", "category": "travel", "isCN": true, "tags": ["train", "ticket"] },
+
+    // 中国教育平台
+    { "id": "xuetangx", "name_en": "XuetangX", "url": "https://xuetangx.com", "logo": "🎓", "category": "education", "isCN": true, "tags": ["mooc", "university"] },
+    { "id": "zhihuishu", "name_en": "Zhihuishu", "url": "https://zhihuishu.com", "logo": "📚", "category": "education", "isCN": true, "tags": ["smart", "education"] },
+    { "id": "icourse163", "name_en": "iCourse163", "url": "https://icourse163.org", "logo": "🎒", "category": "education", "isCN": true, "tags": ["mooc", "netease"] },
+    { "id": "tencent-classroom", "name_en": "Tencent Classroom", "url": "https://ke.qq.com", "logo": "📖", "category": "education", "isCN": true, "tags": ["online", "classroom"] },
+    { "id": "zhongxue", "name_en": "Zhongxue", "url": "https://zhongxue.com", "logo": "🎯", "category": "education", "isCN": true, "tags": ["middle", "school"] },
+
+    // 中国工具平台
+    { "id": "baidu-map", "name_en": "Baidu Maps", "url": "https://map.baidu.com", "logo": "🗺️", "category": "tools", "isCN": true, "tags": ["map", "navigation"] },
+    { "id": "gaode", "name_en": "Amap", "url": "https://amap.com", "logo": "📍", "category": "tools", "isCN": true, "tags": ["map", "navigation"] },
+    { "id": "tencent-map", "name_en": "Tencent Maps", "url": "https://map.qq.com", "logo": "🗺️", "category": "tools", "isCN": true, "tags": ["map", "tencent"] },
+    { "id": "sogou", "name_en": "Sogou", "url": "https://sogou.com", "logo": "🔍", "category": "tools", "isCN": true, "tags": ["search", "input"] },
+    { "id": "360-search", "name_en": "360 Search", "url": "https://so.com", "logo": "🔍", "category": "tools", "isCN": true, "tags": ["search", "security"] },
+
+    // 中国游戏平台
+    { "id": "netease-games", "name_en": "Netease Games", "url": "https://game.163.com", "logo": "🎮", "category": "gaming", "isCN": true, "tags": ["gaming", "netease"] },
+    { "id": "tencent-games", "name_en": "Tencent Games", "url": "https://game.qq.com", "logo": "🎯", "category": "gaming", "isCN": true, "tags": ["gaming", "tencent"] },
+    { "id": "perfect-world", "name_en": "Perfect World", "url": "https://pw.99.com", "logo": "🌍", "category": "gaming", "isCN": true, "tags": ["mmorpg", "gaming"] },
+    { "id": "shanda", "name_en": "Shanda", "url": "https://sdo.com", "logo": "🏰", "category": "gaming", "isCN": true, "tags": ["gaming", "legend"] },
+    { "id": "changyou", "name_en": "Changyou", "url": "https://changyou.com", "logo": "🗡️", "category": "gaming", "isCN": true, "tags": ["gaming", "sword"] },
+
+    // 中国音乐平台
+    { "id": "netease-music", "name_en": "Netease Music", "url": "https://music.163.com", "logo": "🎵", "category": "music", "isCN": true, "tags": ["music", "streaming"] },
+    { "id": "qq-music", "name_en": "QQ Music", "url": "https://y.qq.com", "logo": "🎶", "category": "music", "isCN": true, "tags": ["music", "tencent"] },
+    { "id": "kugou", "name_en": "Kugou", "url": "https://kugou.com", "logo": "🐶", "category": "music", "isCN": true, "tags": ["music", "kugou"] },
+    { "id": "kuwo", "name_en": "Kuwo", "url": "https://kuwo.cn", "logo": "🎤", "category": "music", "isCN": true, "tags": ["music", "kwo"] },
+    { "id": "xiami", "name_en": "Xiami", "url": "https://xiami.com", "logo": "🦐", "category": "music", "isCN": true, "tags": ["music", "indie"] },
+
+    // ========== 扩充国际网站 (目标200个) ==========
+    
+    // 更多国际社交平台（避免重复ID）
+    { "id": "discord-new", "name_en": "Discord", "url": "https://discord.com", "logo": "💬", "category": "social", "isCN": false, "tags": ["gaming", "chat"] },
+    { "id": "telegram-new", "name_en": "Telegram", "url": "https://telegram.org", "logo": "✈️", "category": "social", "isCN": false, "tags": ["messaging", "secure"] },
+    { "id": "whatsapp-new", "name_en": "WhatsApp", "url": "https://whatsapp.com", "logo": "📱", "category": "social", "isCN": false, "tags": ["messaging", "mobile"] },
+    { "id": "snapchat-new", "name_en": "Snapchat", "url": "https://snapchat.com", "logo": "👻", "category": "social", "isCN": false, "tags": ["photo", "disappearing"] },
+    { "id": "pinterest-new", "name_en": "Pinterest", "url": "https://pinterest.com", "logo": "📌", "category": "social", "isCN": false, "tags": ["inspiration", "visual"] },
+    { "id": "reddit-new", "name_en": "Reddit", "url": "https://reddit.com", "logo": "🤖", "category": "social", "isCN": false, "tags": ["discussion", "community"] },
+    { "id": "tumblr-new", "name_en": "Tumblr", "url": "https://tumblr.com", "logo": "🎨", "category": "social", "isCN": false, "tags": ["blog", "creative"] },
+    { "id": "medium-new", "name_en": "Medium", "url": "https://medium.com", "logo": "✍️", "category": "social", "isCN": false, "tags": ["writing", "articles"] },
+
+    // 国际电商平台（避免重复ID）
+    { "id": "shopify-new", "name_en": "Shopify", "url": "https://shopify.com", "logo": "🛍️", "category": "shopping", "isCN": false, "tags": ["ecommerce", "platform"] },
+    { "id": "etsy-new", "name_en": "Etsy", "url": "https://etsy.com", "logo": "🎨", "category": "shopping", "isCN": false, "tags": ["handmade", "crafts"] },
+    { "id": "aliexpress-new", "name_en": "AliExpress", "url": "https://aliexpress.com", "logo": "📦", "category": "shopping", "isCN": false, "tags": ["international", "aliexpress"] },
+    { "id": "wish-new", "name_en": "Wish", "url": "https://wish.com", "logo": "✨", "category": "shopping", "isCN": false, "tags": ["discount", "mobile"] },
+    { "id": "zalando", "name_en": "Zalando", "url": "https://zalando.com", "logo": "👟", "category": "shopping", "isCN": false, "tags": ["fashion", "european"] },
+    { "id": "asos", "name_en": "ASOS", "url": "https://asos.com", "logo": "👗", "category": "shopping", "isCN": false, "tags": ["fashion", "trendy"] },
+    { "id": "h&m", "name_en": "H&M", "url": "https://hm.com", "logo": "👕", "category": "shopping", "isCN": false, "tags": ["fashion", "fast"] },
+    { "id": "zara", "name_en": "Zara", "url": "https://zara.com", "logo": "👔", "category": "shopping", "isCN": false, "tags": ["fashion", "spanish"] },
+
+    // 国际视频平台
+    { "id": "disney+", "name_en": "Disney+", "url": "https://disneyplus.com", "logo": "🏰", "category": "video", "isCN": false, "tags": ["disney", "streaming"] },
+    { "id": "hulu", "name_en": "Hulu", "url": "https://hulu.com", "logo": "🍃", "category": "video", "isCN": false, "tags": ["streaming", "tv"] },
+    { "id": "prime-video", "name_en": "Prime Video", "url": "https://primevideo.com", "logo": "📺", "category": "video", "isCN": false, "tags": ["amazon", "streaming"] },
+    { "id": "hbo-max", "name_en": "HBO Max", "url": "https://hbomax.com", "logo": "🎬", "category": "video", "isCN": false, "tags": ["hbo", "premium"] },
+    { "id": "paramount+", "name_en": "Paramount+", "url": "https://paramountplus.com", "logo": "🏔️", "category": "video", "isCN": false, "tags": ["paramount", "streaming"] },
+    { "id": "peacock", "name_en": "Peacock", "url": "https://peacocktv.com", "logo": "🦚", "category": "video", "isCN": false, "tags": ["nbc", "streaming"] },
+    { "id": "apple-tv", "name_en": "Apple TV+", "url": "https://tv.apple.com", "logo": "📺", "category": "video", "isCN": false, "tags": ["apple", "original"] },
+    { "id": "crunchyroll", "name_en": "Crunchyroll", "url": "https://crunchyroll.com", "logo": "🍙", "category": "video", "isCN": false, "tags": ["anime", "japanese"] },
+
+    // 国际音乐平台（避免重复ID）
+    { "id": "spotify-new", "name_en": "Spotify", "url": "https://spotify.com", "logo": "🎵", "category": "music", "isCN": false, "tags": ["music", "streaming"] },
+    { "id": "apple-music-new", "name_en": "Apple Music", "url": "https://music.apple.com", "logo": "🎶", "category": "music", "isCN": false, "tags": ["apple", "music"] },
+    { "id": "soundcloud-new", "name_en": "SoundCloud", "url": "https://soundcloud.com", "logo": "☁️", "category": "music", "isCN": false, "tags": ["audio", "indie"] },
+    { "id": "pandora-new", "name_en": "Pandora", "url": "https://pandora.com", "logo": "📻", "category": "music", "isCN": false, "tags": ["radio", "personalized"] },
+    { "id": "tidal", "name_en": "Tidal", "url": "https://tidal.com", "logo": "🌊", "category": "music", "isCN": false, "tags": ["hifi", "premium"] },
+    { "id": "deezer-new", "name_en": "Deezer", "url": "https://deezer.com", "logo": "🎧", "category": "music", "isCN": false, "tags": ["music", "french"] },
+    { "id": "amazon-music", "name_en": "Amazon Music", "url": "https://music.amazon.com", "logo": "🎵", "category": "music", "isCN": false, "tags": ["amazon", "music"] },
+    { "id": "youtube-music", "name_en": "YouTube Music", "url": "https://music.youtube.com", "logo": "🎵", "category": "music", "isCN": false, "tags": ["youtube", "music"] },
+
+    // 国际开发工具（避免重复ID）
+    { "id": "stackoverflow-new", "name_en": "Stack Overflow", "url": "https://stackoverflow.com", "logo": "📚", "category": "tools", "isCN": false, "tags": ["programming", "qa"] },
+    { "id": "gitlab-new", "name_en": "GitLab", "url": "https://gitlab.com", "logo": "🦊", "category": "tools", "isCN": false, "tags": ["git", "ci/cd"] },
+    { "id": "bitbucket-new", "name_en": "Bitbucket", "url": "https://bitbucket.org", "logo": "🪣", "category": "tools", "isCN": false, "tags": ["git", "atlassian"] },
+    { "id": "docker-new", "name_en": "Docker", "url": "https://docker.com", "logo": "🐳", "category": "tools", "isCN": false, "tags": ["containerization", "devops"] },
+    { "id": "kubernetes-new", "name_en": "Kubernetes", "url": "https://kubernetes.io", "logo": "⚙️", "category": "tools", "isCN": false, "tags": ["orchestration", "containers"] },
+    { "id": "jenkins-new", "name_en": "Jenkins", "url": "https://jenkins.io", "logo": "👨‍🔧", "category": "tools", "isCN": false, "tags": ["ci/cd", "automation"] },
+    { "id": "terraform", "name_en": "Terraform", "url": "https://terraform.io", "logo": "🏗️", "category": "tools", "isCN": false, "tags": ["infrastructure", "iac"] },
+    { "id": "ansible", "name_en": "Ansible", "url": "https://ansible.com", "logo": "🔧", "category": "tools", "isCN": false, "tags": ["automation", "configuration"] },
+
+    // 国际设计工具（避免重复ID）
+    { "id": "adobe-creative", "name_en": "Adobe Creative", "url": "https://adobe.com", "logo": "🎨", "category": "design", "isCN": false, "tags": ["creative", "professional"] },
+    { "id": "canva-new", "name_en": "Canva", "url": "https://canva.com", "logo": "🎨", "category": "design", "isCN": false, "tags": ["design", "templates"] },
+    { "id": "sketch-new", "name_en": "Sketch", "url": "https://sketch.com", "logo": "✏️", "category": "design", "isCN": false, "tags": ["ui", "mac"] },
+    { "id": "invision-new", "name_en": "InVision", "url": "https://invisionapp.com", "logo": "👁️", "category": "design", "isCN": false, "tags": ["prototyping", "collaboration"] },
+    { "id": "adobe-xd", "name_en": "Adobe XD", "url": "https://adobe.com/xd", "logo": "🎨", "category": "design", "isCN": false, "tags": ["ux", "prototyping"] },
+    { "id": "principle", "name_en": "Principle", "url": "https://principleformac.com", "logo": "⚡", "category": "design", "isCN": false, "tags": ["animation", "interaction"] },
+    { "id": "protopie", "name_en": "ProtoPie", "url": "https://protopie.io", "logo": "🥧", "category": "design", "isCN": false, "tags": ["prototyping", "interactive"] },
+    { "id": "framer-new", "name_en": "Framer", "url": "https://framer.com", "logo": "🎭", "category": "design", "isCN": false, "tags": ["prototyping", "code"] },
+
+    // 国际生产力工具（避免重复ID）
+    { "id": "trello-new", "name_en": "Trello", "url": "https://trello.com", "logo": "📋", "category": "productivity", "isCN": false, "tags": ["kanban", "project"] },
+    { "id": "asana-new", "name_en": "Asana", "url": "https://asana.com", "logo": "🎯", "category": "productivity", "isCN": false, "tags": ["project", "management"] },
+    { "id": "monday-new", "name_en": "Monday.com", "url": "https://monday.com", "logo": "📅", "category": "productivity", "isCN": false, "tags": ["workflow", "collaboration"] },
+    { "id": "airtable-new", "name_en": "Airtable", "url": "https://airtable.com", "logo": "🗃️", "category": "productivity", "isCN": false, "tags": ["database", "spreadsheet"] },
+    { "id": "clickup", "name_en": "ClickUp", "url": "https://clickup.com", "logo": "⬆️", "category": "productivity", "isCN": false, "tags": ["productivity", "all-in-one"] },
+    { "id": "basecamp", "name_en": "Basecamp", "url": "https://basecamp.com", "logo": "🏕️", "category": "productivity", "isCN": false, "tags": ["project", "communication"] },
+    { "id": "jira-new", "name_en": "Jira", "url": "https://atlassian.com/software/jira", "logo": "🎫", "category": "productivity", "isCN": false, "tags": ["issue", "tracking"] },
+    { "id": "confluence-new", "name_en": "Confluence", "url": "https://atlassian.com/software/confluence", "logo": "📚", "category": "productivity", "isCN": false, "tags": ["wiki", "documentation"] },
+
+    // 国际教育平台（避免重复ID）
+    { "id": "coursera-new", "name_en": "Coursera", "url": "https://coursera.org", "logo": "🎓", "category": "education", "isCN": false, "tags": ["mooc", "university"] },
+    { "id": "udemy-new", "name_en": "Udemy", "url": "https://udemy.com", "logo": "📚", "category": "education", "isCN": false, "tags": ["courses", "skills"] },
+    { "id": "khan-academy-new", "name_en": "Khan Academy", "url": "https://khanacademy.org", "logo": "🏫", "category": "education", "isCN": false, "tags": ["free", "k-12"] },
+    { "id": "edx", "name_en": "edX", "url": "https://edx.org", "logo": "🎓", "category": "education", "isCN": false, "tags": ["mooc", "mit-harvard"] },
+    { "id": "skillshare", "name_en": "Skillshare", "url": "https://skillshare.com", "logo": "🎨", "category": "education", "isCN": false, "tags": ["creative", "skills"] },
+    { "id": "masterclass", "name_en": "MasterClass", "url": "https://masterclass.com", "logo": "👑", "category": "education", "isCN": false, "tags": ["celebrity", "premium"] },
+    { "id": "linkedin-learning", "name_en": "LinkedIn Learning", "url": "https://linkedin.com/learning", "logo": "💼", "category": "education", "isCN": false, "tags": ["professional", "career"] },
+    { "id": "pluralsight", "name_en": "Pluralsight", "url": "https://pluralsight.com", "logo": "👁️", "category": "education", "isCN": false, "tags": ["tech", "skills"] },
+
+    // 国际游戏平台（避免重复ID）
+    { "id": "steam", "name_en": "Steam", "url": "https://store.steampowered.com", "logo": "💨", "category": "gaming", "isCN": false, "tags": ["gaming", "pc"] },
+    { "id": "epic-games", "name_en": "Epic Games", "url": "https://epicgames.com", "logo": "🎮", "category": "gaming", "isCN": false, "tags": ["fortnite", "unreal"] },
+    { "id": "ubisoft", "name_en": "Ubisoft", "url": "https://ubisoft.com", "logo": "🏰", "category": "gaming", "isCN": false, "tags": ["assassin", "french"] },
+    { "id": "ea", "name_en": "EA Games", "url": "https://ea.com", "logo": "🎯", "category": "gaming", "isCN": false, "tags": ["fifa", "sports"] },
+    { "id": "activision", "name_en": "Activision", "url": "https://activision.com", "logo": "🎮", "category": "gaming", "isCN": false, "tags": ["call-of-duty", "blizzard"] },
+    { "id": "twitch-new", "name_en": "Twitch", "url": "https://twitch.tv", "logo": "📺", "category": "gaming", "isCN": false, "tags": ["streaming", "gaming"] },
+    { "id": "roblox", "name_en": "Roblox", "url": "https://roblox.com", "logo": "🧱", "category": "gaming", "isCN": false, "tags": ["kids", "creation"] },
+
+    // 国际旅行平台（避免重复ID）
+    { "id": "booking-new", "name_en": "Booking.com", "url": "https://booking.com", "logo": "🏨", "category": "travel", "isCN": false, "tags": ["hotels", "accommodation"] },
+    { "id": "airbnb-new", "name_en": "Airbnb", "url": "https://airbnb.com", "logo": "🏠", "category": "travel", "isCN": false, "tags": ["home-sharing", "experiences"] },
+    { "id": "expedia-new", "name_en": "Expedia", "url": "https://expedia.com", "logo": "✈️", "category": "travel", "isCN": false, "tags": ["travel", "booking"] },
+    { "id": "kayak", "name_en": "Kayak", "url": "https://kayak.com", "logo": "🛶", "category": "travel", "isCN": false, "tags": ["search", "comparison"] },
+    { "id": "skyscanner", "name_en": "Skyscanner", "url": "https://skyscanner.com", "logo": "🔍", "category": "travel", "isCN": false, "tags": ["flights", "search"] },
+    { "id": "tripadvisor", "name_en": "TripAdvisor", "url": "https://tripadvisor.com", "logo": "🗺️", "category": "travel", "isCN": false, "tags": ["reviews", "travel"] },
+    { "id": "uber", "name_en": "Uber", "url": "https://uber.com", "logo": "🚗", "category": "travel", "isCN": false, "tags": ["ride-sharing", "transport"] },
+    { "id": "lyft", "name_en": "Lyft", "url": "https://lyft.com", "logo": "🚕", "category": "travel", "isCN": false, "tags": ["ride-sharing", "transport"] },
+
+    // 国际健康健身（避免重复ID）
+    { "id": "myfitnesspal", "name_en": "MyFitnessPal", "url": "https://myfitnesspal.com", "logo": "🏃", "category": "health", "isCN": false, "tags": ["fitness", "nutrition"] },
+    { "id": "strava", "name_en": "Strava", "url": "https://strava.com", "logo": "🏃‍♂️", "category": "health", "isCN": false, "tags": ["running", "cycling"] },
+    { "id": "fitbit", "name_en": "Fitbit", "url": "https://fitbit.com", "logo": "⌚", "category": "health", "isCN": false, "tags": ["wearable", "fitness"] },
+    { "id": "apple-health", "name_en": "Apple Health", "url": "https://apple.com/health", "logo": "🍎", "category": "health", "isCN": false, "tags": ["health", "apple"] },
+    { "id": "calm", "name_en": "Calm", "url": "https://calm.com", "logo": "🧘", "category": "health", "isCN": false, "tags": ["meditation", "sleep"] },
+    { "id": "headspace", "name_en": "Headspace", "url": "https://headspace.com", "logo": "🧠", "category": "health", "isCN": false, "tags": ["meditation", "mindfulness"] },
+    { "id": "peloton", "name_en": "Peloton", "url": "https://onepeloton.com", "logo": "🚴", "category": "health", "isCN": false, "tags": ["cycling", "fitness"] },
+    { "id": "nike-training", "name_en": "Nike Training", "url": "https://nike.com/ntc-app", "logo": "👟", "category": "health", "isCN": false, "tags": ["nike", "training"] }
+  ]
+}

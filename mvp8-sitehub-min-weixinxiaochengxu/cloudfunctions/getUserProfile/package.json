@@ -1,0 +1,14 @@
+{
+  "name": "getUserProfile",
+  "version": "1.0.0",
+  "description": "统一用户画像接口 - 单一事实源",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
+
+
+
+
+

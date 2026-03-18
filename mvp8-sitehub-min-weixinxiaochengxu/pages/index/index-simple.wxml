@@ -1,0 +1,59 @@
+<!--pages/index/index.wxml - 简化版-->
+<view class="container">
+  <!-- 头部标题 -->
+  <view class="header">
+    <text class="title">SiteHub 工具集</text>
+    <text class="subtitle">一站式网站导航平台</text>
+  </view>
+
+  <!-- 特色产品 -->
+  <view class="featured-section">
+    <text class="section-title">🌟 MornHub 特色产品</text>
+    <scroll-view scroll-x="true" class="featured-scroll">
+      <view class="featured-grid">
+        <view wx:for="{{featuredSites}}" wx:key="id" class="featured-item" bindtap="openSite" data-url="{{item.url}}" data-title="{{item.name}}">
+          <text class="featured-logo">{{item.logo}}</text>
+          <text class="featured-name">{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 搜索框 - 简化版 -->
+  <view class="search-section">
+    <input class="search-input" placeholder="🔍 搜索网站..." bindinput="onSearchInput" value="{{searchQuery}}" />
+  </view>
+  
+  <!-- 分类标签 - 固定全部按钮 -->
+  <view class="category-section">
+    <view class="category-wrapper">
+      <!-- 固定的全部按钮 -->
+      <view class="category-item fixed-all {{selectedCategory === 'all' ? 'active' : ''}}"
+            bindtap="onCategoryChange" data-category="all">
+        <text class="category-text">全部</text>
+      </view>
+      
+      <!-- 可滚动的其他分类 -->
+      <scroll-view scroll-x="true" class="category-scroll-flex">
+        <view class="category-list-flex">
+          <view wx:for="{{categories}}" wx:key="key" wx:if="{{item.key !== 'all'}}"
+                class="category-item {{selectedCategory === item.key ? 'active' : ''}}"
+                bindtap="onCategoryChange" data-category="{{item.key}}">
+            <text class="category-text">{{item.name}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <!-- 网站网格 -->
+  <view class="sites-section">
+    <text class="section-title">🌐 {{filteredSites.length}} 个网站 • 一页查看</text>
+    <view class="sites-grid">
+      <view wx:for="{{filteredSites}}" wx:key="id" class="site-item" bindtap="openSite" data-url="{{item.url}}" data-title="{{item.name}}">
+        <text class="site-logo">{{item.logo}}</text>
+        <text class="site-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+</view>

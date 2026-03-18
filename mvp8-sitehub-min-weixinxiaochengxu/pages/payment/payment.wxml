@@ -1,0 +1,83 @@
+<!--pages/payment/payment.wxml-->
+<view class="container">
+  <!-- 语言切换器 -->
+  <include src="../index/language-switcher.wxml"></include>
+
+  <!-- 页面标题 -->
+  <view class="header">
+    <text class="title">{{uiText.upgradeTitle}}</text>
+    <text class="subtitle">{{uiText.unlockFeatures}}</text>
+  </view>
+
+  <!-- 套餐类型切换器 -->
+  <view class="plan-type-toggle">
+    <view class="toggle-container">
+      <view class="toggle-option {{planType === 'personal' ? 'active' : ''}}"
+            bindtap="selectPlanType" data-plan="personal">
+        <text class="toggle-text">{{uiText.personal}}</text>
+      </view>
+      <view class="toggle-option {{planType === 'team' ? 'active' : ''}}"
+            bindtap="selectPlanType" data-plan="team">
+        <text class="toggle-text">{{uiText.team}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 套餐卡片（并排显示） -->
+  <view class="plans-grid">
+
+    <!-- 月付卡片 -->
+    <view
+      class="plan-card {{billingCycle === 'monthly' ? 'active' : ''}}"
+      bindtap="selectMonthly"
+    >
+      <view class="card-header">
+        <text class="plan-name">{{uiText.monthly}}</text>
+      </view>
+      <view class="price-section">
+        <text class="currency">{{uiText.currency}}</text>
+        <text class="price">{{prices[planType].monthly}}</text>
+      </view>
+      <text class="period">{{uiText.perMonth}}</text>
+    </view>
+
+    <!-- 年付卡片 -->
+    <view
+      class="plan-card {{billingCycle === 'yearly' ? 'active' : ''}}"
+      bindtap="selectYearly"
+    >
+      <view class="badge">{{uiText.save30}}</view>
+      <view class="card-header">
+        <text class="plan-name">{{uiText.yearly}}</text>
+      </view>
+      <view class="price-section">
+        <text class="currency">{{uiText.currency}}</text>
+        <text class="price">{{prices[planType].yearly}}</text>
+      </view>
+      <text class="period">{{uiText.perYear}}</text>
+    </view>
+  </view>
+
+  <!-- 功能列表 -->
+  <view class="features-section">
+    <view class="feature-item" wx:for="{{uiText.features}}" wx:key="index">
+      <text class="check-icon">✓</text>
+      <text class="feature-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 支付按钮 -->
+  <view class="action-section">
+    <button
+      class="pay-button {{loading ? 'loading' : ''}}"
+      bindtap="handlePayment"
+      disabled="{{loading}}"
+    >
+      {{uiText.subscribe}}
+    </button>
+
+    <view class="tips">
+      <text class="tip-text">{{currentLang === 'zh' ? '支付即表示您同意我们的服务条款和隐私政策' : 'By subscribing, you agree to our Terms of Service and Privacy Policy'}}</text>
+    </view>
+  </view>
+</view>

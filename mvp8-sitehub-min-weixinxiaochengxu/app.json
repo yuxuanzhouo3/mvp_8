@@ -1,0 +1,25 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/webview/webview",
+    "pages/login/login",
+    "pages/payment/payment",
+    "pages/settings/settings",
+    "pages/legal/legal"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1e293b",
+    "navigationBarTitleText": "SiteHub工具集",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#1e293b"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于为你推荐合适的网站"
+    }
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,308 @@
+<!--index.wxml - 本土化优化版（还原原网站布局）+ 国际化支持-->
+<view class="page-container">
+
+  <!-- 语言切换器 -->
+  <include src="language-switcher.wxml"></include>
+
+  <!-- 汉堡菜单按钮 -->
+  <view class="menu-button" bindtap="openSidebar">
+    <view class="hamburger-icon">
+      <view class="line"></view>
+      <view class="line"></view>
+      <view class="line"></view>
+    </view>
+  </view>
+
+  <!-- 侧边栏组件 -->
+  <sidebar
+    show="{{showSidebar}}"
+    userInfo="{{userInfo}}"
+    uiText="{{uiText}}"
+    bind:close="closeSidebar"
+    bind:login="goToLogin"
+    bind:upgrade="goToPayment"
+    bind:logout="handleLogout"
+  ></sidebar>
+
+        <!-- 主标题区域 -->
+        <view class="header-section">
+          <text class="main-title">{{uiText.mainTitle}}</text>
+          <text class="sub-title">{{uiText.subTitle}}</text>
+        </view>
+
+  <!-- 顶部 MornHub Products 区域 -->
+  <view class="products-section">
+    <!-- MornHub Products 胶囊标签 -->
+    <view class="products-label">
+      <text class="products-icon">✨</text>
+      <text class="products-text">{{uiText.productsLabel}}</text>
+    </view>
+    
+    <!-- 横向滚动的产品入口条 -->
+    <scroll-view scroll-x="true" class="products-scroll" show-scrollbar="{{false}}">
+      <view class="products-list">
+        <view wx:for="{{quickLinks}}" wx:key="id" class="product-item"
+              bindtap="openSite" bindlongpress="showActionSheet"
+              data-url="{{item.url}}" data-title="{{item.name_zh || item.cnName || item.name_en}}" data-id="{{item.id}}" data-openinbrowser="{{item.openInBrowser}}">
+          <text class="product-emoji">{{item.logo}}</text>
+          <text class="product-name">{{item.name_zh || item.cnName || item.name_en}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-section">
+    <view class="search-box">
+      <input class="search-input"
+             placeholder="{{uiText.searchPlaceholder}}"
+             bindinput="onSearchInput"
+             value="{{searchQuery}}"
+             bindconfirm="onSearchConfirm" />
+      <view class="search-btn" bindtap="onSearchConfirm">
+        <text class="search-icon">🔍</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类区 - 粘顶效果 -->
+  <view class="category-section sticky-top">
+    <scroll-view scroll-x="true" class="category-scroll" show-scrollbar="{{false}}">
+      <view class="category-list">
+        <!-- 全部分类 -->
+        <view class="category-chip {{selectedCategory === 'all' ? 'active' : ''}}"
+              bindtap="onCategoryChange" data-category="all">
+          <text class="category-text">{{uiText.allCategory}}</text>
+        </view>
+        <!-- 前8个分类 -->
+        <view wx:for="{{visibleCategories}}" wx:key="key" 
+              class="category-chip {{selectedCategory === item.key ? 'active' : ''}}"
+              bindtap="onCategoryChange" data-category="{{item.key}}">
+          <text class="category-text">{{item.name_zh || item.cnName || item.name_en}}</text>
+        </view>
+        <!-- +N 更多分类按钮 -->
+        <view wx:if="{{remainingCategoriesCount > 0}}" 
+              class="category-chip category-more" bindtap="showAllCategories">
+          <text class="category-text">+{{remainingCategoriesCount}}</text>
+        </view>
+      </view>
+    </scroll-view>
+    
+    <!-- 网站数量统计 -->
+    <view class="sites-count">
+      <text class="count-text">{{uiText.sitesCount.replace('{count}', filteredSites.length)}}</text>
+    </view>
+  </view>
+
+  <!-- 网站宫格 - 4列布局 + 无限滚动 -->
+  <view class="sites-section">
+    <!-- 自定义网站管理界面 -->
+    <view wx:if="{{selectedCategory === 'custom'}}" class="custom-sites-manager">
+      <view class="manager-header">
+        <text class="manager-title">自定义网站管理</text>
+        <view class="close-btn" bindtap="onCategoryChange" data-category="all">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+      
+      <view class="manager-content">
+        <!-- 添加按钮组 -->
+        <view class="add-buttons">
+          <view class="add-site-btn" bindtap="showAddSiteModal">
+            <text class="add-icon">+</text>
+            <text class="add-text">手动添加</text>
+          </view>
+          <view class="parse-site-btn" bindtap="readClipboardAndParse">
+            <text class="parse-icon">🧠</text>
+            <text class="parse-text">智能解析</text>
+          </view>
+        </view>
+        
+        <!-- 网站列表 -->
+        <view wx:if="{{customSites.length > 0}}" class="sites-manager-list">
+          <view wx:for="{{customSites}}" wx:key="id" class="site-manager-item">
+            <view class="site-info" bindtap="openSite" data-url="{{item.url}}">
+              <text class="site-logo">{{item.logo}}</text>
+              <view class="site-details">
+                <text class="site-name">{{item.name}}</text>
+                <text class="site-url">{{item.url}}</text>
+              </view>
+            </view>
+            <view class="site-actions">
+              <view class="action-btn edit-btn" bindtap="showEditSiteModal" data-id="{{item.id}}">
+                <text class="action-icon">✏️</text>
+              </view>
+              <view class="action-btn delete-btn" bindtap="deleteCustomSite" data-id="{{item.id}}">
+                <text class="action-icon">🗑️</text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 空状态 -->
+        <view wx:else class="empty-custom-sites">
+          <text class="empty-icon">🌐</text>
+          <text class="empty-text">还没有自定义网站</text>
+          <text class="empty-hint">点击上方按钮添加第一个网站</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 普通网站网格 -->
+    <view wx:else class="sites-grid">
+      <view wx:for="{{displaySites}}" wx:key="id" class="site-card"
+            bindtap="openSite" bindlongpress="showActionSheet"
+            data-url="{{item.url}}" data-title="{{item.name_zh || item.cnName || item.name_en}}" data-id="{{item.id}}" data-openinbrowser="{{item.openInBrowser}}">
+        <text class="site-emoji">{{item.logo}}</text>
+        <text class="site-title">{{item.name_zh || item.cnName || item.name_en}}</text>
+      </view>
+
+      <!-- 加载更多提示 -->
+      <view wx:if="{{hasMore && !isLoading}}" class="load-more-hint">
+        <text class="hint-text">下拉加载更多...</text>
+      </view>
+
+      <!-- 加载中提示 -->
+      <view wx:if="{{isLoading}}" class="loading-indicator">
+        <text class="loading-text">加载中...</text>
+      </view>
+
+      <!-- 已加载全部提示 -->
+      <view wx:if="{{!hasMore && displaySites.length > 0}}" class="load-all-hint">
+        <text class="hint-text">已加载全部 {{filteredSites.length}} 个网站</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类选择面板 -->
+  <view wx:if="{{showCategoryPanel}}" class="category-panel-overlay" bindtap="closeCategoryPanel">
+    <view class="category-panel" catchtap="stopPropagation">
+      <view class="panel-header">
+        <text class="panel-title">选择分类</text>
+        <text class="panel-close" bindtap="closeCategoryPanel">✕</text>
+      </view>
+      <view class="panel-content">
+        <view wx:for="{{allCategories}}" wx:key="key" 
+              class="panel-category-item {{selectedCategory === item.key ? 'active' : ''}}"
+              bindtap="selectCategory" data-category="{{item.key}}">
+          <text class="panel-category-text">{{item.name_zh || item.name_en}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 智能解析弹窗 -->
+  <view wx:if="{{showParseModal}}" class="modal-overlay" bindtap="closeParseModal">
+    <view class="modal-content parse-modal" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">智能解析链接</text>
+        <text class="modal-close" bindtap="closeParseModal">✕</text>
+      </view>
+      
+      <view class="modal-body">
+        <view class="form-group">
+          <text class="form-label">粘贴聊天记录或文本</text>
+          <textarea class="form-textarea parse-textarea" 
+                    placeholder="支持从微信聊天、分享文本中自动提取链接&#10;例如：&#10;分享一个有趣的网站：https://chatgpt.com/c/xxx&#10;还有这个GitHub项目：https://github.com/user/repo" 
+                    value="{{parseText}}"
+                    bindinput="onParseTextInput"></textarea>
+        </view>
+        
+        <!-- 解析结果 -->
+        <view wx:if="{{parseResults.length > 0}}" class="parse-results">
+          <text class="results-title">检测到 {{parseResults.length}} 个链接：</text>
+          <view class="results-list">
+            <view wx:for="{{parseResults}}" wx:key="id" class="result-item" bindtap="selectParseResult" data-index="{{index}}">
+              <text class="result-icon">{{item.logo}}</text>
+              <view class="result-info">
+                <text class="result-name">{{item.name}}</text>
+                <text class="result-url">{{item.url}}</text>
+                <text class="result-category">{{item.category}}</text>
+              </view>
+              <text class="result-arrow">→</text>
+            </view>
+          </view>
+          
+          <view class="parse-actions">
+            <button class="btn-add-all" bindtap="addAllParseResults">
+              一键添加全部 ({{parseResults.length}})
+            </button>
+          </view>
+        </view>
+        
+        <!-- 空状态 -->
+        <view wx:elif="{{parseText && parseResults.length === 0}}" class="parse-empty">
+          <text class="empty-icon">🔍</text>
+          <text class="empty-text">未检测到有效链接</text>
+          <text class="empty-hint">请确保文本中包含完整的URL</text>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="closeParseModal">取消</button>
+        <button class="btn-parse" bindtap="parseTextUrls" data-text="{{parseText}}">重新解析</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加/编辑网站弹窗 -->
+  <view wx:if="{{showAddSiteModal || showEditSiteModal}}" class="modal-overlay" bindtap="closeSiteModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">{{editingSiteId ? '编辑网站' : '添加网站'}}</text>
+        <text class="modal-close" bindtap="closeSiteModal">✕</text>
+      </view>
+      
+      <view class="modal-body">
+        <view class="form-group">
+          <text class="form-label">网站名称</text>
+          <input class="form-input" 
+                 placeholder="请输入网站名称" 
+                 value="{{siteFormData.name}}"
+                 data-field="name"
+                 bindinput="onSiteFormInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">网站地址</text>
+          <input class="form-input" 
+                 placeholder="https://example.com" 
+                 value="{{siteFormData.url}}"
+                 data-field="url"
+                 bindinput="onSiteFormInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">网站图标</text>
+          <input class="form-input" 
+                 placeholder="🌐" 
+                 value="{{siteFormData.logo}}"
+                 data-field="logo"
+                 bindinput="onSiteFormInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">网站描述</text>
+          <textarea class="form-textarea" 
+                    placeholder="网站描述（可选）" 
+                    value="{{siteFormData.description}}"
+                    data-field="description"
+                    bindinput="onSiteFormInput"></textarea>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="closeSiteModal">取消</button>
+        <button class="btn-save" bindtap="saveSite">
+          {{editingSiteId ? '保存' : '添加'}}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- ICP备案信息 -->
+  <view class="icp-footer">
+    <text class="icp-text" bindtap="onICPClick">{{icpFilingNumber}}</text>
+  </view>
+
+</view>

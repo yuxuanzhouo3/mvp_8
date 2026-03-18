@@ -1,0 +1,165 @@
+/* pages/legal/legal.wxss */
+.legal-container {
+  padding: 32rpx;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.legal-header {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.back-button {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.back-button:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.95);
+}
+
+.back-icon {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-left: -4rpx;
+}
+
+.legal-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: white;
+  flex: 1;
+}
+
+.legal-content {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 24rpx;
+}
+
+/* 富文本样式 */
+.legal-content h1 {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 24rpx;
+  border-bottom: 2rpx solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 16rpx;
+}
+
+.legal-content h2 {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: white;
+  margin: 32rpx 0 16rpx 0;
+}
+
+.legal-content h3 {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 24rpx 0 12rpx 0;
+}
+
+.legal-content p {
+  margin-bottom: 16rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+}
+
+.legal-content ul {
+  margin: 16rpx 0;
+  padding-left: 32rpx;
+}
+
+.legal-content li {
+  margin-bottom: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.legal-content strong {
+  color: white;
+  font-weight: 600;
+}
+
+.legal-content em {
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+}
+
+.legal-footer {
+  padding: 24rpx 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.agree-button {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 44rpx;
+  color: white;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.agree-button:active {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: scale(0.98);
+}
+
+.agree-button::after {
+  border: none;
+}
+
+/* 滚动优化 */
+.legal-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .legal-container {
+    padding: 24rpx;
+  }
+  
+  .legal-content {
+    padding: 24rpx;
+  }
+  
+  .legal-title {
+    font-size: 32rpx;
+  }
+}
+
+
+
+
+

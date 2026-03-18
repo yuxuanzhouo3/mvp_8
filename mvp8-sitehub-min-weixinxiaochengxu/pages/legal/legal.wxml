@@ -1,0 +1,30 @@
+<!--pages/legal/legal.wxml-->
+<view class="legal-container">
+  
+  <!-- 页面头部 -->
+  <view class="legal-header">
+    <view class="back-button" bindtap="onBack">
+      <text class="back-icon">‹</text>
+    </view>
+    <text class="legal-title">{{title}}</text>
+  </view>
+  
+  <!-- 法律条款内容 -->
+  <view class="legal-content">
+    <rich-text nodes="{{content}}"></rich-text>
+  </view>
+  
+  <!-- 底部操作按钮 -->
+  <view class="legal-footer">
+    <button class="agree-button" bindtap="onAgree">
+      {{uiText.agree}}
+    </button>
+  </view>
+  
+</view>
+
+
+
+
+
+

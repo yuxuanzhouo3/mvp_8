@@ -1,0 +1,46 @@
+<!-- language-switcher.wxml - 语言切换组件 -->
+<view wx:if="{{showLanguageSwitcher}}" class="language-switcher-overlay" bindtap="closeLangSwitcher">
+  <view class="language-switcher" catchtap="stopPropagation">
+    <view class="switcher-header">
+      <text class="switcher-title">{{langSwitcherTitle}}</text>
+      <text class="switcher-close" bindtap="closeLangSwitcher">✕</text>
+    </view>
+    
+    <view class="language-list">
+      <!-- 中文选项 -->
+      <view class="language-option {{currentLanguage === 'zh' ? 'active' : ''}}"
+            bindtap="switchLanguage" data-lang="zh">
+        <text class="language-flag">🇨🇳</text>
+        <view class="language-info">
+          <text class="language-name">中文</text>
+          <text class="language-desc">简体中文 - 默认</text>
+        </view>
+        <text wx:if="{{currentLanguage === 'zh'}}" class="language-check">✓</text>
+      </view>
+      
+      <!-- 英文选项 -->
+      <view class="language-option {{currentLanguage === 'en' ? 'active' : ''}}"
+            bindtap="switchLanguage" data-lang="en">
+        <text class="language-flag">🇺🇸</text>
+        <view class="language-info">
+          <text class="language-name">English</text>
+          <text class="language-desc">English - International</text>
+        </view>
+        <text wx:if="{{currentLanguage === 'en'}}" class="language-check">✓</text>
+      </view>
+    </view>
+    
+    <!-- IP检测信息 -->
+    <view wx:if="{{isAutoDetected}}" class="auto-detect-info">
+      <text class="auto-detect-text">{{autoDetectText}}</text>
+      <text class="detected-country">{{detectedCountryText}}</text>
+    </view>
+  </view>
+</view>
+
+<!-- 语言切换按钮 -->
+<view class="language-switch-btn" bindtap="showLangSwitcher">
+  <text class="current-lang-flag">{{currentLanguageInfo.flag}}</text>
+  <text class="current-lang-name">{{currentLanguageInfo.name}}</text>
+  <text class="switch-icon">🌐</text>
+</view>

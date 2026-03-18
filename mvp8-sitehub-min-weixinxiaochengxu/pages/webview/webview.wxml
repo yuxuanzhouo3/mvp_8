@@ -1,0 +1,49 @@
+<!--pages/webview/webview.wxml - Cookie 持久化版本-->
+<view class="webview-container">
+
+  <!-- 顶部工具栏 -->
+  <view class="webview-toolbar">
+    <view class="toolbar-left">
+      <view class="toolbar-btn" bindtap="goBack">
+        <text class="btn-icon">←</text>
+      </view>
+    </view>
+    <view class="toolbar-center">
+      <view class="toolbar-btn" bindtap="refresh">
+        <text class="btn-icon">↻</text>
+      </view>
+      <view class="toolbar-btn {{isFavorited ? 'favorited' : ''}}" bindtap="toggleFavorite">
+        <text class="btn-icon">{{isFavorited ? '★' : '☆'}}</text>
+      </view>
+    </view>
+    <view class="toolbar-right">
+      <view class="toolbar-btn" bindtap="shareToFriend">
+        <text class="btn-icon">⊕</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载进度条 -->
+  <view class="progress-bar" wx:if="{{isLoading}}">
+    <view class="progress-fill"></view>
+  </view>
+
+  <!-- 加载中页面（首次加载显示） -->
+  <view class="loading-page" wx:if="{{isLoading && !webviewLoaded}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-title">{{title}}</text>
+      <text class="loading-text">正在加载中...</text>
+      <text class="loading-hint">💾 登录状态将自动保存</text>
+    </view>
+  </view>
+
+  <!-- WebView 组件 - Cookie 自动持久化 -->
+  <web-view
+    src="{{url}}"
+    bindload="onWebViewLoad"
+    binderror="onError"
+    bindmessage="onMessage"
+  ></web-view>
+
+</view>

@@ -1,0 +1,929 @@
+/* pages/settings/settings.wxss */
+
+/* ========================================
+   页面容器
+======================================== */
+.settings-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ========================================
+   Tab 导航栏
+======================================== */
+.tabs-bar {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 2rpx solid rgba(255, 255, 255, 0.1);
+  padding: 0 16rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tab-text {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active .tab-text {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 4rpx;
+  background: #3b82f6;
+  border-radius: 2rpx;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active .tab-indicator {
+  width: 60rpx;
+}
+
+/* ========================================
+   Tab 内容区
+======================================== */
+.tab-content {
+  height: calc(100vh - 120rpx);
+}
+
+.tab-panel {
+  padding: 32rpx;
+}
+
+/* ========================================
+   Section 通用样式
+======================================== */
+.section {
+  margin-bottom: 32rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.section-icon {
+  font-size: 36rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ========================================
+   卡片通用样式
+======================================== */
+.profile-card,
+.membership-card,
+.subscription-card,
+.action-card,
+.language-current,
+.note-card,
+.notice-card,
+.contact-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  transition: all 0.2s ease;
+}
+
+/* ========================================
+   Account Tab 样式
+======================================== */
+
+/* 个人信息卡片 */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border: 4rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.info-row {
+  display: flex;
+  gap: 12rpx;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.6);
+  min-width: 120rpx;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: white;
+  font-weight: 500;
+}
+
+/* 会员信息卡片 */
+.membership-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+}
+
+.membership-row:last-child {
+  border-bottom: none;
+}
+
+.membership-label {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.membership-value {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.plan-text {
+  font-weight: 600;
+}
+
+.plan-text.pro {
+  color: #fbbf24;
+}
+
+.plan-text.team {
+  color: #8b5cf6;
+}
+
+.plan-text.free {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.plan-icon {
+  font-size: 24rpx;
+}
+
+.enabled {
+  color: #10b981;
+}
+
+.disabled {
+  color: #ef4444;
+}
+
+/* 账号操作 */
+.action-card {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  max-width: 420rpx;
+  margin: 0 auto;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: rgba(239, 68, 68, 0.12);
+  border: 2rpx solid rgba(239, 68, 68, 0.25);
+  transition: all 0.2s ease;
+}
+
+.logout-button:active {
+  transform: scale(0.97);
+}
+
+.logout-text {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #f87171;
+  text-align: center;
+  margin: 0;
+}
+
+/* ========================================
+   Billing Tab 样式
+======================================== */
+
+/* 订阅卡片 */
+.subscription-card {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border: 2rpx solid rgba(59, 130, 246, 0.3);
+}
+
+.subscription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20rpx;
+}
+
+.subscription-plan {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.plan-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.subscription-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+}
+
+.currency {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 600;
+}
+
+.amount {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: white;
+}
+
+.period {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.subscription-info {
+  margin-bottom: 20rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: white;
+  font-weight: 500;
+}
+
+.subscription-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  box-shadow: 0 4rpx 12rpx rgba(245, 158, 11, 0.3);
+}
+
+.manage-btn {
+  background: rgba(59, 130, 246, 0.2);
+  border: 2rpx solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+/* 空状态 - 无订阅 */
+.empty-subscription {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  padding: 60rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.upgrade-button {
+  margin-top: 20rpx;
+  padding: 20rpx 48rpx;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 24rpx;
+  color: white;
+  font-size: 30rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.upgrade-button:active {
+  transform: scale(0.98);
+}
+
+/* 计费历史 */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 12rpx;
+}
+
+.history-date {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 160rpx;
+}
+
+.history-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.history-plan {
+  font-size: 26rpx;
+  color: white;
+  font-weight: 500;
+}
+
+.history-amount {
+  font-size: 32rpx;
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.history-status {
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.history-status.paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.history-status.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.history-status.refunded {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 40rpx 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 26rpx;
+}
+
+/* 重要提示 */
+.notice-card {
+  padding: 24rpx;
+  background: rgba(245, 158, 11, 0.1);
+  border: 2rpx solid rgba(245, 158, 11, 0.2);
+  border-radius: 16rpx;
+}
+
+.notice-item {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.notice-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   Language Tab 样式
+======================================== */
+
+/* 当前语言 */
+.language-current {
+  padding: 24rpx;
+}
+
+.language-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.05);
+}
+
+.language-row:last-child {
+  border-bottom: none;
+}
+
+.language-label {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.language-value {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 500;
+}
+
+/* 语言选项 */
+.language-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.language-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+  transition: all 0.2s ease;
+}
+
+.language-option:active {
+  transform: scale(0.98);
+}
+
+.language-option.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.option-radio {
+  font-size: 40rpx;
+  color: rgba(255, 255, 255, 0.3);
+  line-height: 1;
+}
+
+.language-option.selected .option-radio {
+  color: #3b82f6;
+}
+
+.option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.option-title {
+  font-size: 30rpx;
+  color: white;
+  font-weight: 600;
+}
+
+.option-desc {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+}
+
+/* 说明卡片 */
+.note-card {
+  padding: 24rpx;
+  background: rgba(59, 130, 246, 0.05);
+  border: 2rpx solid rgba(59, 130, 246, 0.2);
+}
+
+.note-item {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.note-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ========================================
+   Legal Tab 样式
+======================================== */
+.legal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.legal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 24rpx;
+  background: rgba(255, 255, 255, 0.03);
+  transition: all 0.2s ease;
+}
+
+.legal-item:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.legal-text {
+  font-size: 30rpx;
+  color: white;
+  font-weight: 500;
+}
+
+.legal-arrow {
+  font-size: 44rpx;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: 300;
+}
+
+/* 联系我们卡片 */
+.contact-card {
+  padding: 28rpx;
+}
+
+.contact-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  margin-bottom: 20rpx;
+}
+
+.contact-row:last-of-type {
+  margin-bottom: 24rpx;
+}
+
+.contact-label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.contact-value {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 500;
+}
+
+.copy-email-btn {
+  padding: 20rpx;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 12rpx;
+  text-align: center;
+  color: white;
+  font-size: 28rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+.copy-email-btn:active {
+  transform: scale(0.98);
+}
+
+/* ========================================
+   加载状态
+======================================== */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  padding: 60rpx 0;
+}
+
+.loading-icon {
+  font-size: 60rpx;
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ========================================
+   空状态
+======================================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  padding: 60rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ========================================
+   Pro会员卡 - 优化版
+======================================== */
+.pro-member-card {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16rpx;
+  padding: 40rpx;
+  color: #fff;
+  overflow: hidden;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+}
+
+.card-decoration {
+  position: absolute;
+  top: -100rpx;
+  right: -100rpx;
+  width: 300rpx;
+  height: 300rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.member-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.member-badge {
+  display: flex;
+  align-items: center;
+}
+
+.badge-icon {
+  font-size: 48rpx;
+  margin-right: 12rpx;
+}
+
+.badge-text {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.member-tier {
+  padding: 8rpx 16rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20rpx;
+  font-size: 24rpx;
+}
+
+.member-expiry {
+  margin-bottom: 32rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.member-summary {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 12rpx 0 28rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.expiry-label {
+  font-size: 24rpx;
+  opacity: 0.9;
+  margin-bottom: 8rpx;
+}
+
+.expiry-date {
+  font-size: 32rpx;
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+
+.expiry-badge {
+  display: inline-block;
+  padding: 6rpx 16rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16rpx;
+  font-size: 24rpx;
+}
+
+.member-features {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 32rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+.feature-icon {
+  margin-right: 6rpx;
+  font-weight: bold;
+  color: #34d399;
+  line-height: 1.4;
+}
+
+.feature-text {
+  flex: 1;
+}
+
+.member-actions {
+  position: relative;
+  z-index: 1;
+}
+
+.action-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+  font-size: 28rpx;
+}
+
+.arrow {
+  font-size: 36rpx;
+  font-weight: 300;
+}
+
+/* ========================================
+   免费用户卡
+======================================== */
+.free-member-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 24rpx;
+}
+
+.free-badge {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20rpx;
+  margin-bottom: 0;
+  align-self: center;
+}
+
+.free-badge .badge-text {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.free-summary {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 8rpx;
+}
+
+.free-limits {
+  margin-bottom: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.limit-item {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 12rpx;
+  text-align: center;
+}
+
+.upgrade-section {
+  text-align: center;
+}
+
+.upgrade-prompt {
+  display: block;
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 20rpx;
+}
+
+.pro-member-card .upgrade-btn,
+.free-member-card .upgrade-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 24rpx 48rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  display: inline-block;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+  transition: all 0.2s ease;
+}
+
+.pro-member-card .upgrade-btn:active,
+.free-member-card .upgrade-btn:active {
+  transform: scale(0.98);
+}

@@ -1,0 +1,402 @@
+/* pages/payment/payment.wxss - 移动端优化版 */
+
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  padding: 40rpx 32rpx;
+  padding-top: calc(40rpx + env(safe-area-inset-top));
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+}
+
+/* ========== 语言切换器 ========== */
+.language-switch-btn {
+  position: absolute;
+  top: 20rpx;
+  right: 16rpx;
+  display: flex;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  background: rgba(59, 130, 246, 0.2);
+  border: 2rpx solid rgba(59, 130, 246, 0.3);
+  border-radius: 40rpx;
+  z-index: 8;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10rpx);
+}
+
+.language-switch-btn:active {
+  background: rgba(59, 130, 246, 0.3);
+  transform: scale(0.95);
+}
+
+.current-lang-flag {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+}
+
+.current-lang-name {
+  font-size: 24rpx;
+  color: white;
+  margin-right: 8rpx;
+  font-weight: 500;
+}
+
+.switch-icon {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+.language-switcher-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.language-switcher {
+  width: 600rpx;
+  max-height: 500rpx;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-radius: 24rpx;
+  overflow: hidden;
+  border: 2rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.switcher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  background: rgba(59, 130, 246, 0.15);
+  border-bottom: 2rpx solid rgba(255, 255, 255, 0.1);
+}
+
+.switcher-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: white;
+}
+
+.switcher-close {
+  font-size: 40rpx;
+  color: rgba(255, 255, 255, 0.7);
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.switcher-close:active {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(0.9);
+}
+
+.language-list {
+  padding: 16rpx 0;
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.language-option.active {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.language-option:active {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.language-flag {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+}
+
+.language-info {
+  flex: 1;
+}
+
+.language-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4rpx;
+}
+
+.language-desc {
+  display: block;
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.language-check {
+  font-size: 32rpx;
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+/* ========== 页面标题 ========== */
+.header {
+  text-align: center;
+  margin-bottom: 48rpx;
+}
+
+.title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 12rpx;
+}
+
+.subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ========== 套餐类型切换器 ========== */
+.plan-type-toggle {
+  margin-bottom: 40rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.toggle-container {
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50rpx;
+  padding: 8rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.toggle-option {
+  flex: 1;
+  padding: 16rpx 32rpx;
+  border-radius: 42rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.toggle-option.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
+}
+
+.toggle-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color 0.3s ease;
+}
+
+.toggle-option.active .toggle-text {
+  color: white;
+  font-weight: 600;
+}
+
+/* ========== 套餐卡片网格 ========== */
+.plans-grid {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+}
+
+/* 套餐卡片 */
+.plan-card {
+  flex: 1;
+  position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  border: 3rpx solid rgba(255, 255, 255, 0.15);
+  border-radius: 20rpx;
+  padding: 24rpx 20rpx;
+  text-align: center;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-height: 120rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0) 0%, rgba(59, 130, 246, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.plan-card.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  transform: scale(1.02);
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.3);
+}
+
+.plan-card.active::before {
+  opacity: 1;
+}
+
+.plan-card:active {
+  transform: scale(0.98);
+}
+
+/* 卡片标题 */
+.card-header {
+  margin-bottom: 8rpx;
+}
+
+.plan-name {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: white;
+}
+
+/* 优惠徽章 */
+.badge {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  padding: 4rpx 12rpx;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 16rpx;
+  font-size: 18rpx;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(245, 158, 11, 0.4);
+}
+
+/* 价格部分 */
+.price-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4rpx;
+  gap: 6rpx;
+}
+
+.currency {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #3b82f6;
+  line-height: 1;
+}
+
+.price {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #3b82f6;
+  line-height: 1;
+  letter-spacing: -1rpx;
+}
+
+.period {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  line-height: 1;
+}
+
+/* ========== 功能列表 ========== */
+.features-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20rpx;
+  padding: 32rpx 28rpx;
+  margin-bottom: 40rpx;
+}
+
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.feature-item:last-child {
+  margin-bottom: 0;
+}
+
+.check-icon {
+  width: 32rpx;
+  height: 32rpx;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  flex-shrink: 0;
+  font-weight: bold;
+  line-height: 32rpx;
+  text-align: center;
+}
+
+.feature-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+/* ========== 支付按钮 ========== */
+.action-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pay-button {
+  width: 100%;
+  padding: 32rpx;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 20rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: white;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+}
+
+.pay-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.5);
+}
+
+.pay-button.loading {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  opacity: 0.7;
+}
+
+.tips {
+  margin-top: 24rpx;
+  text-align: center;
+}
+
+.tip-text {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}

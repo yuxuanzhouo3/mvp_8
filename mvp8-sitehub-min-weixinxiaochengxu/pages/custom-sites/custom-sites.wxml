@@ -1,0 +1,110 @@
+<!-- pages/custom-sites/custom-sites.wxml - 自定义网站管理页面 -->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="header">
+    <view class="header-content">
+      <view class="back-btn" bindtap="goBack">
+        <text class="back-icon">←</text>
+        <text class="back-text">返回</text>
+      </view>
+      <text class="page-title">{{uiText.pageTitle}}</text>
+      <view class="add-btn" bindtap="showAddModal">
+        <text class="add-icon">+</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 网站列表 -->
+  <view class="sites-section">
+    <view wx:if="{{customSites.length > 0}}" class="sites-list">
+      <view wx:for="{{customSites}}" wx:key="id" class="site-item">
+        <view class="site-info" bindtap="openSite" data-url="{{item.url}}">
+          <text class="site-logo">{{item.logo}}</text>
+          <view class="site-details">
+            <text class="site-name">{{item.name}}</text>
+            <text class="site-url">{{item.url}}</text>
+            <text wx:if="{{item.description}}" class="site-description">{{item.description}}</text>
+          </view>
+        </view>
+        <view class="site-actions">
+          <view class="action-btn edit-btn" bindtap="showEditModal" data-id="{{item.id}}">
+            <text class="action-icon">✏️</text>
+          </view>
+          <view class="action-btn delete-btn" bindtap="deleteSite" data-id="{{item.id}}">
+            <text class="action-icon">🗑️</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:else class="empty-state">
+      <text class="empty-icon">🌐</text>
+      <text class="empty-text">{{uiText.emptyTip}}</text>
+      <text class="empty-hint">{{uiText.addFirst}}</text>
+    </view>
+  </view>
+
+  <!-- 添加/编辑弹窗 -->
+  <view wx:if="{{showAddModal}}" class="modal-overlay" bindtap="closeModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-header">
+        <text class="modal-title">{{editingSite ? uiText.editSite : uiText.addSite}}</text>
+        <text class="modal-close" bindtap="closeModal">✕</text>
+      </view>
+      
+      <view class="modal-body">
+        <view class="form-group">
+          <text class="form-label">{{uiText.siteName}}</text>
+          <input class="form-input" 
+                 placeholder="请输入网站名称" 
+                 value="{{formData.name}}"
+                 data-field="name"
+                 bindinput="onFormInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">{{uiText.siteUrl}}</text>
+          <input class="form-input" 
+                 placeholder="https://example.com" 
+                 value="{{formData.url}}"
+                 data-field="url"
+                 bindinput="onFormInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">{{uiText.siteLogo}}</text>
+          <input class="form-input" 
+                 placeholder="🌐" 
+                 value="{{formData.logo}}"
+                 data-field="logo"
+                 bindinput="onFormInput" />
+        </view>
+        
+        <view class="form-group">
+          <text class="form-label">{{uiText.siteDescription}}</text>
+          <textarea class="form-textarea" 
+                    placeholder="网站描述（可选）" 
+                    value="{{formData.description}}"
+                    data-field="description"
+                    bindinput="onFormInput"></textarea>
+        </view>
+      </view>
+      
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="closeModal">{{uiText.cancel}}</button>
+        <button class="btn-save {{loading ? 'loading' : ''}}" 
+                bindtap="saveSite" 
+                disabled="{{loading}}">
+          {{loading ? '保存中...' : uiText.save}}
+        </button>
+      </view>
+    </view>
+  </view>
+</view>
+
+
+
+
+
+

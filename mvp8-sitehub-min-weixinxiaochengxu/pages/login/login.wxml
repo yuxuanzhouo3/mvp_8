@@ -1,0 +1,91 @@
+<!-- pages/login/login.wxml - 微信登录页面 -->
+<view class="login-container">
+  
+  <!-- 顶部返回按钮 -->
+  <view class="header">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">←</text>
+      <text class="back-text">{{uiText.backBtn}}</text>
+    </view>
+  </view>
+
+  <!-- 登录区域 -->
+  <view class="login-section">
+
+    <!-- 应用图标和标题 -->
+    <view class="app-info">
+      <text class="app-icon">🌟</text>
+      <text class="app-title">{{uiText.appTitle}}</text>
+      <text class="app-subtitle">{{uiText.appSubtitle}}</text>
+    </view>
+
+    <!-- 未登录状态 -->
+    <view wx:if="{{!isLoggedIn}}" class="login-content">
+      <view class="login-desc">
+        <text class="desc-text">{{uiText.loginDesc}}</text>
+        <text class="desc-subtitle">{{uiText.feature1}}</text>
+        <text class="desc-subtitle">{{uiText.feature2}}</text>
+        <text class="desc-subtitle">{{uiText.feature3}}</text>
+      </view>
+
+      <!-- 微信登录按钮 - 使用open-type获取头像昵称 -->
+      <button class="wechat-login-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <text class="login-text">{{uiText.chooseAvatar}}</text>
+      </button>
+
+      <view wx:if="{{tempAvatarUrl}}" class="temp-avatar-preview">
+        <image class="preview-img" src="{{tempAvatarUrl}}" mode="aspectFill"></image>
+      </view>
+
+      <input
+        wx:if="{{tempAvatarUrl}}"
+        class="nickname-input"
+        type="nickname"
+        placeholder="{{uiText.inputNickname}}"
+        bindblur="onNicknameInput"
+        value="{{tempNickname}}"
+      />
+
+      <button
+        wx:if="{{tempAvatarUrl && tempNickname}}"
+        class="confirm-login-btn"
+        bindtap="onConfirmLogin">
+        <text class="login-text">{{uiText.confirmLogin}}</text>
+      </button>
+
+      <view class="login-tips">
+        <text class="tips-text">{{uiText.loginTips}}</text>
+      </view>
+    </view>
+
+    <!-- 已登录状态 -->
+    <view wx:else class="user-profile">
+      <view class="avatar-section">
+        <image class="user-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+        <text class="user-name">{{userInfo.nickName}}</text>
+        <text class="login-time">登录时间: {{userInfo.loginTime}}</text>
+      </view>
+
+      <view class="user-features">
+        <view class="feature-item">
+          <text class="feature-icon">⭐</text>
+          <text class="feature-text">已收藏网站同步</text>
+        </view>
+        <view class="feature-item">
+          <text class="feature-icon">🔄</text>
+          <text class="feature-text">跨设备数据同步</text>
+        </view>
+        <view class="feature-item">
+          <text class="feature-icon">🎯</text>
+          <text class="feature-text">个性化推荐</text>
+        </view>
+      </view>
+
+      <!-- 退出登录按钮 -->
+      <view class="logout-btn" bindtap="onLogout">
+        <text class="logout-text">退出登录</text>
+      </view>
+    </view>
+
+  </view>
+</view>
